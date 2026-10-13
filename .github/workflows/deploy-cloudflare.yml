@@ -12,13 +12,33 @@ concurrency:
 jobs:
   deploy:
     name: Cloudflare Worker and D1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - name: Verify Cloudflare repository secrets are configured
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
+            echo "::error::Repository secret CLOUDFLARE_ACCOUNT_ID is missing or inaccessible. Add it in Settings > Secrets and variables > Actions > Repository secrets for sydgouda2022/aaa (NOT an Environment secret)."
+            exit 1
+          fi
+          if [[ ! "${CLOUDFLARE_ACCOUNT_ID}" =~ ^[0-9a-fA-F]{32}$ ]]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID must be a 32-character hexadecimal Cloudflare account ID, not an account name or API token."
+            exit 1
+          fi
+          if [[ -z "${CLOUDFLARE_API_TOKEN}" ]]; then
+            echo "::error::Repository secret CLOUDFLARE_API_TOKEN is missing or inaccessible. Add it in Settings > Secrets and variables > Actions > Repository secrets for sydgouda2022/aaa."
+            exit 1
+          fi
+          echo "Both Cloudflare secrets are available (values not shown)."
+      - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
+          package-manager-cache: false
       - name: Install Wrangler
         run: npm install --global wrangler@4
       - name: Discover or create the project database
