@@ -1,34 +1,43 @@
-# التقويم المصري القديم — اشتراك واحد، ولغة قابلة للتغيير
+# التقويم المصري القديم — اشتراك واحد ولغة قابلة للتغيير
 
-**One Egyptian Alexandrian calendar per user. Four languages are display options, NOT four subscriptions.**
+Egyptian Alexandrian calendar subscriptions: **one calendar URL per subscriber**, with Arabic, English, Coptic and hieroglyphic display preferences. The year **6282** began **11 September 2026**. This release shows daily dates only, without festivals.
 
-The Egyptian year 6282 began on 11 September 2026. No festivals included yet.
+## Publishing status
 
-## How it works
+- Daily language feeds are hosted on GitHub and refreshed monthly.
+- The **single-calendar language-switching Worker is implemented and tested**, but its public Cloudflare URL will not exist until the repository is linked to a Cloudflare account.
+- GitHub Actions workflow **Test single subscription** passed on 13 Oct 2026.
 
-1. Open the deployed Cloudflare Worker site (the Worker has **not yet been deployed**).
-2. Choose Arabic, Coptic, hieroglyphic or English, then create your personal subscription URL.
-3. Subscribe ONCE to the returned HTTPS .ics URL in Apple Calendar.
-4. Save the **private settings URL** and use it to switch languages without re-subscribing.
-5. Apple Calendar shows updated event titles at its next calendar subscription refresh, which Apple controls.
+## One-time Cloudflare connection (do not send tokens by chat)
 
-## Files
+1. Open [Cloudflare dashboard](https://dash.cloudflare.com/) and note your **Account ID**. Activate your account's `workers.dev` subdomain if prompted.
+2. In Cloudflare, create a scoped **API token** that permits **Workers Scripts: Edit** and **D1: Edit** on the account selected. Do not commit the token.
+3. Open [GitHub repository Actions secrets](https://github.com/sydgouda2022/aaa/settings/secrets/actions). Add these two repository secrets:
+   - `CLOUDFLARE_ACCOUNT_ID`: the 32-character account ID.
+   - `CLOUDFLARE_API_TOKEN`: the API token.
+4. Open [Deploy single calendar to Cloudflare](https://github.com/sydgouda2022/aaa/actions/workflows/deploy-cloudflare.yml), click **Run workflow** on the `main` branch.
+5. The workflow reuses or creates the D1 database, sets up the schema, and deploys the Worker. Read the deployment job output for the **real public URL**.
+6. Open the deployed Worker URL, choose a language and create one subscription. Add the returned HTTPS `.ics` link to Apple Calendar; bookmark your private settings link for changing language later.
 
-- [Cloudflare Worker](worker/index.mjs): generates one stable user subscription link and accepts settings changes.
-- [D1 database schema](worker/schema.sql): stores anonymous ID, hashed edit secret, chosen language.
-- [Wrangler configuration](worker/wrangler.toml): for Cloudflare account deployment.
-- [Calendar generator](generate.mjs): rebuilds underlying feeds monthly with language-independent event UIDs.
-- The four static language feeds under calendar/ are implementation assets, NOT four calendars that a user must subscribe to.
+No Cloudflare credentials should ever be put in source files, GitHub commits, chat messages, or browser query strings. GitHub stores these values as Actions secrets.
 
-## Deploy
+## How language switching works
 
-1. Install Wrangler and authenticate to your Cloudflare account.
-2. Create a D1 database named ancient-egyptian-calendar.
-3. Insert D1 database UUID in worker/wrangler.toml.
-4. From worker/, execute remote migration: `wrangler d1 execute ancient-egyptian-calendar --remote --file=./schema.sql`.
-5. Run `wrangler deploy` from worker/.
-6. Open the actual worker URL, create one calendar and use its HTTPS .ics link in Apple Calendar.
+- On creation the service returns **one permanent personalized calendar URL** and one **private settings URL**.
+- The settings page changes a stored preference; the same subscription responds in the chosen language on future refreshes.
+- Underlying event UIDs do **not** contain language codes: language changes update existing events instead of creating new events.
+- Apple Calendar controls refresh timing; the new language need not appear immediately.
+- Gregorian month/day labels in Apple's own interface remain unchanged.
 
-Until the Worker is deployed, the earlier direct GitHub ICS links remain static-language previews; they do **not** fulfill the single changeable-language calendar requirement.
+## Implementation
 
-Historical note: Egyptian hieroglyphic ordinal month names are used. Royal cartouches are not automatically appropriate for the names of months.
+- [Cloudflare Worker](worker/index.mjs): registration, settings and ICS endpoint.
+- [D1 database schema](worker/schema.sql): only anonymous ID, SHA-256 of a random edit token, and preferred language.
+- [Wrangler config](worker/wrangler.toml): configuration template; D1 UUID injected at deployment only.
+- [Cloudflare D1 setup script](scripts/prepare_cloudflare.py): idempotently finds or creates the project's database.
+- [Deployment workflow](.github/workflows/deploy-cloudflare.yml): manually triggered.
+- [Automated Worker test](worker/test.mjs): covers registration, URL stability, language changes, event UID stability and rejection of invalid settings tokens.
+- [ICS generator](generate.mjs): refreshes source feeds on a rolling multi-year horizon, in the background of GitHub Actions.
+- The four language files under `calendar/` are internal source data, **not user-facing separate calendar subscriptions**.
+
+No festivals are included yet. Hieroglyphic months are shown by their historical ordinal place within each season, not by putting later festival-derived names into royal cartouches.
