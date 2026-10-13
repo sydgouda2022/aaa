@@ -1,26 +1,34 @@
-# Ancient Egyptian Calendar Subscriptions
+# التقويم المصري القديم — اشتراك واحد، ولغة قابلة للتغيير
 
-Read-only Egyptian Alexandrian calendar feeds. Year **6282** began **11 September 2026**. This is a modern conventional year numbering, not a claim about a historically proven epoch.
+**One Egyptian Alexandrian calendar per user. Four languages are display options, NOT four subscriptions.**
 
-**No religious festivals included yet.** Daily feeds show Egyptian dates alongside Gregorian dates in the user's existing calendar. Compact feeds show Egyptian month starts and epagomenal period.
+The Egyptian year 6282 began on 11 September 2026. No festivals included yet.
 
-| Language | Full (daily) | Compact (monthly) |
-|---|---|---|
-| Arabic / العربية | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/ar/full.ics) | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/ar/compact.ics) |
-| English | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/en/full.ics) | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/en/compact.ics) |
-| Coptic / Ⲙⲉⲧⲣⲉⲙⲛ̀ⲭⲏⲙⲓ | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/cop/full.ics) | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/cop/compact.ics) |
-| Egyptian hieroglyphs | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/egy/full.ics) | [Subscribe](https://raw.githubusercontent.com/sydgouda2022/aaa/main/calendar/egy/compact.ics) |
+## How it works
 
-## Apple Calendar subscription
+1. Open the deployed Cloudflare Worker site (the Worker has **not yet been deployed**).
+2. Choose Arabic, Coptic, hieroglyphic or English, then create your personal subscription URL.
+3. Subscribe ONCE to the returned HTTPS .ics URL in Apple Calendar.
+4. Save the **private settings URL** and use it to switch languages without re-subscribing.
+5. Apple Calendar shows updated event titles at its next calendar subscription refresh, which Apple controls.
 
-On iPhone or iPad: Calendar → Calendars → Add Calendar → Add Subscription Calendar, then paste the HTTPS link above. On Mac: Calendar → File → New Calendar Subscription. Choose iCloud if you want the subscription on all your devices. The link is read-only and does not alter personal events.
+## Files
 
-## Historical notation
+- [Cloudflare Worker](worker/index.mjs): generates one stable user subscription link and accepts settings changes.
+- [D1 database schema](worker/schema.sql): stores anonymous ID, hashed edit secret, chosen language.
+- [Wrangler configuration](worker/wrangler.toml): for Cloudflare account deployment.
+- [Calendar generator](generate.mjs): rebuilds underlying feeds monthly with language-independent event UIDs.
+- The four static language feeds under calendar/ are implementation assets, NOT four calendars that a user must subscribe to.
 
-Ancient Egyptian edition uses **ordinal month number within season** (hieroglyphic month sign 𓇹, numerical month, season signs) and Egyptian numeric signs for both day and year. It does not guess the twelve hieroglyphic festival-name spellings or put divine month names in royal cartouches. The cartouche traditionally encloses royal names and some divine names in special contexts, so cannot be automatically applied to month names.
+## Deploy
 
-## Maintenance
+1. Install Wrangler and authenticate to your Cloudflare account.
+2. Create a D1 database named ancient-egyptian-calendar.
+3. Insert D1 database UUID in worker/wrangler.toml.
+4. From worker/, execute remote migration: `wrangler d1 execute ancient-egyptian-calendar --remote --file=./schema.sql`.
+5. Run `wrangler deploy` from worker/.
+6. Open the actual worker URL, create one calendar and use its HTTPS .ics link in Apple Calendar.
 
-The zero-dependency source is [generate.mjs](generate.mjs). GitHub Actions regenerates the calendars monthly with a rolling multi-year horizon; stable URLs are retained. Feeds contain all-day `TRANSP:TRANSPARENT` events with deterministic UIDs and no alarms.
+Until the Worker is deployed, the earlier direct GitHub ICS links remain static-language previews; they do **not** fulfill the single changeable-language calendar requirement.
 
-References: [UCL calendar](https://www.ucl.ac.uk/museums-static/digitalegypt/chronology/calendar.html), [UCLA cartouches](https://escholarship.org/uc/item/3g726122), [Library of Congress Coptic numerals](https://www.loc.gov/catdir/cpso/romanization/coptic.pdf).
+Historical note: Egyptian hieroglyphic ordinal month names are used. Royal cartouches are not automatically appropriate for the names of months.
