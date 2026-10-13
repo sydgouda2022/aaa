@@ -1,4 +1,4 @@
-name: Deploy Renpet 0.3.0 to Cloudflare Pages
+name: Deploy Renpet 0.3.0 to Cloudflare
 on:
   push:
     paths:
@@ -74,26 +74,24 @@ jobs:
           PY
       - name: Install Wrangler
         run: npm install --global wrangler@4
-      - name: Ensure Cloudflare Pages project exists
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          wrangler pages project create renpet --production-branch main 2>&1 | tee /tmp/project.log || true
-      - name: Deploy Renpet Pages
-        id: deploy
+      - name: Deploy Renpet as Cloudflare Worker Static Assets
+        working-directory: renpet
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -o pipefail
-          wrangler pages deploy renpet/web --project-name renpet --branch main 2>&1 | tee /tmp/deploy.log
-          URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.pages\.dev' /tmp/deploy.log | tail -1 || true)
-          echo "deployment_url=$URL" >> "$GITHUB_OUTPUT"
-          echo "Wrangler deployment URL: $URL"
+          for attempt in 1 2 3; do
+            if wrangler deploy --config wrangler.worker.toml 2>&1 | tee /tmp/renpet-worker.log; then
+              break
+            fi
+            if [[ "$attempt" -eq 3 ]]; then exit 1; fi
+            sleep $((attempt * 10))
+          done
+          grep -E 'https://.*workers.dev' /tmp/renpet-worker.log || true
       - name: Smoke test production
         run: |
-          BASE="https://renpet.pages.dev"
+          BASE="https://renpet.sydgouda.workers.dev"
           for i in 1 2 3 4 5 6; do
             if curl -fsSL --max-time 20 "$BASE/" | grep -q '<title>Renpet</title>'; then
               curl -fsSL --max-time 20 "$BASE/data.json" | grep -q '"min_date"'
@@ -104,5 +102,5 @@ jobs:
             fi
             sleep 6
           done
-          echo "::error::Cloudflare Pages deployment did not pass public smoke test."
+          echo "::error::Renpet Worker deployment did not pass public smoke test."
           exit 1
