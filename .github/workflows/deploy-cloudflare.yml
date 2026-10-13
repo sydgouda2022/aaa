@@ -1,5 +1,11 @@
-name: Deploy single calendar to Cloudflare
+name: Deploy Egyptian Calendar PWA
 on:
+  push:
+    paths:
+      - 'worker/index.mjs'
+      - 'worker/public/**'
+      - 'worker/wrangler.toml'
+      - '.github/workflows/deploy-cloudflare.yml'
   workflow_dispatch:
 
 permissions:
@@ -10,51 +16,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Cloudflare Worker and D1
+  test-and-deploy:
+    name: Deploy Egyptian PWA
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - name: Verify Cloudflare repository secrets are configured
+      - name: Validate Cloudflare credentials
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: bash
         run: |
-          if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
-            echo "::error::Repository secret CLOUDFLARE_ACCOUNT_ID is missing or inaccessible. Add it in Settings > Secrets and variables > Actions > Repository secrets for sydgouda2022/aaa (NOT an Environment secret)."
-            exit 1
-          fi
-          if [[ ! "${CLOUDFLARE_ACCOUNT_ID}" =~ ^[0-9a-fA-F]{32}$ ]]; then
-            echo "::error::CLOUDFLARE_ACCOUNT_ID must be a 32-character hexadecimal Cloudflare account ID, not an account name or API token."
-            exit 1
-          fi
-          if [[ -z "${CLOUDFLARE_API_TOKEN}" ]]; then
-            echo "::error::Repository secret CLOUDFLARE_API_TOKEN is missing or inaccessible. Add it in Settings > Secrets and variables > Actions > Repository secrets for sydgouda2022/aaa."
-            exit 1
-          fi
-          echo "Both Cloudflare secrets are available (values not shown)."
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-          package-manager-cache: false
+      - name: Validate PWA source
+        run: |
+          node --check worker/index.mjs
+          node --check worker/public/calendar-core.mjs
+          node --check worker/public/app.js
+          node --check worker/public/sw.js
+          node --test tests/calendar.test.mjs
       - name: Install Wrangler
         run: npm install --global wrangler@4
-      - name: Discover or create the project database
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: python3 scripts/prepare_cloudflare.py
-      - name: Create or verify D1 schema
-        working-directory: worker
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: wrangler d1 execute ancient-egyptian-calendar --remote --file=./schema.sql --yes
-      - name: Deploy Worker
+      - name: Deploy static PWA to Cloudflare Workers
         working-directory: worker
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: wrangler deploy
+      - name: Smoke-test public PWA
+        run: |
+          URL="https://ancient-egyptian-calendar.sydgouda.workers.dev"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsSL --max-time 15 "$URL/" | grep -q 'id="days"'; then
+              curl -fsSL --max-time 15 "$URL/manifest.webmanifest" | grep -q '"standalone"'
+              curl -fsSL --max-time 15 "$URL/calendar-core.mjs" | grep -q 'yearStartUtc'
+              echo "PWA deployed and publicly serving HTML, manifest and calendar engine."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::PWA was uploaded but the public URL did not pass the smoke test"
+          exit 1
