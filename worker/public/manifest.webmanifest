@@ -1,0 +1,30 @@
+{
+  "name": "التقويم المصري — Egyptian Calendar",
+  "short_name": "التقويم المصري",
+  "description": "تقويم مصري إسكندري مع التاريخ الميلادي داخل كل يوم. أربع لغات ويعمل دون اتصال.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
+  "background_color": "#f7f7f5",
+  "theme_color": "#102e4a",
+  "orientation": "any",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "education",
+    "utilities"
+  ]
+}
