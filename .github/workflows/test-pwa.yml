@@ -1,0 +1,25 @@
+name: Test Egyptian PWA
+on:
+  push:
+    paths:
+      - 'worker/**'
+      - 'tests/**'
+      - '.github/workflows/test-pwa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - run: node --check worker/index.mjs
+      - run: node --check worker/public/calendar-core.mjs
+      - run: node --check worker/public/app.js
+      - run: node --check worker/public/sw.js
+      - run: node --test tests/calendar.test.mjs
