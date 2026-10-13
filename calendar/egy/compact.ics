@@ -1,0 +1,1097 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+CALSCALE:GREGORIAN
+PRODID:-//Ancient Egyptian Calendar//Alexandrian Era 6282//EN
+X-WR-CALNAME:𓇳𓏺 𓆼 (compact)
+METHOD:PUBLISH
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:egypt-compact-20260109-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260109
+DTEND;VALUE=DATE:20260110
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal month of seas
+ on (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260208-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260208
+DTEND;VALUE=DATE:20260209
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260310-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260310
+DTEND;VALUE=DATE:20260311
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260409-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260409
+DTEND;VALUE=DATE:20260410
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260509-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260509
+DTEND;VALUE=DATE:20260510
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal month of seas
+ on (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260608-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260608
+DTEND;VALUE=DATE:20260609
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260708-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260708
+DTEND;VALUE=DATE:20260709
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260807-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260807
+DTEND;VALUE=DATE:20260808
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260906-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260906
+DTEND;VALUE=DATE:20260907
+SUMMARY:𓇹 — 𓏺 𓈖𓊪𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺
+DESCRIPTION:𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆
+ 𓎆𓎆𓎆𓏺. Epagomenal day\, outside months and seasons.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260911-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260911
+DTEND;VALUE=DATE:20260912
+SUMMARY:𓇳𓏺 — 𓏺 𓇹𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month of season (
+ without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20261011-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261012
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month of seas
+ on (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20261110-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20261210-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20261210
+DTEND;VALUE=DATE:20261211
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270109-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270109
+DTEND;VALUE=DATE:20270110
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270208-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270208
+DTEND;VALUE=DATE:20270209
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270310-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270310
+DTEND;VALUE=DATE:20270311
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270409-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270409
+DTEND;VALUE=DATE:20270410
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270509-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270509
+DTEND;VALUE=DATE:20270510
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270608-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270608
+DTEND;VALUE=DATE:20270609
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270708-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270708
+DTEND;VALUE=DATE:20270709
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270807-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270807
+DTEND;VALUE=DATE:20270808
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270906-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270906
+DTEND;VALUE=DATE:20270907
+SUMMARY:𓇹 — 𓏺 𓈖𓊪𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺
+DESCRIPTION:𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆
+ 𓎆𓎆𓎆𓏺𓏺. Epagomenal day\, outside months and seasons.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270912-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270912
+DTEND;VALUE=DATE:20270913
+SUMMARY:𓇳𓏺 — 𓏺 𓇹𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal month of seas
+ on (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20271012-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20271012
+DTEND;VALUE=DATE:20271013
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20271111-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20271111
+DTEND;VALUE=DATE:20271112
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20271211-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20271211
+DTEND;VALUE=DATE:20271212
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280110-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280110
+DTEND;VALUE=DATE:20280111
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280209-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280209
+DTEND;VALUE=DATE:20280210
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280310-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280310
+DTEND;VALUE=DATE:20280311
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280409-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280409
+DTEND;VALUE=DATE:20280410
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280509-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280509
+DTEND;VALUE=DATE:20280510
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280608-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280608
+DTEND;VALUE=DATE:20280609
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280708-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280708
+DTEND;VALUE=DATE:20280709
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280807-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280807
+DTEND;VALUE=DATE:20280808
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280906-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280906
+DTEND;VALUE=DATE:20280907
+SUMMARY:𓇹 — 𓏺 𓈖𓊪𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺
+DESCRIPTION:𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆
+ 𓎆𓎆𓎆𓏺𓏺𓏺. Epagomenal day\, outside months and seasons.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280911-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280911
+DTEND;VALUE=DATE:20280912
+SUMMARY:𓇳𓏺 — 𓏺 𓇹𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordinal month of 
+ season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20281011-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20281011
+DTEND;VALUE=DATE:20281012
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20281110-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20281110
+DTEND;VALUE=DATE:20281111
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20281210-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20281210
+DTEND;VALUE=DATE:20281211
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290109-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290109
+DTEND;VALUE=DATE:20290110
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290208-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290208
+DTEND;VALUE=DATE:20290209
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290310-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290310
+DTEND;VALUE=DATE:20290311
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290409-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290409
+DTEND;VALUE=DATE:20290410
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290509-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290509
+DTEND;VALUE=DATE:20290510
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290608-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290608
+DTEND;VALUE=DATE:20290609
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290708-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290708
+DTEND;VALUE=DATE:20290709
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290807-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290807
+DTEND;VALUE=DATE:20290808
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290906-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290906
+DTEND;VALUE=DATE:20290907
+SUMMARY:𓇹 — 𓏺 𓈖𓊪𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺
+DESCRIPTION:𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆
+ 𓎆𓎆𓎆𓏺𓏺𓏺𓏺. Epagomenal day\, outside months and seasons.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290911-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290911
+DTEND;VALUE=DATE:20290912
+SUMMARY:𓇳𓏺 — 𓏺 𓇹𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical ordinal month
+  of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20291011-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20291011
+DTEND;VALUE=DATE:20291012
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20291110-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20291110
+DTEND;VALUE=DATE:20291111
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20291210-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20291210
+DTEND;VALUE=DATE:20291211
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300109-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300109
+DTEND;VALUE=DATE:20300110
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300208-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300208
+DTEND;VALUE=DATE:20300209
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300310-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300310
+DTEND;VALUE=DATE:20300311
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300409-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300409
+DTEND;VALUE=DATE:20300410
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Hist
+ orical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300509-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300509
+DTEND;VALUE=DATE:20300510
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300608-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300608
+DTEND;VALUE=DATE:20300609
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300708-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300708
+DTEND;VALUE=DATE:20300709
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300807-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300807
+DTEND;VALUE=DATE:20300808
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Hist
+ orical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300906-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300906
+DTEND;VALUE=DATE:20300907
+SUMMARY:𓇹 — 𓏺 𓈖𓊪𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆
+ 𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺. Epagomenal day\, outside months and seas
+ ons.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300911-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300911
+DTEND;VALUE=DATE:20300912
+SUMMARY:𓇳𓏺 — 𓏺 𓇹𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historical ordinal m
+ onth of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20301011-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20301011
+DTEND;VALUE=DATE:20301012
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20301110-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20301110
+DTEND;VALUE=DATE:20301111
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20301210-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20301210
+DTEND;VALUE=DATE:20301211
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310109-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310109
+DTEND;VALUE=DATE:20310110
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310208-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310208
+DTEND;VALUE=DATE:20310209
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310310-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310310
+DTEND;VALUE=DATE:20310311
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Hist
+ orical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310409-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310409
+DTEND;VALUE=DATE:20310410
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓊪𓂋𓏏 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. 
+ Historical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310509-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310509
+DTEND;VALUE=DATE:20310510
+SUMMARY:𓇹 — 𓏺 𓇹𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310608-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310608
+DTEND;VALUE=DATE:20310609
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310708-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310708
+DTEND;VALUE=DATE:20310709
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼
+ 𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Hist
+ orical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310807-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310807
+DTEND;VALUE=DATE:20310808
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈙𓅓𓅱 · 𓏺 · 𓆼𓆼𓆼𓆼
+ 𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. 
+ Historical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310906-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310906
+DTEND;VALUE=DATE:20310907
+SUMMARY:𓇹 — 𓏺 𓈖𓊪𓏏 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆𓎆𓎆𓎆𓎆
+ 𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺. Epagomenal day\, outside months and 
+ seasons.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310912-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310912
+DTEND;VALUE=DATE:20310913
+SUMMARY:𓇳𓏺 — 𓏺 𓇹𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢𓎆
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺. Historical ordin
+ al month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20311012-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20311012
+DTEND;VALUE=DATE:20311013
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢𓍢
+ 𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺. Historical o
+ rdinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20311111-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20311111
+DTEND;VALUE=DATE:20311112
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼𓍢
+ 𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺. Historic
+ al ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20311211-egy@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20311211
+DTEND;VALUE=DATE:20311212
+SUMMARY:𓇹 — 𓏺 𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺
+DESCRIPTION:𓇹𓏺𓏺𓏺𓏺 𓈌 · 𓏺 · 𓆼𓆼𓆼𓆼𓆼𓆼
+ 𓍢𓍢𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓎆𓏺𓏺𓏺𓏺𓏺𓏺𓏺. Hist
+ orical ordinal month of season (without royal cartouche).
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+END:VCALENDAR
