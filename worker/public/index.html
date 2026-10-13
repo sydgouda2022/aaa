@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102d49">
+  <meta name="description" content="التقويم المصري السكندري — تاريخ مصري وميلادي في كل يوم. يعمل دون اتصال ويدعم العربية والقبطية والهيروغليفية والإنجليزية.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="التقويم المصري">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <title>التقويم المصري</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-symbol" aria-hidden="true">☀</span>
+        <div class="brand-copy">
+          <span class="brand-kicker">EGYPTIAN SOLAR CALENDAR</span>
+          <span class="brand-name" id="appName">التقويم المصري</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <label class="language-picker" for="language">
+          <span class="sr-only" id="languageLabel">لغة التاريخ</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+          <select id="language" aria-labelledby="languageLabel">
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+            <option value="cop">Ⲙⲉⲧⲣⲉⲙⲛ̀ⲭⲏⲙⲓ</option>
+            <option value="egy">𓂀 Hieroglyphs</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="heading">
+        <div class="hero-ornament" aria-hidden="true">
+          <svg viewBox="0 0 164 164" fill="none"><circle cx="82" cy="82" r="65" stroke="currentColor" stroke-width=".6" opacity=".35"/><circle cx="82" cy="82" r="49" stroke="currentColor" stroke-width=".6" opacity=".32"/><circle cx="82" cy="82" r="27" stroke="currentColor" stroke-width="1.1"/><circle cx="82" cy="82" r="14" fill="currentColor" opacity=".75"/><path d="M82 4v26M82 134v26M4 82h26M134 82h26M27 27l19 19M118 118l19 19M137 27l-19 19M46 118l-19 19" stroke="currentColor" stroke-width="1.2"/></svg>
+        </div>
+        <div class="hero-topline">
+          <span class="eyebrow" id="heroEyebrow">السنة المصرية</span>
+          <span class="hero-line" aria-hidden="true"></span>
+        </div>
+        <h1 id="heading" class="hero-title">التقويم المصري</h1>
+        <div class="hero-dates">
+          <div class="hero-main" id="heroDate">٣ بابه ٦٢٨٢</div>
+          <div class="hero-secondary" id="heroGregorian">13 October 2026</div>
+        </div>
+        <div class="hero-bottom">
+          <span id="heroSeason" class="hero-pill">أخت</span>
+          <span id="heroDecade">العشرية الأولى</span>
+        </div>
+      </section>
+
+      <section class="calendar-section" aria-labelledby="monthTitle">
+        <div class="calendar-bar">
+          <div class="month-headings">
+            <span class="section-eyebrow" id="sectionEyebrow">الشهر المصري</span>
+            <h2 id="monthTitle" class="month-title">بابه ٦٢٨٢</h2>
+            <p class="month-subtitle" id="monthSpan"></p>
+          </div>
+          <div class="nav-group" aria-label="التنقل بين الشهور">
+            <button class="icon-button" id="prevMonth" type="button" title="الشهر السابق" aria-label="الشهر السابق">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+            </button>
+            <button class="today-button" id="today" type="button">اليوم</button>
+            <button class="icon-button" id="nextMonth" type="button" title="الشهر التالي" aria-label="الشهر التالي">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="calendar-toolbar">
+          <div class="season-indicator">
+            <span class="tiny-sun" aria-hidden="true"></span>
+            <span id="seasonLabel">فصل أخت</span>
+            <span class="season-divider" aria-hidden="true">·</span>
+            <span id="monthIndex">الشهر ٢ من ١٢</span>
+          </div>
+          <label class="jump-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+            <span class="sr-only" id="jumpLabel">الانتقال إلى تاريخ ميلادي</span>
+            <input type="date" id="jumpDate" aria-labelledby="jumpLabel" min="1900-01-01" max="2200-12-31">
+          </label>
+        </div>
+
+        <div class="calendar-grid-wrap" id="swipeArea">
+          <div class="weekday-row" id="weekdays" aria-label="أيام الأسبوع"></div>
+          <div class="day-grid" id="days" role="grid" aria-label="أيام الشهر المصري"></div>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-symbol egyptian-symbol"></span><span id="legendEgyptian">التاريخ المصري</span></span>
+          <span class="legend-item"><span class="legend-symbol gregorian-symbol"></span><span id="legendGregorian">الموافق الميلادي</span></span>
+          <span class="legend-item"><span class="legend-symbol today-symbol"></span><span id="legendToday">اليوم</span></span>
+        </div>
+      </section>
+
+      <section class="detail-card" aria-labelledby="detailHeading">
+        <div class="detail-head">
+          <span class="detail-icon" aria-hidden="true">𓇳</span>
+          <span id="detailHeading" class="detail-eyebrow">التاريخ المحدد</span>
+        </div>
+        <div class="detail-main" id="detailDate"></div>
+        <div class="detail-gregorian" id="detailGregorian"></div>
+        <div class="detail-meta" id="detailMeta"></div>
+      </section>
+      <p class="install-note" id="installNote" hidden></p>
+      <button id="installButton" class="install-button" type="button" hidden></button>
+    </main>
+
+    <footer class="footer">
+      <span id="footerText">تقويم إسكندري · ١٢ شهرًا + النسيء · يعمل دون اتصال</span>
+      <span class="footer-symbol" aria-hidden="true">𓇳</span>
+    </footer>
+  </div>
+  <noscript><p class="no-script">This calendar requires JavaScript to calculate the Egyptian and Gregorian dates.</p></noscript>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
