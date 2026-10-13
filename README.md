@@ -1,43 +1,31 @@
-# التقويم المصري القديم — اشتراك واحد ولغة قابلة للتغيير
+# Egyptian Alexandrian Calendar — Offline-first PWA
 
-Egyptian Alexandrian calendar subscriptions: **one calendar URL per subscriber**, with Arabic, English, Coptic and hieroglyphic display preferences. The year **6282** began **11 September 2026**. This release shows daily dates only, without festivals.
+**Live application:** https://ancient-egyptian-calendar.sydgouda.workers.dev/
 
-## Publishing status
+A **standalone Egyptian calendar** for iPhone, iPad, Android and desktop. Each Egyptian month is rendered as a true calendar grid with Gregorian counterpart dates in the same day cell. No ICS subscriptions, no all-day events, no external calendar app required.
 
-- Daily language feeds are hosted on GitHub and refreshed monthly.
-- The **single-calendar language-switching Worker is implemented and tested**, but its public Cloudflare URL will not exist until the repository is linked to a Cloudflare account.
-- GitHub Actions workflow **Test single subscription** passed on 13 Oct 2026.
+## Install on iPhone / iPad
+1. Open the live HTTPS link in **Safari**.
+2. Tap **Share** → **Add to Home Screen** → **Add**.
+3. Open the icon on your home screen. It behaves like a standalone PWA.
 
-## One-time Cloudflare connection (do not send tokens by chat)
+## What it includes
+- Egyptian Alexandrian calendar: 12 × 30-day months, plus the 5/6 epagomenal days.
+- **11 September 2026 = 1 Thout 6282**, with Egyptian year numbering offset +4539 from the Coptic year.
+- Daily Egyptian and Gregorian dates **inside each calendar square**, plus selectable day details.
+- Four display choices: Arabic (default), English, Coptic and hieroglyphic **including date numerals**.
+- Historical ordinal-month-by-season style for Egyptian hieroglyphs. **No royal cartouches** invented for month names.
+- Month navigation with taps or swipes, jump to Gregorian date, today button.
+- Saves the chosen language locally. Works without a network after the first online load with service worker assets cached.
+- No account, no tracking, no events, no prayers or holidays in this first calendar-only release.
 
-1. Open [Cloudflare dashboard](https://dash.cloudflare.com/) and note your **Account ID**. Activate your account's `workers.dev` subdomain if prompted.
-2. In Cloudflare, create a scoped **API token** that permits **Workers Scripts: Edit** and **D1: Edit** on the account selected. Do not commit the token.
-3. Open [GitHub repository Actions secrets](https://github.com/sydgouda2022/aaa/settings/secrets/actions). Add these two repository secrets:
-   - `CLOUDFLARE_ACCOUNT_ID`: the 32-character account ID.
-   - `CLOUDFLARE_API_TOKEN`: the API token.
-4. Open [Deploy single calendar to Cloudflare](https://github.com/sydgouda2022/aaa/actions/workflows/deploy-cloudflare.yml), click **Run workflow** on the `main` branch.
-5. The workflow reuses or creates the D1 database, sets up the schema, and deploys the Worker. Read the deployment job output for the **real public URL**.
-6. Open the deployed Worker URL, choose a language and create one subscription. Add the returned HTTPS `.ics` link to Apple Calendar; bookmark your private settings link for changing language later.
+## Development and automatic publishing
+- Static PWA frontend: [worker/public/](worker/public/)
+- Calendar conversion engine: [worker/public/calendar-core.mjs](worker/public/calendar-core.mjs)
+- Offline service worker: [worker/public/sw.js](worker/public/sw.js)
+- Cloudflare static Workers frontend: [worker/index.mjs](worker/index.mjs) and [worker/wrangler.toml](worker/wrangler.toml)
+- GitHub Actions deployment: [.github/workflows/deploy-cloudflare.yml](.github/workflows/deploy-cloudflare.yml)
+- Calendar and PWA checks: [tests/calendar.test.mjs](tests/calendar.test.mjs)
+- Build/test with Node.js 24; works with standard modern browsers. The calendar arithmetic runs entirely on-device.
 
-No Cloudflare credentials should ever be put in source files, GitHub commits, chat messages, or browser query strings. GitHub stores these values as Actions secrets.
-
-## How language switching works
-
-- On creation the service returns **one permanent personalized calendar URL** and one **private settings URL**.
-- The settings page changes a stored preference; the same subscription responds in the chosen language on future refreshes.
-- Underlying event UIDs do **not** contain language codes: language changes update existing events instead of creating new events.
-- Apple Calendar controls refresh timing; the new language need not appear immediately.
-- Gregorian month/day labels in Apple's own interface remain unchanged.
-
-## Implementation
-
-- [Cloudflare Worker](worker/index.mjs): registration, settings and ICS endpoint.
-- [D1 database schema](worker/schema.sql): only anonymous ID, SHA-256 of a random edit token, and preferred language.
-- [Wrangler config](worker/wrangler.toml): configuration template; D1 UUID injected at deployment only.
-- [Cloudflare D1 setup script](scripts/prepare_cloudflare.py): idempotently finds or creates the project's database.
-- [Deployment workflow](.github/workflows/deploy-cloudflare.yml): manually triggered.
-- [Automated Worker test](worker/test.mjs): covers registration, URL stability, language changes, event UID stability and rejection of invalid settings tokens.
-- [ICS generator](generate.mjs): refreshes source feeds on a rolling multi-year horizon, in the background of GitHub Actions.
-- The four language files under `calendar/` are internal source data, **not user-facing separate calendar subscriptions**.
-
-No festivals are included yet. Hieroglyphic months are shown by their historical ordinal place within each season, not by putting later festival-derived names into royal cartouches.
+The earlier ICS-feed prototype has been superseded. It does **not** support adding a new calendar-system type to the native Apple Calendar app, which is why this independent PWA exists.

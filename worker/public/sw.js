@@ -1,6 +1,6 @@
 // Self-contained, offline-first Egyptian PWA shell. No remote APIs needed for calendar dates.
-const CACHE='egyptian-calendar-pwa-v1.0.0';
-const APP_SHELL=['/','/index.html','/styles.css','/app.js','/calendar-core.mjs','/manifest.webmanifest','/icon.svg'];
+const CACHE='egyptian-calendar-pwa-v1.1.0';
+const APP_SHELL=['/','/index.html','/styles.css','/app.js','/calendar-core.mjs','/manifest.webmanifest','/icon.svg','/apple-touch-icon.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));
 });
