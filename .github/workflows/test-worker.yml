@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'worker/**'
+      - 'scripts/**'
       - 'calendar/**'
       - '.github/workflows/test-worker.yml'
   workflow_dispatch:
@@ -18,4 +19,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: python3 -m py_compile scripts/prepare_cloudflare.py
       - run: node --test worker/test.mjs
