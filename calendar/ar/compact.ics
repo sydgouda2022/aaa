@@ -1,0 +1,945 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+CALSCALE:GREGORIAN
+PRODID:-//Ancient Egyptian Calendar//Alexandrian Era 6282//EN
+X-WR-CALNAME:التقويم المصري (compact)
+METHOD:PUBLISH
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:egypt-compact-20260109-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260109
+DTEND;VALUE=DATE:20260110
+SUMMARY:بداية شهر — ١ طوبة ٦٢٨١
+DESCRIPTION:الفصل برت، الشهر ٥، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260208-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260208
+DTEND;VALUE=DATE:20260209
+SUMMARY:بداية شهر — ١ أمشير ٦٢٨١
+DESCRIPTION:الفصل برت، الشهر ٦، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260310-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260310
+DTEND;VALUE=DATE:20260311
+SUMMARY:بداية شهر — ١ برمهات ٦٢٨١
+DESCRIPTION:الفصل برت، الشهر ٧، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260409-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260409
+DTEND;VALUE=DATE:20260410
+SUMMARY:بداية شهر — ١ برمودة ٦٢٨١
+DESCRIPTION:الفصل برت، الشهر ٨، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260509-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260509
+DTEND;VALUE=DATE:20260510
+SUMMARY:بداية شهر — ١ بشنس ٦٢٨١
+DESCRIPTION:الفصل شمو، الشهر ٩، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260608-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260608
+DTEND;VALUE=DATE:20260609
+SUMMARY:بداية شهر — ١ بؤونة ٦٢٨١
+DESCRIPTION:الفصل شمو، الشهر ١٠، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260708-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260708
+DTEND;VALUE=DATE:20260709
+SUMMARY:بداية شهر — ١ أبيب ٦٢٨١
+DESCRIPTION:الفصل شمو، الشهر ١١، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260807-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260807
+DTEND;VALUE=DATE:20260808
+SUMMARY:بداية شهر — ١ مسرى ٦٢٨١
+DESCRIPTION:الفصل شمو، الشهر ١٢، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨١.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260906-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260906
+DTEND;VALUE=DATE:20260907
+SUMMARY:بداية شهر — ١ نسيء ٦٢٨١
+DESCRIPTION:أيام النسيء، اليوم ١ من 5. خارج الشه
+ ور والفصول والعشريات.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20260911-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20260911
+DTEND;VALUE=DATE:20260912
+SUMMARY:رأس السنة المصرية — ١ توت ٦٢٨٢
+DESCRIPTION:الفصل أخت، الشهر ١، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20261011-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261012
+SUMMARY:بداية شهر — ١ بابه ٦٢٨٢
+DESCRIPTION:الفصل أخت، الشهر ٢، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20261110-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20261110
+DTEND;VALUE=DATE:20261111
+SUMMARY:بداية شهر — ١ هاتور ٦٢٨٢
+DESCRIPTION:الفصل أخت، الشهر ٣، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20261210-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20261210
+DTEND;VALUE=DATE:20261211
+SUMMARY:بداية شهر — ١ كيهك ٦٢٨٢
+DESCRIPTION:الفصل أخت، الشهر ٤، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270109-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270109
+DTEND;VALUE=DATE:20270110
+SUMMARY:بداية شهر — ١ طوبة ٦٢٨٢
+DESCRIPTION:الفصل برت، الشهر ٥، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270208-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270208
+DTEND;VALUE=DATE:20270209
+SUMMARY:بداية شهر — ١ أمشير ٦٢٨٢
+DESCRIPTION:الفصل برت، الشهر ٦، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270310-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270310
+DTEND;VALUE=DATE:20270311
+SUMMARY:بداية شهر — ١ برمهات ٦٢٨٢
+DESCRIPTION:الفصل برت، الشهر ٧، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270409-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270409
+DTEND;VALUE=DATE:20270410
+SUMMARY:بداية شهر — ١ برمودة ٦٢٨٢
+DESCRIPTION:الفصل برت، الشهر ٨، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270509-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270509
+DTEND;VALUE=DATE:20270510
+SUMMARY:بداية شهر — ١ بشنس ٦٢٨٢
+DESCRIPTION:الفصل شمو، الشهر ٩، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270608-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270608
+DTEND;VALUE=DATE:20270609
+SUMMARY:بداية شهر — ١ بؤونة ٦٢٨٢
+DESCRIPTION:الفصل شمو، الشهر ١٠، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270708-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270708
+DTEND;VALUE=DATE:20270709
+SUMMARY:بداية شهر — ١ أبيب ٦٢٨٢
+DESCRIPTION:الفصل شمو، الشهر ١١، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270807-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270807
+DTEND;VALUE=DATE:20270808
+SUMMARY:بداية شهر — ١ مسرى ٦٢٨٢
+DESCRIPTION:الفصل شمو، الشهر ١٢، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٢.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270906-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270906
+DTEND;VALUE=DATE:20270907
+SUMMARY:بداية شهر — ١ نسيء ٦٢٨٢
+DESCRIPTION:أيام النسيء، اليوم ١ من 6. خارج الشه
+ ور والفصول والعشريات.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20270912-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20270912
+DTEND;VALUE=DATE:20270913
+SUMMARY:رأس السنة المصرية — ١ توت ٦٢٨٣
+DESCRIPTION:الفصل أخت، الشهر ١، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20271012-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20271012
+DTEND;VALUE=DATE:20271013
+SUMMARY:بداية شهر — ١ بابه ٦٢٨٣
+DESCRIPTION:الفصل أخت، الشهر ٢، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20271111-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20271111
+DTEND;VALUE=DATE:20271112
+SUMMARY:بداية شهر — ١ هاتور ٦٢٨٣
+DESCRIPTION:الفصل أخت، الشهر ٣، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20271211-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20271211
+DTEND;VALUE=DATE:20271212
+SUMMARY:بداية شهر — ١ كيهك ٦٢٨٣
+DESCRIPTION:الفصل أخت، الشهر ٤، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280110-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280110
+DTEND;VALUE=DATE:20280111
+SUMMARY:بداية شهر — ١ طوبة ٦٢٨٣
+DESCRIPTION:الفصل برت، الشهر ٥، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280209-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280209
+DTEND;VALUE=DATE:20280210
+SUMMARY:بداية شهر — ١ أمشير ٦٢٨٣
+DESCRIPTION:الفصل برت، الشهر ٦، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280310-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280310
+DTEND;VALUE=DATE:20280311
+SUMMARY:بداية شهر — ١ برمهات ٦٢٨٣
+DESCRIPTION:الفصل برت، الشهر ٧، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280409-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280409
+DTEND;VALUE=DATE:20280410
+SUMMARY:بداية شهر — ١ برمودة ٦٢٨٣
+DESCRIPTION:الفصل برت، الشهر ٨، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280509-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280509
+DTEND;VALUE=DATE:20280510
+SUMMARY:بداية شهر — ١ بشنس ٦٢٨٣
+DESCRIPTION:الفصل شمو، الشهر ٩، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280608-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280608
+DTEND;VALUE=DATE:20280609
+SUMMARY:بداية شهر — ١ بؤونة ٦٢٨٣
+DESCRIPTION:الفصل شمو، الشهر ١٠، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280708-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280708
+DTEND;VALUE=DATE:20280709
+SUMMARY:بداية شهر — ١ أبيب ٦٢٨٣
+DESCRIPTION:الفصل شمو، الشهر ١١، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280807-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280807
+DTEND;VALUE=DATE:20280808
+SUMMARY:بداية شهر — ١ مسرى ٦٢٨٣
+DESCRIPTION:الفصل شمو، الشهر ١٢، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٣.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280906-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280906
+DTEND;VALUE=DATE:20280907
+SUMMARY:بداية شهر — ١ نسيء ٦٢٨٣
+DESCRIPTION:أيام النسيء، اليوم ١ من 5. خارج الشه
+ ور والفصول والعشريات.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20280911-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20280911
+DTEND;VALUE=DATE:20280912
+SUMMARY:رأس السنة المصرية — ١ توت ٦٢٨٤
+DESCRIPTION:الفصل أخت، الشهر ١، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20281011-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20281011
+DTEND;VALUE=DATE:20281012
+SUMMARY:بداية شهر — ١ بابه ٦٢٨٤
+DESCRIPTION:الفصل أخت، الشهر ٢، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20281110-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20281110
+DTEND;VALUE=DATE:20281111
+SUMMARY:بداية شهر — ١ هاتور ٦٢٨٤
+DESCRIPTION:الفصل أخت، الشهر ٣، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20281210-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20281210
+DTEND;VALUE=DATE:20281211
+SUMMARY:بداية شهر — ١ كيهك ٦٢٨٤
+DESCRIPTION:الفصل أخت، الشهر ٤، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290109-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290109
+DTEND;VALUE=DATE:20290110
+SUMMARY:بداية شهر — ١ طوبة ٦٢٨٤
+DESCRIPTION:الفصل برت، الشهر ٥، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290208-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290208
+DTEND;VALUE=DATE:20290209
+SUMMARY:بداية شهر — ١ أمشير ٦٢٨٤
+DESCRIPTION:الفصل برت، الشهر ٦، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290310-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290310
+DTEND;VALUE=DATE:20290311
+SUMMARY:بداية شهر — ١ برمهات ٦٢٨٤
+DESCRIPTION:الفصل برت، الشهر ٧، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290409-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290409
+DTEND;VALUE=DATE:20290410
+SUMMARY:بداية شهر — ١ برمودة ٦٢٨٤
+DESCRIPTION:الفصل برت، الشهر ٨، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290509-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290509
+DTEND;VALUE=DATE:20290510
+SUMMARY:بداية شهر — ١ بشنس ٦٢٨٤
+DESCRIPTION:الفصل شمو، الشهر ٩، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290608-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290608
+DTEND;VALUE=DATE:20290609
+SUMMARY:بداية شهر — ١ بؤونة ٦٢٨٤
+DESCRIPTION:الفصل شمو، الشهر ١٠، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290708-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290708
+DTEND;VALUE=DATE:20290709
+SUMMARY:بداية شهر — ١ أبيب ٦٢٨٤
+DESCRIPTION:الفصل شمو، الشهر ١١، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290807-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290807
+DTEND;VALUE=DATE:20290808
+SUMMARY:بداية شهر — ١ مسرى ٦٢٨٤
+DESCRIPTION:الفصل شمو، الشهر ١٢، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٤.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290906-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290906
+DTEND;VALUE=DATE:20290907
+SUMMARY:بداية شهر — ١ نسيء ٦٢٨٤
+DESCRIPTION:أيام النسيء، اليوم ١ من 5. خارج الشه
+ ور والفصول والعشريات.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20290911-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20290911
+DTEND;VALUE=DATE:20290912
+SUMMARY:رأس السنة المصرية — ١ توت ٦٢٨٥
+DESCRIPTION:الفصل أخت، الشهر ١، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20291011-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20291011
+DTEND;VALUE=DATE:20291012
+SUMMARY:بداية شهر — ١ بابه ٦٢٨٥
+DESCRIPTION:الفصل أخت، الشهر ٢، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20291110-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20291110
+DTEND;VALUE=DATE:20291111
+SUMMARY:بداية شهر — ١ هاتور ٦٢٨٥
+DESCRIPTION:الفصل أخت، الشهر ٣، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20291210-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20291210
+DTEND;VALUE=DATE:20291211
+SUMMARY:بداية شهر — ١ كيهك ٦٢٨٥
+DESCRIPTION:الفصل أخت، الشهر ٤، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300109-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300109
+DTEND;VALUE=DATE:20300110
+SUMMARY:بداية شهر — ١ طوبة ٦٢٨٥
+DESCRIPTION:الفصل برت، الشهر ٥، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300208-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300208
+DTEND;VALUE=DATE:20300209
+SUMMARY:بداية شهر — ١ أمشير ٦٢٨٥
+DESCRIPTION:الفصل برت، الشهر ٦، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300310-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300310
+DTEND;VALUE=DATE:20300311
+SUMMARY:بداية شهر — ١ برمهات ٦٢٨٥
+DESCRIPTION:الفصل برت، الشهر ٧، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300409-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300409
+DTEND;VALUE=DATE:20300410
+SUMMARY:بداية شهر — ١ برمودة ٦٢٨٥
+DESCRIPTION:الفصل برت، الشهر ٨، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300509-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300509
+DTEND;VALUE=DATE:20300510
+SUMMARY:بداية شهر — ١ بشنس ٦٢٨٥
+DESCRIPTION:الفصل شمو، الشهر ٩، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300608-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300608
+DTEND;VALUE=DATE:20300609
+SUMMARY:بداية شهر — ١ بؤونة ٦٢٨٥
+DESCRIPTION:الفصل شمو، الشهر ١٠، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300708-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300708
+DTEND;VALUE=DATE:20300709
+SUMMARY:بداية شهر — ١ أبيب ٦٢٨٥
+DESCRIPTION:الفصل شمو، الشهر ١١، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300807-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300807
+DTEND;VALUE=DATE:20300808
+SUMMARY:بداية شهر — ١ مسرى ٦٢٨٥
+DESCRIPTION:الفصل شمو، الشهر ١٢، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٥.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300906-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300906
+DTEND;VALUE=DATE:20300907
+SUMMARY:بداية شهر — ١ نسيء ٦٢٨٥
+DESCRIPTION:أيام النسيء، اليوم ١ من 5. خارج الشه
+ ور والفصول والعشريات.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20300911-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20300911
+DTEND;VALUE=DATE:20300912
+SUMMARY:رأس السنة المصرية — ١ توت ٦٢٨٦
+DESCRIPTION:الفصل أخت، الشهر ١، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20301011-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20301011
+DTEND;VALUE=DATE:20301012
+SUMMARY:بداية شهر — ١ بابه ٦٢٨٦
+DESCRIPTION:الفصل أخت، الشهر ٢، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20301110-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20301110
+DTEND;VALUE=DATE:20301111
+SUMMARY:بداية شهر — ١ هاتور ٦٢٨٦
+DESCRIPTION:الفصل أخت، الشهر ٣، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20301210-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20301210
+DTEND;VALUE=DATE:20301211
+SUMMARY:بداية شهر — ١ كيهك ٦٢٨٦
+DESCRIPTION:الفصل أخت، الشهر ٤، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310109-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310109
+DTEND;VALUE=DATE:20310110
+SUMMARY:بداية شهر — ١ طوبة ٦٢٨٦
+DESCRIPTION:الفصل برت، الشهر ٥، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310208-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310208
+DTEND;VALUE=DATE:20310209
+SUMMARY:بداية شهر — ١ أمشير ٦٢٨٦
+DESCRIPTION:الفصل برت، الشهر ٦، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310310-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310310
+DTEND;VALUE=DATE:20310311
+SUMMARY:بداية شهر — ١ برمهات ٦٢٨٦
+DESCRIPTION:الفصل برت، الشهر ٧، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310409-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310409
+DTEND;VALUE=DATE:20310410
+SUMMARY:بداية شهر — ١ برمودة ٦٢٨٦
+DESCRIPTION:الفصل برت، الشهر ٨، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310509-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310509
+DTEND;VALUE=DATE:20310510
+SUMMARY:بداية شهر — ١ بشنس ٦٢٨٦
+DESCRIPTION:الفصل شمو، الشهر ٩، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310608-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310608
+DTEND;VALUE=DATE:20310609
+SUMMARY:بداية شهر — ١ بؤونة ٦٢٨٦
+DESCRIPTION:الفصل شمو، الشهر ١٠، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310708-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310708
+DTEND;VALUE=DATE:20310709
+SUMMARY:بداية شهر — ١ أبيب ٦٢٨٦
+DESCRIPTION:الفصل شمو، الشهر ١١، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310807-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310807
+DTEND;VALUE=DATE:20310808
+SUMMARY:بداية شهر — ١ مسرى ٦٢٨٦
+DESCRIPTION:الفصل شمو، الشهر ١٢، العشرية ١. الت
+ قويم السكندري، السنة المصرية ٦٢٨٦.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310906-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310906
+DTEND;VALUE=DATE:20310907
+SUMMARY:بداية شهر — ١ نسيء ٦٢٨٦
+DESCRIPTION:أيام النسيء، اليوم ١ من 6. خارج الشه
+ ور والفصول والعشريات.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20310912-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20310912
+DTEND;VALUE=DATE:20310913
+SUMMARY:رأس السنة المصرية — ١ توت ٦٢٨٧
+DESCRIPTION:الفصل أخت، الشهر ١، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٧.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20311012-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20311012
+DTEND;VALUE=DATE:20311013
+SUMMARY:بداية شهر — ١ بابه ٦٢٨٧
+DESCRIPTION:الفصل أخت، الشهر ٢، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٧.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20311111-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20311111
+DTEND;VALUE=DATE:20311112
+SUMMARY:بداية شهر — ١ هاتور ٦٢٨٧
+DESCRIPTION:الفصل أخت، الشهر ٣، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٧.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+BEGIN:VEVENT
+UID:egypt-compact-20311211-ar@egyptian-calendar
+DTSTAMP:20261013T000000Z
+DTSTART;VALUE=DATE:20311211
+DTEND;VALUE=DATE:20311212
+SUMMARY:بداية شهر — ١ كيهك ٦٢٨٧
+DESCRIPTION:الفصل أخت، الشهر ٤، العشرية ١. التق
+ ويم السكندري، السنة المصرية ٦٢٨٧.
+TRANSP:TRANSPARENT
+STATUS:CONFIRMED
+CLASS:PUBLIC
+END:VEVENT
+END:VCALENDAR
