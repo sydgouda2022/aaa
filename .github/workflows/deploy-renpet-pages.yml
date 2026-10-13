@@ -1,0 +1,102 @@
+name: Deploy Renpet 0.3.0 to Cloudflare Pages
+on:
+  push:
+    paths:
+      - 'renpet/**'
+      - '.github/workflows/deploy-renpet-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renpet-pages-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Rebuild packaged assets
+        run: |
+          python -m pip install --disable-pip-version-check fonttools
+          gzip -dc renpet/build-assets/style.css.gz > renpet/web/style.css
+          gzip -dc renpet/build-assets/data.json.gz > renpet/web/data.json
+          python renpet/tools/make_numerals.py
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path('renpet/web')
+          files=[]
+          for p in sorted(root.rglob('*')):
+              if p.is_file() and p.name not in {'sw.js','_headers'}:
+                  files.append('./'+p.relative_to(root).as_posix())
+          stamp=hashlib.sha256('\n'.join(files).encode()).hexdigest()[:12]
+          sw=f"""const CACHE='renpet-0.3.0-{stamp}';
+          const ASSETS={json.dumps(files,separators=(',',':'))};
+          self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
+          self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('renpet-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
+          self.addEventListener('fetch',e=>{{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==self.location.origin)return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{{if(r.ok)caches.open(CACHE).then(x=>x.put(e.request,r.clone())).catch(()=>{{}});return r;}}).catch(()=>e.request.mode==='navigate'?caches.match('./index.html'):new Response('Offline',{{status:503}}))))}});
+          """
+          (root/'sw.js').write_text(sw,encoding='utf-8')
+          print('Service worker assets:',len(files),'cache',stamp)
+          PY
+      - name: Validate Renpet build
+        run: |
+          node --check renpet/web/app.js
+          node --check renpet/web/calendar.js
+          node --check renpet/web/locales.js
+          node --check renpet/web/sw.js
+          test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 333
+          grep -q '<title>Renpet</title>' renpet/web/index.html
+          grep -q '"name":"Renpet"' renpet/web/manifest.webmanifest
+          python - <<'PY'
+          import json
+          d=json.load(open('renpet/web/data.json',encoding='utf-8'))
+          assert d['min_date']=='1900-01-01'
+          assert d['max_date']=='2200-12-31'
+          assert d['years'][0]['year']==6155 and d['years'][-1]['year']==6457
+          print('Calendar data and range OK; festivals:',len(d['festivals']))
+          PY
+      - name: Install Wrangler
+        run: npm install --global wrangler@4
+      - name: Ensure Cloudflare Pages project exists
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          wrangler pages project create renpet --production-branch main 2>&1 | tee /tmp/project.log || true
+      - name: Deploy Renpet Pages
+        id: deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -o pipefail
+          wrangler pages deploy renpet/web --project-name renpet --branch main 2>&1 | tee /tmp/deploy.log
+          URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.pages\.dev' /tmp/deploy.log | tail -1 || true)
+          echo "deployment_url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Wrangler deployment URL: $URL"
+      - name: Smoke test production
+        run: |
+          BASE="https://renpet.pages.dev"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsSL --max-time 20 "$BASE/" | grep -q '<title>Renpet</title>'; then
+              curl -fsSL --max-time 20 "$BASE/data.json" | grep -q '"min_date"'
+              curl -fsSL --max-time 20 "$BASE/assets/numerals/6282.svg" | grep -q '<svg'
+              curl -fsSL --max-time 20 "$BASE/manifest.webmanifest" | grep -q '"Renpet"'
+              echo "Renpet live at $BASE"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::Cloudflare Pages deployment did not pass public smoke test."
+          exit 1
