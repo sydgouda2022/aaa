@@ -29,7 +29,9 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check fonttools
           gzip -dc renpet/build-assets/style.css.gz > renpet/web/style.css
-          gzip -dc renpet/build-assets/data.json.gz > renpet/web/data.json
+          cat renpet/build-assets/data.part1 renpet/build-assets/data.part2 renpet/build-assets/data.part3 > /tmp/renpet-data.json.gz
+          gzip -t /tmp/renpet-data.json.gz
+          gzip -dc /tmp/renpet-data.json.gz > renpet/web/data.json
           python renpet/tools/make_numerals.py
           python - <<'PY'
           from pathlib import Path
