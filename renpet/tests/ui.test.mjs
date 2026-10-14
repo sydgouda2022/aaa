@@ -11,7 +11,6 @@ globalThis.document={
  documentElement:{lang:'ar',dir:'rtl'},
  body:{dataset:{}}
 };
-globalThis.navigator={};
 globalThis.fetch=async()=>({ok:true,json:async()=>JSON.parse(await readFile(new URL('../web/data.json',import.meta.url),'utf8'))});
 await import('../web/app.js');
 await new Promise(resolve=>setImmediate(resolve));
