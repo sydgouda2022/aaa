@@ -1,0 +1,49 @@
+/* Four genuinely different Renpet calendar layouts; no legacy year-month board. */
+main.renpet-views-active > :not(.renpet-view-controls):not(.renpet-view-panel):not([role="dialog"]):not(.modal):not(.sheet):not(form){display:none!important}
+.renpet-view-controls,.renpet-view-panel{box-sizing:border-box;max-width:920px;margin-inline:auto;width:100%}
+.renpet-view-controls{padding:12px 12px 4px}
+.renpet-view-switch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:4px;background:#eef1f7;border-radius:12px}
+.renpet-view-switch button{background:transparent;border:0;border-radius:9px;padding:10px 2px;font:600 .9rem system-ui,-apple-system,sans-serif;color:#47566e;cursor:pointer}
+.renpet-view-switch button.active{background:white;color:#1034A6;box-shadow:0 1px 5px #102d4c26}
+.renpet-view-navigation{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 10px}
+.renpet-view-navigation button{font-size:1.7rem;line-height:1;background:#f2f4f9;color:#1034A6;border:0;border-radius:12px;width:44px;height:44px;cursor:pointer}
+.renpet-view-title{font-size:1.1rem;text-align:center;color:#1a2943}
+.renpet-display-picker{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin:8px 0 14px;color:#5a6473;font-size:.86rem}
+.renpet-display-picker select{font:inherit;color:#1034A6;background:white;border:1px solid #d7deea;border-radius:10px;padding:7px}
+.renpet-view-panel{padding:0 12px 28px}
+.renpet-month-grid{border-radius:15px;overflow:hidden;border:1px solid #e4e8f0;background:white}
+.renpet-week-headers,.renpet-month-days{display:grid;grid-template-columns:repeat(var(--renpet-columns),minmax(0,1fr))}
+.renpet-week-headers span{text-align:center;background:#f5f7fb;color:#637087;font-size:.77rem;padding:9px 0}
+.renpet-month-cell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;min-height:76px;padding:8px 2px 5px;border:0;border-inline-end:1px solid #eef0f4;border-block-end:1px solid #eef0f4;background:#fff;color:#1a2943;cursor:pointer;overflow:hidden}
+.renpet-month-grid[style*="10"] .renpet-month-cell{min-height:63px}
+.renpet-month-cell.selected{background:#eaf0ff;box-shadow:inset 0 0 0 2px #1034A6}
+.renpet-month-cell.is-today .renpet-primary-day{color:#1034A6;font-weight:800}
+.renpet-month-cell small{font-size:.64rem;color:#778195}
+.renpet-primary-day{font-size:1rem;font-weight:650;line-height:1.3}
+.renpet-blank{background:#f7f8fa;min-height:63px}
+.renpet-glyph-number{display:inline-block;vertical-align:middle;max-width:100%;width:auto;height:1.12em}
+.renpet-dots{display:flex;gap:2px;justify-content:center;margin-top:4px}
+.renpet-dots i{width:5px;height:5px;border-radius:50%;display:block}
+.renpet-stacked-mark,.renpet-detailed-mark{display:flex;flex-direction:column;width:95%;overflow:hidden;gap:2px}
+.renpet-stacked-mark b,.renpet-detailed-mark b{font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;background:#e6ebf7;border-radius:3px}
+.renpet-festival-mark{position:absolute;top:1px;inset-inline-start:3px;color:#bf9336;font-size:.6rem}
+.renpet-week-strip{display:grid;grid-template-columns:repeat(var(--renpet-columns),minmax(0,1fr));gap:4px;margin:10px 0 22px}
+.renpet-week-day{border:1px solid #dce3ef;background:white;color:#24324a;border-radius:12px;padding:10px 1px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+.renpet-week-day.selected{background:#1034A6;color:white}
+.renpet-week-day small{font-size:.68rem}
+.renpet-week-day strong{font-size:1.2rem}
+.renpet-count{border-radius:12px;background:#c8a24a;color:#17243a;font-size:.67rem;padding:1px 6px}
+.renpet-date-heading{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;padding:15px 3px 8px;color:#1a2943}
+.renpet-date-heading strong{font-size:1.2rem}
+.renpet-date-heading>span{color:#1034A6}
+.renpet-date-heading small{flex-basis:100%;font-size:.85rem;color:#667187}
+.renpet-events-title{font-size:1rem;color:#29384d;margin:18px 0 12px}
+.renpet-appointment{display:flex;align-items:flex-start;gap:12px;border-inline-start:4px solid var(--event-color);padding:12px;margin:7px 0;border-radius:10px;background:#f6f8fb;color:#26354c;overflow:hidden}
+.renpet-event-time{min-width:65px;flex-shrink:0;font-size:.77rem;color:#536176}
+.renpet-event-body{min-width:0;display:flex;flex-direction:column;gap:4px}
+.renpet-event-body strong{font-size:.9rem;overflow-wrap:anywhere}
+.renpet-event-body small{font-size:.78rem;color:#6d7785}
+.renpet-empty{padding:30px 12px;text-align:center;color:#738094}
+.renpet-list-group{padding:0 0 16px;border-bottom:1px solid #e6eaf1}
+.renpet-list-group+.renpet-list-group{padding-top:10px}
+@media(max-width:420px){.renpet-month-cell{min-height:63px}.renpet-month-grid[style*="10"] .renpet-month-cell{min-height:52px}.renpet-month-cell small{font-size:.55rem}.renpet-stacked-mark b,.renpet-detailed-mark b{font-size:.51rem}.renpet-view-switch button{font-size:.78rem}}
