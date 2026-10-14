@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {dayNumber} from '../web/calendar.js';
 const handlers={};
-const root={innerHTML:'',addEventListener:(name,fn)=>{handlers[name]=fn;},querySelector:()=>null};
+const root={innerHTML:'',addEventListener:(name,fn)=>{(handlers[name]??=[]).push(fn);},querySelector:()=>null};
 const memory=new Map();
 globalThis.localStorage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
 globalThis.document={
@@ -20,13 +20,12 @@ assert.ok(root.innerHTML.includes('apple-bottom'),'Apple-style bottom bar must r
 assert.ok(!root.innerHTML.includes('Renpet:'),'App must not display runtime error');
 const click=(name,value)=>{
  const button={disabled:false,dataset:{[name.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:value},hasAttribute:k=>k===name};
- handlers.click({target:{closest:selector=>selector==='button'?button:null}});
+ for(const listener of handlers.click)listener({target:{closest:selector=>selector==='button'?button:null,stopImmediatePropagation(){},preventDefault(){}}});
 };
 assert.ok(root.innerHTML.includes('month-agenda'),'Month view must include selected-day agenda');
 click('data-date',String(dayNumber('2026-10-16')));
 assert.ok(root.innerHTML.includes('month-agenda'),'First date tap must select, not navigate');
 click('data-date',String(dayNumber('2026-10-16')));
-console.log('AFTER SECOND TAP',root.innerHTML.slice(0,650));
 assert.ok(root.innerHTML.includes('timeline-hour'),'Second date tap opens day timeline');
 click('data-back','');
 assert.ok(root.innerHTML.includes('month-agenda'),'Back from day returns to month');
@@ -38,7 +37,7 @@ click('data-more','');
 assert.ok(root.innerHTML.includes('more-sheet'),'More opens secondary destinations');
 click('data-tab','settings');
 assert.ok(root.innerHTML.includes('settings-group'),'Settings view must render');
-handlers.change({target:{name:'language',value:'cop'}});
+for(const listener of handlers.change)listener({target:{name:'language',value:'cop'}});
 assert.equal(document.body.dataset.language,'cop');
 click('data-tab','calendar');
 click('data-new','');
