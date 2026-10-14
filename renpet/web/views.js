@@ -46,7 +46,7 @@ function getItems(day){
   const state=loadScheduler();
   try { const visible=new Set(state.calendars.filter(c=>c.visible!==false).map(c=>c.id)); return state.items.filter(i=>visible.has(i.calendarId)&&occursOn(i,day,data.years)).sort((a,b)=>a.startMinutes-b.startMinutes); } catch { return []; }
 }
-function itemColor(item){const state=loadScheduler();return state.calendars.find(c=>c.id===item.calendarId)?.color||'#1034A6';}
+function itemColor(item){const state=loadScheduler();return state.calendars.find(c=>c.id===item.calendarId)?.color||'#187568';}
 function itemClock(item){
   if(item.allDay)return t().allDay;
   const n=item.startMinutes||0;

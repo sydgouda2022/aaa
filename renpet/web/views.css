@@ -114,3 +114,7 @@ main.renpet-views-active[data-renpet-view="month"] .renpet-view-panel{padding-in
 .renpet-appointment{box-sizing:border-box;width:100%;font-family:inherit;text-align:start;cursor:pointer}
 .renpet-appointment:focus-visible{outline:2px solid var(--renpet-nile);outline-offset:-2px}
 .renpet-delete-event{border:0;border-radius:10px;background:#fff;color:#c83232;min-height:44px;font-size:16px;font-weight:600;cursor:pointer}
+
+/* Mirror the iPhone toolbar naturally for Arabic right-to-left reading. */
+html[dir="rtl"] .renpet-apple-topbar{direction:rtl}
+html[dir="rtl"] .renpet-year-back svg{transform:scaleX(-1)}
