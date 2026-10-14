@@ -46,7 +46,7 @@ jobs:
           rm -f renpet/web/assets/fonts/Egyptian.ttf
           sed -i "/@font-face{font-family:Egyptian;/d" renpet/web/style.css
           # Nile-green theme across the native shell and appointment manager.
-          sed -i 's/#1034A6/#187568/g' renpet/web/manifest.webmanifest renpet/web/style.css renpet/web/scheduler.css renpet/web/scheduler.js renpet/web/app.js
+          sed -i 's/#1034A6/#187568/g' renpet/web/manifest.webmanifest renpet/web/index.html renpet/web/style.css renpet/web/scheduler.css renpet/web/scheduler.js renpet/web/app.js renpet/web/backup.css
           python renpet/tools/make_numerals.py
           python - <<'PY'
           from pathlib import Path
