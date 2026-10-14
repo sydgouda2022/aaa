@@ -14,6 +14,7 @@ globalThis.document={
 globalThis.fetch=async()=>({ok:true,json:async()=>JSON.parse(await readFile(new URL('../web/data.json',import.meta.url),'utf8'))});
 await import('../web/app.js');
 await new Promise(resolve=>setImmediate(resolve));
+console.log('Initial UI:',root.innerHTML.slice(0,300));
 assert.ok(root.innerHTML.includes('month-section'),'Month view must render');
 assert.ok(!root.innerHTML.includes('year-grid'),'Legacy year grid must not render');
 assert.ok(!root.innerHTML.includes('Renpet:'),'App must not display runtime error');
