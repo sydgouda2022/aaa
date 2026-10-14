@@ -1,4 +1,4 @@
-name: Deploy Renpet 0.5.0 to Cloudflare
+name: Deploy Renpet 0.6.0 to Cloudflare
 on:
   push:
     paths:
@@ -25,19 +25,20 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-      - name: Apply Renpet 0.5.0 scheduler UI
+      - name: Apply Renpet 0.6.0 scheduler UI
         run: |
           cat renpet/build-assets/v050/chunk* > /tmp/renpet-v050.b64
           base64 -d /tmp/renpet-v050.b64 > /tmp/renpet-v050.tar.gz
           gzip -t /tmp/renpet-v050.tar.gz
           tar -xzf /tmp/renpet-v050.tar.gz -C renpet
+          python renpet/tools/enable_backup.py
       - name: Rebuild packaged assets
         run: |
           gzip -dc renpet/build-assets/style.css.gz > renpet/web/style.css
           cat renpet/build-assets/data.part1 renpet/build-assets/data.part2 renpet/build-assets/data.part3 > /tmp/renpet-data.json.gz
           gzip -t /tmp/renpet-data.json.gz
           gzip -dc /tmp/renpet-data.json.gz > renpet/web/data.json
-          sed -i 's/"version":"0.3.0"/"version":"0.5.0"/' renpet/web/data.json
+          sed -i 's/"version":"0.3.0"/"version":"0.6.0"/' renpet/web/data.json
           # The UI's numeric hieroglyphs are self-contained SVG outlines.
           # Remove the temporary test subset font and use platform fallback for
           # non-numeric hieroglyphic labels in this test deployment.
@@ -54,7 +55,7 @@ jobs:
               if p.is_file() and p.name not in {'sw.js','_headers'}:
                   files.append('./'+p.relative_to(root).as_posix())
           stamp=hashlib.sha256('\n'.join(files).encode()).hexdigest()[:12]
-          sw=f"""const CACHE='renpet-0.5.0-{stamp}';
+          sw=f"""const CACHE='renpet-0.6.0-{stamp}';
           const ASSETS={json.dumps(files,separators=(',',':'))};
           self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
           self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('renpet-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
@@ -69,6 +70,9 @@ jobs:
           node --check renpet/web/calendar.js
           node --check renpet/web/locales.js
           node --check renpet/web/scheduler.js
+          node --check renpet/web/backup.js
+          node --check renpet/web/backup-core.mjs
+          node renpet/tests/backup.test.mjs
           node --check renpet/web/sw.js
           node renpet/tests/scheduler.test.mjs
           test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 333
@@ -77,11 +81,12 @@ jobs:
           grep -q 'search-query' renpet/web/app.js
           grep -q 'calendar-manager' renpet/web/scheduler.css
           grep -q 'createCalendar' renpet/web/scheduler.js
+          grep -q 'backup.js' renpet/web/index.html
           grep -q '"name":"Renpet"' renpet/web/manifest.webmanifest
           python - <<'PY'
           import json
           d=json.load(open('renpet/web/data.json',encoding='utf-8'))
-          assert d['version']=='0.5.0'
+          assert d['version']=='0.6.0'
           assert d['min_date']=='1900-01-01'
           assert d['max_date']=='2200-12-31'
           assert d['years'][0]['year']==6155 and d['years'][-1]['year']==6457
@@ -115,6 +120,7 @@ jobs:
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
               && curl -fsSL --max-time 20 "$BASE/scheduler.css" -o /tmp/renpet-scheduler-css \
               && curl -fsSL --max-time 20 "$BASE/app.js" -o /tmp/renpet-app \
+              && curl -fsSL --max-time 20 "$BASE/backup.js" -o /tmp/renpet-backup \
               && grep -q '<title>Renpet</title>' /tmp/renpet-index \
               && grep -q '"version":"0.5.0"' /tmp/renpet-data \
               && grep -q '<svg' /tmp/renpet-numeral \
@@ -123,8 +129,10 @@ jobs:
               && grep -q 'renpet.scheduler.v1' /tmp/renpet-scheduler \
               && grep -q 'createCalendar' /tmp/renpet-scheduler \
               && grep -q 'calendar-manager' /tmp/renpet-scheduler-css \
-              && grep -q 'search-query' /tmp/renpet-app; then
-              echo "Renpet 0.5.0 live at $BASE"
+              && grep -q 'search-query' /tmp/renpet-app \
+              && grep -q 'parseBackup' /tmp/renpet-backup \
+              && grep -q 'backup.js' /tmp/renpet-index; then
+              echo "Renpet 0.6.0 live at $BASE"
               exit 0
             fi
             echo "Waiting for Cloudflare asset propagation (attempt $i)..."

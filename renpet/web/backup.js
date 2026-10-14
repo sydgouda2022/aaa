@@ -1,0 +1,98 @@
+import { createBackup, parseBackup, restoreBackup } from './backup-core.mjs';
+
+// Backup and restore work entirely on the user's device. No account or upload.
+const root = document.querySelector('#app');
+const words = {
+  ar: { trigger:'النسخ الاحتياطي', title:'بيانات رنبت', info:'احتفظ بنسخة من مواعيدك وتقاويمك وإعداداتك على جهازك. لا تُرسل أي بيانات إلى الإنترنت.', export:'تصدير نسخة', import:'استعادة نسخة', close:'إغلاق', confirm:'استعادة النسخة ستستبدل البيانات الموجودة من نفس النوع. هل تريد المتابعة؟', done:'تمت استعادة البيانات. سيُعاد تحميل رنبت.', empty:'لا توجد بيانات محفوظة للتصدير.' },
+  cop: { trigger:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', title:'Ⲣⲉⲛⲡⲉⲧ · ⲇⲉⲇⲟⲙⲉⲛⲁ', info:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ ⲉ̀ⲡⲉⲕⲥⲱⲙⲁ. Ⲙ̀ⲙⲟⲛ ⲟⲩⲱⲣⲡ ⲉ̀ⲡⲓⲓⲛⲧⲉⲣⲛⲉⲧ.', export:'Ⲥⲱⲧⲡ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', import:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', close:'Ϣⲧⲁⲙ', confirm:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ?', done:'Ⲁⲩⲧⲁϩⲟ ⲛ̀ⲛⲓⲇⲉⲇⲟⲙⲉⲛⲁ.', empty:'Ⲙ̀ⲙⲟⲛ ⲇⲉⲇⲟⲙⲉⲛⲁ.' },
+  egy: { trigger:'𓏞 𓂋𓏤', title:'𓆳𓏏𓏤 · 𓏞', info:'𓏞 · 𓂋𓏤𓈖𓆎𓏏𓊖', export:'𓏞 ↓', import:'𓏞 ↑', close:'𓐍𓏏𓅓', confirm:'𓏞 ↑ ?', done:'𓏞 ✓', empty:'𓏞 —' }
+};
+const lang = () => words[document.body.dataset.language] ? document.body.dataset.language : 'ar';
+const tr = () => words[lang()];
+let dialog = null;
+let lastFocus = null;
+function close() {
+  if (!dialog) return;
+  dialog.remove();
+  dialog = null;
+  if (lastFocus?.isConnected) lastFocus.focus();
+}
+function download(text, filename) {
+  const url = URL.createObjectURL(new Blob([text], { type:'application/json;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+function exportData() {
+  try {
+    const stamp = new Date().toISOString().slice(0, 10);
+    download(createBackup(localStorage), 'renpet-backup-' + stamp + '.json');
+  } catch (error) { window.alert(error.message || tr().empty); }
+}
+async function importData() {
+  const picker = document.createElement('input');
+  picker.type = 'file'; picker.accept = '.json,application/json';
+  picker.addEventListener('change', async () => {
+    const file = picker.files?.[0];
+    if (!file) return;
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('Backup file is too large');
+      const parsed = parseBackup(await file.text());
+      if (!window.confirm(tr().confirm)) return;
+      // Save the existing state first, so replacing it can be reversed.
+      try { download(createBackup(localStorage), 'renpet-before-restore-' + new Date().toISOString().slice(0,10) + '.json'); }
+      catch { /* A new installation may not yet have anything to preserve. */ }
+      restoreBackup(localStorage, parsed);
+      window.alert(tr().done);
+      window.location.reload();
+    } catch (error) { window.alert(error.message || 'Backup restore failed'); }
+  }, { once:true });
+  picker.click();
+}
+function open() {
+  if (dialog) return;
+  lastFocus = document.activeElement;
+  const t = tr();
+  dialog = document.createElement('div');
+  dialog.className = 'renpet-backup-overlay';
+  dialog.innerHTML = `<section class="renpet-backup-panel" role="dialog" aria-modal="true" aria-labelledby="renpet-backup-heading">
+    <div class="renpet-backup-head"><h2 id="renpet-backup-heading"></h2><button type="button" data-backup="close" class="renpet-backup-close" aria-label=""></button></div>
+    <p class="renpet-backup-info"></p>
+    <button type="button" data-backup="export" class="renpet-backup-action"></button>
+    <button type="button" data-backup="import" class="renpet-backup-action secondary"></button>
+  </section>`;
+  dialog.querySelector('h2').textContent = t.title;
+  dialog.querySelector('.renpet-backup-info').textContent = t.info;
+  dialog.querySelector('[data-backup="close"]').textContent = '×';
+  dialog.querySelector('[data-backup="close"]').setAttribute('aria-label', t.close);
+  dialog.querySelector('[data-backup="export"]').textContent = t.export;
+  dialog.querySelector('[data-backup="import"]').textContent = t.import;
+  dialog.dir = lang() === 'ar' ? 'rtl' : 'ltr';
+  dialog.addEventListener('click', event => {
+    const action = event.target.closest('[data-backup]')?.dataset.backup;
+    if (action === 'close' || event.target === dialog) close();
+    else if (action === 'export') exportData();
+    else if (action === 'import') importData();
+  });
+  document.body.append(dialog);
+  dialog.querySelector('[data-backup="close"]').focus();
+}
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && dialog) close(); });
+function ensureTrigger() {
+  const top = root?.querySelector('header.top');
+  if (!top || top.querySelector('[data-renpet-backup]')) return;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'renpet-backup-trigger';
+  b.dataset.renpetBackup = '1';
+  b.setAttribute('aria-label', tr().trigger);
+  b.title = tr().trigger;
+  b.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg>';
+  b.addEventListener('click', open);
+  top.append(b);
+}
+if (root) {
+  new MutationObserver(ensureTrigger).observe(root, { childList:true });
+  ensureTrigger();
+}
