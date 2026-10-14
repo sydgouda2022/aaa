@@ -43,6 +43,7 @@ jobs:
           # non-numeric hieroglyphic labels in this test deployment.
           rm -f renpet/web/assets/fonts/Egyptian.ttf
           sed -i "/@font-face{font-family:Egyptian;/d" renpet/web/style.css
+          sed -i 's/#187568/#1034A6/g' renpet/web/manifest.webmanifest
           python renpet/tools/make_numerals.py
           python - <<'PY'
           from pathlib import Path
@@ -53,7 +54,7 @@ jobs:
               if p.is_file() and p.name not in {'sw.js','_headers'}:
                   files.append('./'+p.relative_to(root).as_posix())
           stamp=hashlib.sha256('\n'.join(files).encode()).hexdigest()[:12]
-          sw=f"""const CACHE='renpet-0.3.0-{stamp}';
+          sw=f"""const CACHE='renpet-0.5.0-{stamp}';
           const ASSETS={json.dumps(files,separators=(',',':'))};
           self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
           self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('renpet-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
@@ -106,18 +107,27 @@ jobs:
       - name: Smoke test production
         run: |
           BASE="https://renpet.sydgouda.workers.dev"
-          for i in 1 2 3 4 5 6; do
-            if curl -fsSL --max-time 20 "$BASE/" | grep -q '<title>Renpet</title>'; then
-              curl -fsSL --max-time 20 "$BASE/data.json" | grep -q '"min_date"'
-              curl -fsSL --max-time 20 "$BASE/assets/numerals/6282.svg" | grep -q '<svg'
-              curl -fsSL --max-time 20 "$BASE/manifest.webmanifest" | grep -q '"Renpet"'
-              curl -fsSL --max-time 20 "$BASE/scheduler.js" | grep -q 'renpet.scheduler.v1'
-              curl -fsSL --max-time 20 "$BASE/scheduler.css" | grep -q 'calendar-manager'
-              curl -fsSL --max-time 20 "$BASE/app.js" | grep -q 'search-query'
-              curl -fsSL --max-time 20 "$BASE/scheduler.js" | grep -q 'createCalendar'
-              echo "Renpet live at $BASE"
+          for i in 1 2 3 4 5 6 7 8; do
+            if curl -fsSL --max-time 20 "$BASE/" -o /tmp/renpet-index \
+              && curl -fsSL --max-time 20 "$BASE/data.json" -o /tmp/renpet-data \
+              && curl -fsSL --max-time 20 "$BASE/assets/numerals/6282.svg" -o /tmp/renpet-numeral \
+              && curl -fsSL --max-time 20 "$BASE/manifest.webmanifest" -o /tmp/renpet-manifest \
+              && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
+              && curl -fsSL --max-time 20 "$BASE/scheduler.css" -o /tmp/renpet-scheduler-css \
+              && curl -fsSL --max-time 20 "$BASE/app.js" -o /tmp/renpet-app \
+              && grep -q '<title>Renpet</title>' /tmp/renpet-index \
+              && grep -q '"version":"0.5.0"' /tmp/renpet-data \
+              && grep -q '<svg' /tmp/renpet-numeral \
+              && grep -q '"Renpet"' /tmp/renpet-manifest \
+              && grep -q '#1034A6' /tmp/renpet-manifest \
+              && grep -q 'renpet.scheduler.v1' /tmp/renpet-scheduler \
+              && grep -q 'createCalendar' /tmp/renpet-scheduler \
+              && grep -q 'calendar-manager' /tmp/renpet-scheduler-css \
+              && grep -q 'search-query' /tmp/renpet-app; then
+              echo "Renpet 0.5.0 live at $BASE"
               exit 0
             fi
+            echo "Waiting for Cloudflare asset propagation (attempt $i)..."
             sleep 6
           done
           echo "::error::Renpet Worker deployment did not pass public smoke test."
