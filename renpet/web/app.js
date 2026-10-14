@@ -21,7 +21,7 @@ const week=()=>[7,10].includes(prefs.weeks[lang()])?prefs.weeks[lang()]:(lang()=
 const min=()=>dayNumber(data.min_date),max=()=>dayNumber(data.max_date),clamp=d=>Math.min(max(),Math.max(min(),d));
 const savePrefs=()=>{try{localStorage.setItem(SETTINGS,JSON.stringify(prefs));}catch{}};
 const saveView=()=>{try{localStorage.setItem(VIEWS,JSON.stringify({view:state.view,display:state.display}));}catch{}};
-const egypt=d=>toEgyptian(d,data.years);
+const egy=d=>toEgyptian(d,data.years);
 const monthName=m=>m===13?LOCALES[lang()].epagomenal:lang()==='egy'?('𓇹 '+N(m)):data.months[lang()][m-1];
 const numHtml=n=>lang()==='egy'?'<img class="glyph" src="assets/numerals/'+n+'.svg" alt="'+safe(N(n))+'">':safe(N(n));
 const greg=(d,opts={day:'numeric',month:'short'})=>new Intl.DateTimeFormat(lang()==='ar'?'ar-EG-u-nu-arab':'en-GB',{...opts,timeZone:'UTC'}).format(new Date(d*DAY));
