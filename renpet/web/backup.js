@@ -3,7 +3,6 @@ import { exportICS } from './ics-core.mjs';
 import { occursOn, loadScheduler } from './scheduler.js';
 
 // Backup and restore work entirely on the user's device. No account or upload.
-const root = document.querySelector('#app');
 const words = {
   ar: { trigger:'النسخ الاحتياطي', title:'بيانات رنبت', info:'احتفظ بنسخة من مواعيدك وتقاويمك وإعداداتك على جهازك. لا تُرسل أي بيانات إلى الإنترنت.', export:'تصدير نسخة', ics:'تصدير إلى Apple / Google Calendar', import:'استعادة نسخة', close:'إغلاق', confirm:'استعادة النسخة ستستبدل البيانات الموجودة من نفس النوع. هل تريد المتابعة؟', done:'تمت استعادة البيانات. سيُعاد تحميل رنبت.', empty:'لا توجد بيانات محفوظة للتصدير.' },
   cop: { trigger:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', title:'Ⲣⲉⲛⲡⲉⲧ · ⲇⲉⲇⲟⲙⲉⲛⲁ', info:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ ⲉ̀ⲡⲉⲕⲥⲱⲙⲁ. Ⲙ̀ⲙⲟⲛ ⲟⲩⲱⲣⲡ ⲉ̀ⲡⲓⲓⲛⲧⲉⲣⲛⲉⲧ.', export:'Ⲥⲱⲧⲡ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', ics:'ICS · Apple / Google Calendar', import:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', close:'Ϣⲧⲁⲙ', confirm:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ?', done:'Ⲁⲩⲧⲁϩⲟ ⲛ̀ⲛⲓⲇⲉⲇⲟⲙⲉⲛⲁ.', empty:'Ⲙ̀ⲙⲟⲛ ⲇⲉⲇⲟⲙⲉⲛⲁ.' },
@@ -96,20 +95,4 @@ function open() {
   dialog.querySelector('[data-backup="close"]').focus();
 }
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && dialog) close(); });
-function ensureTrigger() {
-  const top = root?.querySelector('header.top');
-  if (!top || top.querySelector('[data-renpet-backup]')) return;
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.className = 'renpet-backup-trigger';
-  b.dataset.renpetBackup = '1';
-  b.setAttribute('aria-label', tr().trigger);
-  b.title = tr().trigger;
-  b.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg>';
-  b.addEventListener('click', open);
-  top.append(b);
-}
-if (root) {
-  new MutationObserver(ensureTrigger).observe(root, { childList:true });
-  ensureTrigger();
-}
+export function openBackup(){open();}

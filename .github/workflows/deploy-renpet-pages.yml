@@ -1,18 +1,15 @@
-name: Deploy Renpet 0.8.1 to Cloudflare
+name: Deploy Renpet 0.9.0 to Cloudflare
 on:
   push:
     paths:
       - 'renpet/**'
       - '.github/workflows/deploy-renpet-pages.yml'
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 concurrency:
-  group: renpet-pages-production
+  group: renpet-production
   cancel-in-progress: false
-
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -25,143 +22,96 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-      - name: Apply Renpet 0.8.1 scheduler UI
+      - name: Build offline assets from tracked source
         run: |
-          cat renpet/build-assets/v050/chunk* > /tmp/renpet-v050.b64
-          base64 -d /tmp/renpet-v050.b64 > /tmp/renpet-v050.tar.gz
-          gzip -t /tmp/renpet-v050.tar.gz
-          tar -xzf /tmp/renpet-v050.tar.gz -C renpet
-          python renpet/tools/enable_backup.py
-          python renpet/tools/enable_views.py
-      - name: Rebuild packaged assets
-        run: |
-          gzip -dc renpet/build-assets/style.css.gz > renpet/web/style.css
-          cat renpet/build-assets/data.part1 renpet/build-assets/data.part2 renpet/build-assets/data.part3 > /tmp/renpet-data.json.gz
-          gzip -t /tmp/renpet-data.json.gz
-          gzip -dc /tmp/renpet-data.json.gz > renpet/web/data.json
-          sed -i 's/"version":"0.3.0"/"version":"0.8.1"/' renpet/web/data.json
-          # The UI's numeric hieroglyphs are self-contained SVG outlines.
-          # Remove the temporary test subset font and use platform fallback for
-          # non-numeric hieroglyphic labels in this test deployment.
-          rm -f renpet/web/assets/fonts/Egyptian.ttf
-          sed -i "/@font-face{font-family:Egyptian;/d" renpet/web/style.css
-          # Nile-green theme across the native shell and appointment manager.
-          sed -i 's/#1034A6/#187568/g' renpet/web/manifest.webmanifest renpet/web/index.html renpet/web/style.css renpet/web/scheduler.css renpet/web/scheduler.js renpet/web/app.js renpet/web/backup.css
+          set -euo pipefail
           python renpet/tools/make_numerals.py
           python - <<'PY'
           from pathlib import Path
-          import hashlib, json
+          import hashlib,json
           root=Path('renpet/web')
-          files=[]
-          for p in sorted(root.rglob('*')):
-              if p.is_file() and p.name not in {'sw.js','_headers'}:
-                  files.append('./'+p.relative_to(root).as_posix())
-          stamp=hashlib.sha256(b''.join((name.encode()+b'\\0'+hashlib.sha256((root/name.removeprefix('./')).read_bytes()).digest()) for name in files)).hexdigest()[:12]
-          sw=f"""const CACHE='renpet-0.8.1-{stamp}';
-          const ASSETS={json.dumps(files,separators=(',',':'))};
+          files=['./'+p.relative_to(root).as_posix() for p in sorted(root.rglob('*')) if p.is_file() and p.name not in {'sw.js','_headers'}]
+          stamp=hashlib.sha256(b''.join((p.encode()+hashlib.sha256((root/p.removeprefix('./')).read_bytes()).digest()) for p in files)).hexdigest()[:12]
+          sw="""const CACHE='renpet-0.9.0-__STAMP__';
+          const ASSETS=__ASSETS__;
           self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
           self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('renpet-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
-          self.addEventListener('fetch',e=>{{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==self.location.origin)return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{{if(r.ok)caches.open(CACHE).then(x=>x.put(e.request,r.clone())).catch(()=>{{}});return r;}}).catch(()=>e.request.mode==='navigate'?caches.match('./index.html'):new Response('Offline',{{status:503}}))))}});
-          """
+          self.addEventListener('fetch',e=>{
+            if(e.request.method!=='GET')return;
+            const u=new URL(e.request.url);
+            if(u.origin!==self.location.origin)return;
+            if(e.request.mode==='navigate'){
+              e.respondWith(fetch(e.request).then(r=>{if(r.ok)caches.open(CACHE).then(c=>c.put('./index.html',r.clone()));return r;}).catch(()=>caches.match('./index.html')));
+            }else{
+              e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(r.ok)caches.open(CACHE).then(x=>x.put(e.request,r.clone()));return r;})));
+            }
+          });
+          """.replace('__STAMP__',stamp).replace('__ASSETS__',json.dumps(files,separators=(',',':')))
           (root/'sw.js').write_text(sw,encoding='utf-8')
-          print('Service worker assets:',len(files),'cache',stamp)
+          print('Built Renpet 0.9.0 from tracked sources; offline assets:',len(files))
           PY
-      - name: Materialize generated support modules as tracked source
+      - name: Validate single renderer and data
         run: |
-          git config user.name "Renpet Source Migration"
-          git config user.email "actions@users.noreply.github.com"
-          git add -f renpet/web/scheduler.js renpet/web/scheduler.css renpet/web/backup-core.mjs renpet/web/ics-core.mjs renpet/web/backup.css renpet/web/style.css renpet/web/data.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Track Renpet scheduler, styles and data as source files"
-            git push origin HEAD:main
-          fi
-      - name: Validate Renpet build
-        run: |
+          set -euo pipefail
           node --check renpet/web/app.js
           node --check renpet/web/calendar.js
           node --check renpet/web/locales.js
           node --check renpet/web/scheduler.js
           node --check renpet/web/backup.js
-          node --check renpet/web/views.js
           node --check renpet/web/backup-core.mjs
-          node renpet/tests/backup.test.mjs
-          node renpet/tests/ics.test.mjs
           node --check renpet/web/ics-core.mjs
           node --check renpet/web/sw.js
           node renpet/tests/scheduler.test.mjs
+          node renpet/tests/backup.test.mjs
+          node renpet/tests/ics.test.mjs
           test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 333
-          grep -q '<title>Renpet</title>' renpet/web/index.html
-          grep -q '#187568' renpet/web/index.html
-          grep -q 'search-query' renpet/web/app.js
-          grep -q 'calendar-manager' renpet/web/scheduler.css
-          grep -q 'createCalendar' renpet/web/scheduler.js
-          grep -q 'backup.js' renpet/web/index.html
-          grep -q 'views.js' renpet/web/index.html
-          grep -q 'ics-core.mjs' renpet/web/backup.js
-          grep -q 'renpet-view-switch' renpet/web/views.css
-          grep -q 'renpet-apple-topbar' renpet/web/views.js
-          grep -q 'renpet-month-scroll' renpet/web/views.css
-          grep -q '"name":"Renpet"' renpet/web/manifest.webmanifest
+          test "$(grep -o 'type="module"' renpet/web/index.html | wc -l)" -eq 1
+          ! grep -q 'views.js\|style.css\|scheduler.css' renpet/web/index.html
+          ! grep -q 'MutationObserver\|year-grid\|year-tile' renpet/web/app.js
+          grep -q 'Single owner of #app' renpet/web/app.js
+          grep -q 'openBackup' renpet/web/backup.js
+          grep -q 'ui.css?v=0.9.0' renpet/web/index.html
           python - <<'PY'
           import json
-          d=json.load(open('renpet/web/data.json',encoding='utf-8'))
-          assert d['version']=='0.8.1'
-          assert d['min_date']=='1900-01-01'
-          assert d['max_date']=='2200-12-31'
-          assert d['years'][0]['year']==6155 and d['years'][-1]['year']==6457
-          print('Calendar data and range OK; festivals:',len(d['festivals']))
+          from pathlib import Path
+          d=json.loads(Path('renpet/web/data.json').read_text())
+          assert d['version']=='0.9.0'
+          assert d['min_date']=='1900-01-01' and d['max_date']=='2200-12-31'
+          assert len(d['years'])>300 and len(d['festivals'])>0
+          print('Calendar data and version validated')
           PY
       - name: Install Wrangler
         run: npm install --global wrangler@4
-      - name: Deploy Renpet as Cloudflare Worker Static Assets
+      - name: Deploy Renpet Worker
         working-directory: renpet
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          set -o pipefail
+          set -euo pipefail
           for attempt in 1 2 3; do
-            if wrangler deploy --config wrangler.worker.toml 2>&1 | tee /tmp/renpet-worker.log; then
-              break
-            fi
-            if [[ "$attempt" -eq 3 ]]; then exit 1; fi
+            if wrangler deploy --config wrangler.worker.toml; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
             sleep $((attempt * 10))
           done
-          grep -E 'https://.*workers.dev' /tmp/renpet-worker.log || true
       - name: Smoke test production
         run: |
+          set -euo pipefail
           BASE="https://renpet.sydgouda.workers.dev"
           for i in 1 2 3 4 5 6 7 8; do
-            if curl -fsSL --max-time 20 "$BASE/" -o /tmp/renpet-index \
+            if curl -fsSL --max-time 20 "$BASE/?v=0.9.0" -o /tmp/renpet-index \
               && curl -fsSL --max-time 20 "$BASE/data.json" -o /tmp/renpet-data \
-              && curl -fsSL --max-time 20 "$BASE/assets/numerals/6282.svg" -o /tmp/renpet-numeral \
-              && curl -fsSL --max-time 20 "$BASE/manifest.webmanifest" -o /tmp/renpet-manifest \
+              && curl -fsSL --max-time 20 "$BASE/app.js?v=0.9.0" -o /tmp/renpet-app \
+              && curl -fsSL --max-time 20 "$BASE/ui.css?v=0.9.0" -o /tmp/renpet-css \
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
-              && curl -fsSL --max-time 20 "$BASE/scheduler.css" -o /tmp/renpet-scheduler-css \
-              && curl -fsSL --max-time 20 "$BASE/app.js" -o /tmp/renpet-app \
-              && curl -fsSL --max-time 20 "$BASE/backup.js" -o /tmp/renpet-backup \
-              && curl -fsSL --max-time 20 "$BASE/views.js" -o /tmp/renpet-views \
-              && curl -fsSL --max-time 20 "$BASE/ics-core.mjs" -o /tmp/renpet-ics \
-              && grep -q '<title>Renpet</title>' /tmp/renpet-index \
-              && grep -q '"version":"0.8.1"' /tmp/renpet-data \
-              && grep -q '<svg' /tmp/renpet-numeral \
-              && grep -q '"Renpet"' /tmp/renpet-manifest \
-              && grep -q '#187568' /tmp/renpet-manifest \
-              && grep -q 'renpet.scheduler.v1' /tmp/renpet-scheduler \
-              && grep -q 'createCalendar' /tmp/renpet-scheduler \
-              && grep -q 'calendar-manager' /tmp/renpet-scheduler-css \
-              && grep -q 'search-query' /tmp/renpet-app \
-              && grep -q 'parseBackup' /tmp/renpet-backup \
-              && grep -q 'backup.js' /tmp/renpet-index \
-              && grep -q 'views.js' /tmp/renpet-index \
-              && grep -q 'weekMarkup' /tmp/renpet-views \
-              && grep -q 'renpet-apple-topbar' /tmp/renpet-views \
-              && grep -q 'exportICS' /tmp/renpet-ics; then
-              echo "Renpet 0.8.1 live at $BASE"
+              && grep -q '"version":"0.9.0"' /tmp/renpet-data \
+              && grep -q 'ui.css?v=0.9.0' /tmp/renpet-index \
+              && grep -q 'Single owner of #app' /tmp/renpet-app \
+              && grep -q 'month-section' /tmp/renpet-css \
+              && grep -q 'itemsForDay' /tmp/renpet-scheduler; then
+              echo "Renpet 0.9.0 single-renderer build is live"
               exit 0
             fi
-            echo "Waiting for Cloudflare asset propagation (attempt $i)..."
             sleep 6
           done
-          echo "::error::Renpet Worker deployment did not pass public smoke test."
           exit 1

@@ -1,155 +1,161 @@
-import {DAY,dayNumber,isoDate,toEgyptian,toGregorian,nativeNumber,monthGrid,festivalHits} from './calendar.js';
+import {DAY,dayNumber,isoDate,toEgyptian,toGregorian,monthGrid,festivalHits,nativeNumber} from './calendar.js';
 import {LOCALES} from './locales.js';
+import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
+import {openBackup} from './backup.js';
 
-const root=document.querySelector('#app');
-const STORE='renpet.settings.v1';
-let data,selected,viewYear,viewMonth,tab='calendar',mode='month',openedFestival=null;
-let prefs={language:'ar',gregorian:true,festivals:true,weeks:{}};
-try{
- const saved=JSON.parse(localStorage.getItem(STORE)||'null');
- if(saved&&LOCALES[saved.language]){
-  prefs.language=saved.language;
-  for(const key of ['gregorian','festivals'])if(typeof saved[key]==='boolean')prefs[key]=saved[key];
-  for(const lang of Object.keys(LOCALES))if([7,10].includes(saved.weeks?.[lang]))prefs.weeks[lang]=saved.weeks[lang];
- }
-}catch{/* A restricted browser can still use Renpet in-memory. */}
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const lang=()=>prefs.language,L=()=>LOCALES[lang()];
-const week=()=>prefs.weeks[lang()]||(lang()==='ar'?7:10);
-const num=n=>nativeNumber(n,lang());
-const save=()=>{try{localStorage.setItem(STORE,JSON.stringify(prefs));}catch{}};
-const today=()=>{const d=new Date();return dayNumber(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);};
-const min=()=>dayNumber(data.min_date),max=()=>dayNumber(data.max_date);
-const clamp=d=>Math.max(min(),Math.min(max(),d));
-const icon=name=>{
- const shapes={calendar:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18M8 14h1M15 14h1M8 17h1M15 17h1"/>',star:'<path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2L12 17.3l-5.7 2.9 1.1-6.2L2.9 9.6l6.3-.9Z"/>',settings:'<path d="m9.5 3-.6 2.4-2 .9-2.1-.7-2 3.4 1.7 1.8v2.4L2.8 15l2 3.4 2.1-.7 2 .9.6 2.4h5l.6-2.4 2-.9 2.1.7 2-3.4-1.7-1.8v-2.4l1.7-1.8-2-3.4-2.1.7-2-.9L14.5 3Z"/><circle cx="12" cy="12" r="3"/>',left:'<path d="m14 5-7 7 7 7"/>',right:'<path d="m10 5 7 7-7 7"/>'};
- return `<svg viewBox="0 0 24 24" aria-hidden="true" class="${['left','right'].includes(name)?'directional':''}">${shapes[name]}</svg>`;
+// Single owner of #app. No observers, shadow views, patched DOM or legacy year board.
+const root=document.querySelector('#app'), SETTINGS='renpet.settings.v1', VIEWS='renpet.view.v3';
+const copy=()=>JSON.parse(JSON.stringify(loadScheduler()));
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>{const d=new Date();return dayNumber([d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'));};
+const WORDS={
+ ar:{day:'يوم',week:'أسبوع',month:'شهر',list:'قائمة',today:'اليوم',calendar:'التقويم',calendars:'التقاويم',festivals:'الأعياد',settings:'الإعدادات',search:'بحث',add:'إضافة',event:'موعد',reminder:'تذكير',title:'العنوان',location:'المكان',notes:'ملاحظات',date:'التاريخ المصري',start:'البداية',end:'النهاية',allDay:'طوال اليوم',repeat:'التكرار',alert:'التنبيه',none:'بدون',daily:'يومي',weekly:'أسبوعي',decan:'كل ١٠ أيام',monthly:'شهري مصري',yearly:'سنوي مصري',save:'حفظ',cancel:'إلغاء',delete:'حذف',confirm:'حذف هذا الموعد؟',noEvents:'لا توجد مواعيد',language:'اللغة',gregorian:'إظهار التاريخ الميلادي',festivalSetting:'إظهار الأعياد المصرية',weekLength:'أيام الأسبوع',backup:'النسخ الاحتياطي وتصدير ICS',manage:'إدارة التقاويم',newCalendar:'تقويم جديد',name:'الاسم',color:'اللون',show:'إظهار',hide:'إخفاء',done:'تم',view:'طريقة العرض',compact:'مختصر',stacked:'متراص',detailed:'تفصيلي',all:'الكل',results:'نتائج البحث',version:'الإصدار',time:'الوقت',minute:'دقيقة',hour:'ساعة',previous:'السابق',next:'التالي'},
+ cop:{day:'Ϩⲟⲟⲩ',week:'Ⲉⲃⲇⲟⲙⲁⲥ',month:'Ⲉⲃⲟⲧ',list:'Ⲕⲁⲧⲁⲗⲟⲅⲟⲥ',today:'Ⲫⲟⲟⲩ',calendar:'Ⲡⲓϩⲙⲉ',calendars:'Ⲛⲓϩⲙⲉ',festivals:'Ⲛⲓϣⲁⲓ',settings:'Ⲛⲓⲥⲙⲓⲛⲉ',search:'Ϣⲓⲛⲓ',add:'Ⲧⲱⲟⲩⲛ',event:'Ⲉⲣⲅⲟⲛ',reminder:'Ⲣⲉⲙⲉⲙⲃⲉⲣ',title:'Ⲣⲁⲛ',location:'Ⲙⲁ',notes:'Ⲛⲓⲥⲁϫⲓ',date:'Ⲡⲓⲉϩⲟⲟⲩ',start:'Ⲁⲣⲭⲏ',end:'Ⲑⲁⲏ',allDay:'Ϩⲟⲟⲩ',repeat:'Ⲧⲱⲃϩ',alert:'Ⲁⲗⲉⲣⲧ',none:'—',daily:'Ϩⲟⲟⲩ',weekly:'Ⲉⲃⲇⲟⲙⲁⲥ',decan:'10',monthly:'Ⲉⲃⲟⲧ',yearly:'Ⲣⲟⲙⲡⲓ',save:'Ⲥⲱⲛϩ',cancel:'Ϣⲧⲁⲙ',delete:'Ⲃⲱⲗ',confirm:'Ⲃⲱⲗ?',noEvents:'Ⲙ̀ⲙⲟⲛ',language:'Ⲁⲥⲡⲓ',gregorian:'Gregorian',festivalSetting:'Ⲛⲓϣⲁⲓ',weekLength:'Ⲛⲓⲉϩⲟⲟⲩ',backup:'ICS · Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ',manage:'Ⲛⲓϩⲙⲉ',newCalendar:'Ⲃⲉⲣⲓ',name:'Ⲣⲁⲛ',color:'Ⲟⲩⲣⲱⲙⲓ',show:'Ⲟⲩⲱⲛϩ',hide:'Ϩⲱⲡ',done:'Ⲧⲉⲗⲟⲥ',view:'Ⲟⲩⲱⲛϩ',compact:'Ⲕⲟⲩϫⲓ',stacked:'Ⲥⲱⲟⲩϩ',detailed:'Ⲧⲉⲗⲓⲟⲥ',all:'Ⲧⲏⲣⲟⲩ',results:'Ⲛⲓⲉⲣⲅⲟⲛ',version:'Version',time:'Ⲟⲩⲛⲟⲩ',minute:'min',hour:'hour',previous:'Ϩⲁⲑⲏ',next:'Ⲥⲁ'},
+ egy:{day:'𓇳',week:'𓇳𓏥',month:'𓇹',list:'𓏏𓏤',today:'𓇳',calendar:'𓆳𓏏',calendars:'𓆳𓏥',festivals:'𓎛𓂋𓏏',settings:'𓏞',search:'𓁹',add:'𓏭',event:'𓏏𓏤',reminder:'𓏏𓏥',title:'𓂋𓈖',location:'𓊖',notes:'𓏞',date:'𓆳',start:'𓄂',end:'𓏏',allDay:'𓇳',repeat:'𓎛𓂋',alert:'𓏭',none:'—',daily:'𓇳',weekly:'𓇳𓏥',decan:'𓎆',monthly:'𓇹',yearly:'𓆳',save:'𓏞',cancel:'𓐍',delete:'𓂧',confirm:'𓂧 ?',noEvents:'𓏏𓏤 —',language:'𓂋𓈖',gregorian:'Gregorian',festivalSetting:'𓎛𓂋𓏏',weekLength:'𓇳𓏥',backup:'ICS ↓',manage:'𓆳𓏥',newCalendar:'𓆳𓏏',name:'𓂋𓈖',color:'𓇋𓈖',show:'𓁹',hide:'𓏏',done:'𓏞',view:'𓁹',compact:'𓏏',stacked:'𓏥',detailed:'𓂋𓏤',all:'𓏥',results:'𓏏𓏥',version:'v',time:'𓇳',minute:'𓏏',hour:'𓇳',previous:'𓄂',next:'𓏭'}
 };
-function numberMarkup(n){
- if(lang()!=='egy')return esc(num(n));
- return `<img class="egy-numeral" src="assets/numerals/${n}.svg" alt="${esc(num(n))}">`;
+let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={tab:'calendar',view:'month',focus:today(),display:'compact',menu:false,search:false,query:'',dialog:null,festival:null,manage:false};
+try{const x=JSON.parse(localStorage.getItem(SETTINGS)||'null');if(x){if(LOCALES[x.language])prefs.language=x.language;if(typeof x.gregorian==='boolean')prefs.gregorian=x.gregorian;if(typeof x.festivals==='boolean')prefs.festivals=x.festivals;if(x.weeks&&typeof x.weeks==='object')prefs.weeks=x.weeks;}}catch{}
+try{const x=JSON.parse(localStorage.getItem(VIEWS)||'null');if(['day','week','month','list'].includes(x?.view))state.view=x.view;if(['compact','stacked','detailed'].includes(x?.display))state.display=x.display;}catch{}
+const lang=()=>prefs.language,T=()=>WORDS[lang()],N=n=>nativeNumber(n,lang());
+const week=()=>[7,10].includes(prefs.weeks[lang()])?prefs.weeks[lang()]:(lang()==='ar'?7:10);
+const min=()=>dayNumber(data.min_date),max=()=>dayNumber(data.max_date),clamp=d=>Math.min(max(),Math.max(min(),d));
+const savePrefs=()=>{try{localStorage.setItem(SETTINGS,JSON.stringify(prefs));}catch{}};
+const saveView=()=>{try{localStorage.setItem(VIEWS,JSON.stringify({view:state.view,display:state.display}));}catch{}};
+const egypt=d=>toEgyptian(d,data.years);
+const monthName=m=>m===13?LOCALES[lang()].epagomenal:lang()==='egy'?('𓇹 '+N(m)):data.months[lang()][m-1];
+const numHtml=n=>lang()==='egy'?'<img class="glyph" src="assets/numerals/'+n+'.svg" alt="'+safe(N(n))+'">':safe(N(n));
+const greg=(d,opts={day:'numeric',month:'short'})=>new Intl.DateTimeFormat(lang()==='ar'?'ar-EG-u-nu-arab':'en-GB',{...opts,timeZone:'UTC'}).format(new Date(d*DAY));
+const monthDays=e=>e.month===13?data.years.find(y=>y.year===e.year).days-360:30;
+const monthStart=e=>toGregorian({year:e.year,month:e.month,day:1},data.years);
+const adjacent=(e,delta)=>{let m=e.month+delta,y=e.year;while(m>13){m-=13;y++;}while(m<1){m+=13;y--;}return data.years.some(v=>v.year===y)?{year:y,month:m,day:1}:null;};
+const calName=c=>c.name?.[lang()]||c.name?.ar||c.id;
+const items=d=>itemsForDay(loadScheduler(),d,data.years);
+const icon=name=>{const p={back:'<path d="m15 5-7 7 7 7"/>',search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',plus:'<path d="M12 4v16M4 12h16"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',settings:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',star:'<path d="m12 2 3 7 7 .5-5.5 5 1.5 7L12 18l-6 3.5 1.5-7L2 9.5 9 9Z"/>',check:'<path d="m4 12 5 5L20 6"/>'};return '<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p[name]+'</svg>';};
+function eventRow(i,day=state.focus){
+ const cal=loadScheduler().calendars.find(c=>c.id===i.calendarId),color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
+ const clock=i.allDay?T().allDay:String(Math.floor(i.startMinutes/60)).padStart(2,'0')+':'+String(i.startMinutes%60).padStart(2,'0');
+ return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+safe(clock)+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(state.display==='detailed'&&i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
 }
-function monthName(m){
- if(m===13)return L().epagomenal;
- if(lang()==='egy')return '𓇹'+nativeNumber((m-1)%4+1,'egy')+' '+data.seasons[Math.floor((m-1)/4)];
- return data.months[lang()][m-1];
+function agenda(d){const a=items(d);return '<section class="agenda"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<p class="subtle">'+safe(greg(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+'</p>':'')+(a.length?a.map(i=>eventRow(i,d)).join(''):'<p class="empty">'+safe(T().noEvents)+'</p>')+'</section>';}
+function monthSection(e){
+ const start=monthStart(e),w=week(),cells=monthGrid(e.year,e.month,w,data.years);
+ const headers=Array.from({length:w},(_,i)=>w===7?(LOCALES[lang()].shortWeekdays?.[i]||N(i+1)):N(i+1)).map(v=>'<span>'+safe(v)+'</span>').join('');
+ const grid=cells.map(c=>{if(!c)return '<span class="blank"></span>';const d=c.gregorian,ev=items(d),hits=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
+ return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+numHtml(c.day)+'</span>'+(prefs.gregorian?'<small>'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+ev.slice(0,3).map(i=>{const col=loadScheduler().calendars.find(x=>x.id===i.calendarId)?.color||'#187568';return '<i style="background:'+(/^#[0-9a-f]{6}$/i.test(col)?col:'#187568')+'"></i>';}).join('')+'</span>'+(hits.length?'<em class="fest-mark">✦</em>':'')+'</button>';}).join('');
+ return '<section class="month-section"><h2>'+safe(monthName(e.month))+' <small>'+numHtml(e.year)+'</small></h2>'+(prefs.gregorian?'<p class="subtle">'+safe(greg(start,{day:'numeric',month:'short'}))+' – '+safe(greg(start+monthDays(e)-1,{day:'numeric',month:'short'}))+'</p>':'')+'<div class="week-headers" style="--cols:'+w+'">'+headers+'</div><div class="dates" style="--cols:'+w+'">'+grid+'</div></section>';
 }
-function egyptianLabel(e){return `${num(e.day)} ${monthName(e.month)} · ${num(e.year)}`;}
-function gregorianLabel(day,options={day:'numeric',month:'long',year:'numeric'}){
- return new Intl.DateTimeFormat(lang()==='ar'?'ar-EG-u-nu-arab':'en-GB',{...options,timeZone:'UTC'}).format(new Date(day*DAY));
+function monthView(){const e=egy(state.focus),next=adjacent(e,1);return '<div class="month-scroll">'+monthSection(e)+(next?monthSection(next):'')+'</div>';}
+function dayView(){
+ const all=items(state.focus).filter(i=>i.allDay),timed=items(state.focus).filter(i=>!i.allDay);
+ const rows=Array.from({length:24},(_,h)=>'<div class="hour-row"><span>'+String(h).padStart(2,'0')+':00</span><div>'+timed.filter(i=>Math.floor(i.startMinutes/60)===h).map(i=>eventRow(i)).join('')+'</div></div>').join('');
+ return '<div class="day-page">'+agenda(state.focus)+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="hours">'+rows+'</div></div>';
 }
-function gregorianMarkup(day,options){
- if(!prefs.gregorian)return '';
- return `<div class="gregorian" lang="${lang()==='ar'?'ar':'en'}" dir="${lang()==='ar'?'rtl':'ltr'}">${esc(gregorianLabel(day,options))}</div>`;
+function weekView(){
+ const w=week(),e=egy(state.focus),start=w===10?state.focus-(e.day-1)%10:state.focus-(new Date(state.focus*DAY).getUTCDay()+6)%7;
+ return '<div class="week-page"><div class="week-strip" style="--cols:'+w+'">'+Array.from({length:w},(_,i)=>{const d=start+i;return '<button class="'+(d===state.focus?'active':'')+'" data-pick="'+d+'"><small>'+(w===7?safe(LOCALES[lang()].shortWeekdays?.[i]||N(i+1)):numHtml(i+1))+'</small><strong>'+numHtml(egy(d).day)+'</strong></button>';}).join('')+'</div>'+agenda(state.focus)+'</div>';
 }
-function weekdayName(day){
- const i=(new Date(day*DAY).getUTCDay()+6)%7;
- // No invented ancient seven-day weekday lexicon: see LOCALIZATION.md.
- return L().weekdays?.[i]||'𓇳𓏤 '+num(i+1);
-}
-function rangeMarkup(y,m){
- if(!prefs.gregorian)return '';
- const start=toGregorian({year:y,month:m,day:1},data.years);
- const count=m===13?data.years.find(v=>v.year===y).days-360:30;
- return `<div class="range gregorian" lang="${lang()==='ar'?'ar':'en'}" dir="${lang()==='ar'?'rtl':'ltr'}">${esc(gregorianLabel(start,{day:'numeric',month:'long'}))} – ${esc(gregorianLabel(start+count-1,{day:'numeric',month:'long',year:'numeric'}))}</div>`;
-}
-function festivalName(f){
- // Arabic source names are preserved. Native labels plus IDs are used in the
- // other scripts until the festival-specific translations have been reviewed.
- return lang()==='ar'?f.ar:`${L().festival} ${num(data.festivals.findIndex(v=>v.id===f.id)+1)}`;
-}
-function festivalList(hits){
- return `<div class="festival-list">${hits.map(f=>{
-  const e=toEgyptian(f.start,data.years);
-  return `<div><button class="festival-item" data-festival="${esc(f.id)}" aria-expanded="${openedFestival===f.id}"><span class="star" aria-hidden="true">✦</span><span class="item-text">${esc(festivalName(f))}<small>${esc(num(e.day)+' '+monthName(e.month))}</small>${gregorianMarkup(f.start,{day:'numeric',month:'long'})}</span>${icon('right')}</button>${openedFestival===f.id?`<div class="festival-detail">${esc(lang()==='ar'?f.description_ar:egyptianLabel(e))}</div>`:''}</div>`;
- }).join('')}</div>`;
-}
-function header(){
- return `<header class="top"><div class="brand"><img src="assets/icon-180.png" alt=""><span>${esc(L().brand)}</span></div><button class="today-button" data-action="today">${esc(L().today)}</button></header>`;
-}
-function navigation(){
- return `<nav class="bottom-nav" aria-label="${esc(L().brand)}">${['calendar','festivals','settings'].map(t=>`<button data-tab="${t}" class="${t===tab?'active':''}" ${t===tab?'aria-current="page"':''}>${icon(t==='festivals'?'star':t)}<span>${esc(L()[t])}</span></button>`).join('')}</nav>`;
-}
-function arrows(){
- let previous=toGregorian({year:viewYear,month:viewMonth,day:1},data.years)-1;
- let next=toGregorian({year:viewYear,month:viewMonth,day:1},data.years)+(viewMonth===13?data.years.find(v=>v.year===viewYear).days-360:30);
- if(mode==='year'&&tab==='calendar'){
-  previous=toGregorian({year:viewYear,month:1,day:1},data.years)-1;
-  next=toGregorian({year:viewYear+1,month:1,day:1},data.years);
- }
- return `<div class="arrows"><button class="icon-button" data-action="previous" aria-label="${esc(L().previous)}" ${previous<min()?'disabled':''}>${icon('left')}</button><button class="icon-button" data-action="next" aria-label="${esc(L().next)}" ${next>max()?'disabled':''}>${icon('right')}</button></div>`;
-}
-function calendarView(){
- let html=`<div class="month-head"><div class="month-title"><h1>${esc(mode==='year'?L().year:monthName(viewMonth))}</h1><div class="year-line">${numberMarkup(viewYear)}</div></div>${arrows()}</div>`;
- html+=mode==='month'?rangeMarkup(viewYear,viewMonth):'';
- html+=`<div class="segments" aria-label="${esc(L().calendar)}">${['month','year'].map(v=>`<button data-mode="${v}" class="${mode===v?'active':''}" aria-pressed="${mode===v}">${esc(L()[v])}</button>`).join('')}</div>`;
- if(mode==='year'){
-  html+='<div class="year-grid">';
-  for(let m=1;m<=13;m++)html+=`<button class="month-tile" data-month="${m}"><div>${esc(monthName(m))}</div>${gregorianMarkup(toGregorian({year:viewYear,month:m,day:1},data.years),{day:'numeric',month:'short'})}</button>`;
-  return html+'</div>';
- }
- const w=week(),cells=monthGrid(viewYear,viewMonth,w,data.years);
- const headers=Array.from({length:w},(_,i)=>{
-  if(w===7)return `<div class="weekday ${lang()}" title="${esc(L().weekdays?.[i]||'𓇳𓏤 '+num(i+1))}">${esc(L().shortWeekdays?.[i]||'𓇳 '+num(i+1))}</div>`;
-  const ordinal=lang()==='ar'?L().ordinal[i]:lang()==='cop'?'ⲙⲉϩ'+num(i+1):'𓎔'+num(i+1);
-  return `<div class="weekday ${lang()}" title="${esc(ordinal)}">${lang()==='ar'?esc(num(i+1)):lang()==='egy'?'<span>𓎔</span>'+numberMarkup(i+1):esc(ordinal)}</div>`;
- }).join('');
- html+=`<section class="calendar-wrap ${w===10?'decade':''}" aria-label="${esc(monthName(viewMonth))}" style="--columns:${w}"><div class="grid headers">${headers}</div><div class="grid dates">${cells.map(cell=>{
-  if(!cell)return '<div class="cell empty" aria-hidden="true"></div>';
-  const day=cell.gregorian,disabled=day<min()||day>max(),hits=prefs.festivals?festivalHits(day,data.years,data.festivals):[];
-  const e={year:viewYear,month:viewMonth,day:cell.day};
-  return `<button class="cell ${day===selected?'selected':''} ${day===today()?'today':''}" data-day="${day}" aria-pressed="${day===selected}" aria-label="${esc(egyptianLabel(e)+(prefs.gregorian?' · '+gregorianLabel(day):'')+(hits.length?' · '+hits.map(festivalName).join(' · '):''))}" ${disabled?'disabled':''}><span class="primary">${numberMarkup(cell.day)}</span>${prefs.gregorian?`<span class="secondary" lang="${lang()==='ar'?'ar':'en'}" dir="${lang()==='ar'?'rtl':'ltr'}">${esc(lang()==='ar'?num(new Date(day*DAY).getUTCDate()):String(new Date(day*DAY).getUTCDate()))}</span>`:''}${hits.length?'<span class="festival-dot" aria-hidden="true"></span>':''}</button>`;
- }).join('')}</div></section>`;
- const e=toEgyptian(selected,data.years);
- html+=`<section class="selected-card" aria-live="polite"><h2>${numberMarkup(e.day)} <span>${esc(monthName(e.month))}</span></h2>${week()===7?`<div class="weekday-name">${esc(weekdayName(selected))}</div>`:''}${gregorianMarkup(selected)}</section>`;
- if(prefs.festivals)html+=festivalList(festivalHits(selected,data.years,data.festivals));
- return html;
-}
-function festivalsView(){
- let html=`<div class="month-head"><h1>${esc(L().festivals)}</h1>${arrows()}</div><div class="year-line">${esc(monthName(viewMonth))} · ${num(viewYear)}</div>${rangeMarkup(viewYear,viewMonth)}`;
- if(!prefs.festivals)return html+`<p class="empty-message">${esc(L().disabled)}</p>`;
- const first=toGregorian({year:viewYear,month:viewMonth,day:1},data.years),length=viewMonth===13?data.years.find(v=>v.year===viewYear).days-360:30;
- const hits=new Map();
- for(let d=first;d<first+length;d++)for(const f of festivalHits(d,data.years,data.festivals))hits.set(f.id,f);
- return html+(hits.size?festivalList([...hits.values()]):`<p class="empty-message">${esc(L().none)}</p>`);
+function listView(){const groups=[];for(let d=state.focus;d<=Math.min(max(),state.focus+59);d++)if(items(d).length)groups.push(agenda(d));return '<div class="list-page">'+(groups.join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div>';}
+function festivalView(){
+ if(!prefs.festivals)return '<p class="empty">'+safe(T().noEvents)+'</p>';
+ const e=egy(state.focus),start=monthStart(e),found=new Map();
+ for(let d=start;d<start+monthDays(e);d++)for(const f of festivalHits(d,data.years,data.festivals))found.set(f.id,f);
+ return '<section class="page"><h1>'+safe(T().festivals)+'</h1><p>'+safe(monthName(e.month))+' '+numHtml(e.year)+'</p><div class="festival-list">'+([...found.values()].map(f=>'<button class="festival" data-festival="'+safe(f.id)+'"><span>✦</span><strong>'+safe(lang()==='ar'?f.ar:T().festivals)+'</strong><small>'+safe(greg(f.start))+'</small></button>'+(state.festival===f.id?'<p class="festival-detail">'+safe(lang()==='ar'?f.description_ar:monthName(egy(f.start).month))+'</p>':'')).join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div></section>';
 }
 function settingsView(){
- const label=(name,inner)=>`<div class="setting-row"><label class="setting-label" for="${name}">${esc(L()[name==='gregorian'?'gregorian':name==='festivals'?'festivalSetting':'week'])}</label>${inner}</div>`;
- return `<h1 class="view-title">${esc(L().settings)}</h1><section class="settings-section"><div class="setting-row"><label for="language">${esc(L().language)}</label><select id="language">${Object.entries(LOCALES).map(([id,l])=>`<option value="${id}" ${id===lang()?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div></section><section class="settings-section">${['gregorian','festivals'].map(name=>label(name,`<input type="checkbox" role="switch" class="switch" id="${name}" ${prefs[name]?'checked':''} aria-label="${esc(L()[name==='gregorian'?'gregorian':'festivalSetting'])}">`)).join('')}${label('week',`<select id="week"><option value="7" ${week()===7?'selected':''}>${esc(L().seven)}</option><option value="10" ${week()===10?'selected':''}>${esc(L().ten)}</option></select>`)}</section>`;
+ return '<section class="page"><h1>'+safe(T().settings)+'</h1><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-group"><button class="setting-action" data-backup>'+safe(T().backup)+' ›</button><button class="setting-action" data-manage>'+safe(T().manage)+' ›</button></div><p class="build-label">'+safe(T().version)+' 0.9.0</p></section>';
+}
+function managerView(){
+ const a=loadScheduler();
+ return '<section class="page"><h1>'+safe(T().calendars)+'</h1><div class="settings-group">'+a.calendars.map(c=>'<div class="cal-row"><input type="checkbox" data-visible="'+safe(c.id)+'" '+(c.visible!==false?'checked':'')+'><span class="color-dot" style="background:'+safe(c.color)+'"></span><span>'+safe(calName(c))+'</span>'+(c.custom?'<button data-remove-cal="'+safe(c.id)+'" aria-label="'+safe(T().delete)+'">×</button>':'')+'</div>').join('')+'</div><form id="new-calendar" class="settings-group"><label>'+safe(T().newCalendar)+'<input name="name" required maxlength="80" placeholder="'+safe(T().name)+'"></label><label>'+safe(T().color)+'<input type="color" name="color" value="#187568"></label><button class="primary" type="submit">'+safe(T().add)+'</button></form></section>';
+}
+function nav(){return '<nav class="bottom-nav"><button data-today>'+safe(T().today)+'</button><button data-tab="calendar" class="'+(state.tab==='calendar'?'active':'')+'">'+icon('calendar')+'<small>'+safe(T().calendar)+'</small></button><button data-manage>'+safe(T().calendars)+'</button><button data-tab="festivals" class="'+(state.tab==='festivals'?'active':'')+'">'+icon('star')+'<small>'+safe(T().festivals)+'</small></button><button data-tab="settings" class="'+(state.tab==='settings'?'active':'')+'">'+icon('settings')+'<small>'+safe(T().settings)+'</small></button></nav>';}
+function toolbar(){
+ const e=egy(state.focus);
+ return '<header class="toolbar"><div class="tool-row"><button data-back aria-label="'+safe(T().previous)+'">'+icon('back')+'<span>'+numHtml(e.year)+'</span></button><div class="tool-actions"><button data-search aria-label="'+safe(T().search)+'">'+icon('search')+'</button><button data-menu aria-label="'+safe(T().view)+'">'+icon('list')+'</button><button data-new aria-label="'+safe(T().add)+'">'+icon('plus')+'</button></div></div><div class="headline"><h1>'+(state.view==='day'?numHtml(e.day)+' ':'')+safe(monthName(e.month))+'</h1><div><button data-prev aria-label="'+safe(T().previous)+'">‹</button><button data-next aria-label="'+safe(T().next)+'">›</button></div></div>'+(state.menu?'<div class="view-menu"><div class="segmented">'+['day','week','month','list'].map(v=>'<button data-view="'+v+'" class="'+(v===state.view?'active':'')+'">'+safe(T()[v])+'</button>').join('')+'</div><label>'+safe(T().view)+'<select name="display">'+['compact','stacked','detailed'].map(v=>'<option value="'+v+'" '+(state.display===v?'selected':'')+'>'+safe(T()[v])+'</option>').join('')+'</select></label></div>':'')+(state.search?'<div class="search-panel"><input type="search" name="query" value="'+safe(state.query)+'" placeholder="'+safe(T().search)+'" autocomplete="off"><div class="search-results">'+searchResults()+'</div></div>':'')+'</header>';
+}
+function searchResults(){return searchItems(loadScheduler(),state.query).slice(0,60).map(i=>'<button data-result="'+i.startDay+'"><strong>'+safe(i.title)+'</strong><small>'+safe(greg(i.startDay))+'</small></button>').join('')||'<p class="empty">'+safe(T().noEvents)+'</p>';}
+function dateFields(d){const e=egy(d);return '<div class="date-fields"><input name="egyYear" type="number" min="'+data.years[0].year+'" max="'+data.years.at(-1).year+'" value="'+e.year+'" required><select name="egyMonth">'+Array.from({length:13},(_,i)=>'<option value="'+(i+1)+'" '+(e.month===i+1?'selected':'')+'>'+safe(monthName(i+1))+'</option>').join('')+'</select><select name="egyDay">'+Array.from({length:30},(_,i)=>'<option value="'+(i+1)+'" '+(e.day===i+1?'selected':'')+'>'+N(i+1)+'</option>').join('')+'</select></div><small class="date-preview">'+safe(greg(d,{day:'numeric',month:'long',year:'numeric'}))+'</small>';}
+const timeString=n=>String(Math.floor((n||0)/60)).padStart(2,'0')+':'+String((n||0)%60).padStart(2,'0');
+function editor(){
+ const item=state.dialog?.id?loadScheduler().items.find(i=>i.id===state.dialog.id):null,d=item?.startDay??state.focus,kind=item?.kind||state.dialog?.kind||'event';
+ const sched=loadScheduler();
+ return '<div class="sheet-overlay"><form id="event-editor" class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><button type="button" data-close>'+safe(T().cancel)+'</button><strong>'+safe(item?T().event:T().add)+'</strong><button class="save-button" type="submit">'+safe(T().save)+'</button></div><div class="sheet-body"><div class="kind-toggle"><label><input type="radio" name="kind" value="event" '+(kind==='event'?'checked':'')+'>'+safe(T().event)+'</label><label><input type="radio" name="kind" value="reminder" '+(kind==='reminder'?'checked':'')+'>'+safe(T().reminder)+'</label></div><label>'+safe(T().title)+'<input name="title" required maxlength="200" value="'+safe(item?.title||'')+'"></label><label>'+safe(T().date)+dateFields(d)+'</label><label class="check-row">'+safe(T().allDay)+'<input type="checkbox" name="allDay" '+(item?.allDay?'checked':'')+'></label><div class="time-fields"><label>'+safe(T().start)+'<input type="time" name="start" value="'+timeString(item?.startMinutes??540)+'"></label><label>'+safe(T().end)+'<input type="time" name="end" value="'+timeString(item?.endMinutes??600)+'"></label></div><label>'+safe(T().location)+'<input name="location" maxlength="300" value="'+safe(item?.location||'')+'"></label><label>'+safe(T().notes)+'<textarea name="notes" rows="3">'+safe(item?.notes||'')+'</textarea></label><label>'+safe(T().calendars)+'<select name="calendarId">'+sched.calendars.map(c=>'<option value="'+safe(c.id)+'" '+(c.id===(item?.calendarId||sched.calendars[0].id)?'selected':'')+'>'+safe(calName(c))+'</option>').join('')+'</select></label><label>'+safe(T().repeat)+'<select name="repeat">'+[['none',T().none],['daily',T().daily],['weekly',T().weekly],['egy10',T().decan],['egyMonthly',T().monthly],['egyYearly',T().yearly]].map(([v,n])=>'<option value="'+v+'" '+((item?.repeat||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label><label>'+safe(T().alert)+'<select name="alert">'+[['none',T().none],['atTime','0'],['5min','5'],['15min','15'],['1hour','60'],['1day','1440']].map(([v,n])=>'<option value="'+v+'" '+((item?.alert||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label>'+(item?'<button type="button" class="delete" data-delete="'+safe(item.id)+'">'+safe(T().delete)+'</button>':'')+'</div></form></div>';
 }
 function render(){
- document.documentElement.lang=L().html;document.documentElement.dir=lang()==='ar'?'rtl':'ltr';document.body.dataset.language=lang();
- root.innerHTML=`<div class="shell">${header()}<main>${tab==='settings'?settingsView():tab==='festivals'?festivalsView():calendarView()}</main>${navigation()}</div>`;
+ if(!data)return;
+ document.documentElement.lang=LOCALES[lang()].html;document.documentElement.dir=lang()==='ar'?'rtl':'ltr';document.body.dataset.language=lang();
+ const content=state.manage?managerView():state.tab==='settings'?settingsView():state.tab==='festivals'?festivalView():state.view==='day'?dayView():state.view==='week'?weekView():state.view==='list'?listView():monthView();
+ root.innerHTML='<div class="app-shell">'+(state.tab==='calendar'&&!state.manage?toolbar():'<header class="simple-header"><button data-return>'+icon('back')+'</button><span>Renpet</span></header>')+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'+(state.dialog?editor():'');
 }
-root.addEventListener('click',event=>{
- const button=event.target.closest('button');if(!button||button.disabled)return;
- if(button.dataset.tab){tab=button.dataset.tab;openedFestival=null;render();return;}
- if(button.dataset.mode){mode=button.dataset.mode;render();return;}
- if(button.dataset.month){viewMonth=Number(button.dataset.month);selected=clamp(toGregorian({year:viewYear,month:viewMonth,day:1},data.years));mode='month';render();return;}
- if(button.dataset.day){selected=Number(button.dataset.day);openedFestival=null;render();return;}
- if(button.dataset.festival){openedFestival=openedFestival===button.dataset.festival?null:button.dataset.festival;render();return;}
- const action=button.dataset.action;if(!action)return;
- if(action==='today'){selected=clamp(today());({year:viewYear,month:viewMonth}=toEgyptian(selected,data.years));tab='calendar';mode='month';}
- else if(action==='previous'||action==='next'){
-  const offset=action==='previous'?-1:1;
-  if(tab==='calendar'&&mode==='year'){viewYear+=offset;}
-  else{viewMonth+=offset;if(viewMonth<1){viewMonth=13;viewYear--;}if(viewMonth>13){viewMonth=1;viewYear++;}}
-  selected=clamp(toGregorian({year:viewYear,month:viewMonth,day:1},data.years));
- }
- openedFestival=null;render();
+function navigate(step){
+ if(state.view==='day')state.focus+=step;
+ else if(state.view==='week')state.focus+=step*week();
+ else if(state.view==='list')state.focus+=step*30;
+ else{const e=egy(state.focus),next=adjacent(e,step);if(next)state.focus=monthStart(next)+Math.min(e.day,monthDays(next))-1;}
+ state.focus=clamp(state.focus);render();
+}
+function submitEvent(form){
+ const f=new FormData(form),y=Number(f.get('egyYear')),m=Number(f.get('egyMonth')),d=Number(f.get('egyDay'));
+ if(!data.years.some(x=>x.year===y)||m<1||m>13||d<1||d>monthDays({year:y,month:m})){alert('Invalid Egyptian date');return;}
+ const startDay=toGregorian({year:y,month:m,day:d},data.years);
+ const time=v=>{const [h,min]=String(v||'09:00').split(':').map(Number);return h*60+min;};
+ const startMinutes=time(f.get('start')),endMinutes=time(f.get('end'));
+ if(!f.has('allDay')&&endMinutes<=startMinutes){alert('End time must follow start time');return;}
+ const vals={kind:f.get('kind'),title:f.get('title'),startDay,endDay:startDay,startMinutes,endMinutes,allDay:f.has('allDay'),location:f.get('location'),notes:f.get('notes'),calendarId:f.get('calendarId'),repeat:f.get('repeat'),alert:f.get('alert')};
+ const sched=loadScheduler(),existing=state.dialog?.id?sched.items.find(i=>i.id===state.dialog.id):null;
+ const item=existing?{...existing,...vals,updatedAt:new Date().toISOString()}:createItem(vals);
+ upsertItem(sched,item);
+ if(!saveScheduler(sched)){alert('Unable to save event');return;}
+ state.dialog=null;state.focus=clamp(startDay);render();
+}
+root.addEventListener('click',ev=>{
+ const b=ev.target.closest('button');if(!b||b.disabled)return;
+ if(b.hasAttribute('data-close')){state.dialog=null;render();return;}
+ if(b.hasAttribute('data-new')){state.dialog={kind:'event'};render();root.querySelector('[name="title"]')?.focus();return;}
+ if(b.hasAttribute('data-edit')){state.dialog={id:b.dataset.edit};render();return;}
+ if(b.hasAttribute('data-delete')){if(confirm(T().confirm)){const s=loadScheduler();removeItem(s,b.dataset.delete);saveScheduler(s);state.dialog=null;render();}return;}
+ if(b.hasAttribute('data-complete')){const s=loadScheduler(),item=s.items.find(i=>i.id===b.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(s);render();}return;}
+ if(b.hasAttribute('data-menu')){state.menu=!state.menu;render();return;}
+ if(b.hasAttribute('data-search')){state.search=!state.search;state.query='';render();if(state.search)root.querySelector('[name="query"]')?.focus();return;}
+ if(b.hasAttribute('data-view')){state.view=b.dataset.view;state.menu=false;saveView();render();return;}
+ if(b.hasAttribute('data-date')){state.focus=clamp(Number(b.dataset.date));state.view='day';saveView();render();return;}
+ if(b.hasAttribute('data-pick')){state.focus=clamp(Number(b.dataset.pick));render();return;}
+ if(b.hasAttribute('data-result')){state.focus=clamp(Number(b.dataset.result));state.view='day';state.search=false;saveView();render();return;}
+ if(b.hasAttribute('data-prev')){navigate(-1);return;}
+ if(b.hasAttribute('data-next')){navigate(1);return;}
+ if(b.hasAttribute('data-back')){if(state.view!=='month'){state.view='month';saveView();render();}else{const e=egy(state.focus),p=adjacent(e,-1);if(p){state.focus=monthStart(p);render();}}return;}
+ if(b.hasAttribute('data-today')){state.focus=clamp(today());state.tab='calendar';state.manage=false;state.view='day';saveView();render();return;}
+ if(b.hasAttribute('data-tab')){state.tab=b.dataset.tab;state.manage=false;state.menu=false;state.search=false;render();return;}
+ if(b.hasAttribute('data-return')){state.tab='calendar';state.manage=false;render();return;}
+ if(b.hasAttribute('data-manage')){state.manage=true;render();return;}
+ if(b.hasAttribute('data-backup')){openBackup();return;}
+ if(b.hasAttribute('data-festival')){state.festival=state.festival===b.dataset.festival?null:b.dataset.festival;render();return;}
+ if(b.hasAttribute('data-remove-cal')){const s=loadScheduler();removeCalendar(s,b.dataset.removeCal);saveScheduler(s);render();return;}
 });
-root.addEventListener('change',event=>{
- const input=event.target;
- if(input.id==='language'&&LOCALES[input.value])prefs.language=input.value;
- else if(input.id==='gregorian'||input.id==='festivals')prefs[input.id]=input.checked;
- else if(input.id==='week')prefs.weeks[lang()]=Number(input.value);
- save();render();
+root.addEventListener('change',ev=>{
+ const el=ev.target;
+ if(el.name==='language'&&LOCALES[el.value])prefs.language=el.value;
+ else if(el.name==='gregorian'||el.name==='festivals')prefs[el.name]=el.checked;
+ else if(el.name==='week')prefs.weeks[lang()]=Number(el.value);
+ else if(el.name==='display'){state.display=el.value;saveView();render();return;}
+ else if(el.hasAttribute('data-visible')){const s=loadScheduler();updateCalendar(s,el.dataset.visible,{visible:el.checked});saveScheduler(s);render();return;}
+ else if(el.closest('#event-editor')&&['egyYear','egyMonth','egyDay'].includes(el.name)){
+  const form=el.form,y=Number(form.elements.egyYear.value),m=Number(form.elements.egyMonth.value),d=Number(form.elements.egyDay.value);
+  const preview=form.querySelector('.date-preview');
+  if(preview)preview.textContent=data.years.some(x=>x.year===y)&&d<=monthDays({year:y,month:m})?greg(toGregorian({year:y,month:m,day:d},data.years),{day:'numeric',month:'long',year:'numeric'}):'—';
+  return;
+ }else return;
+ savePrefs();render();
 });
+root.addEventListener('input',ev=>{if(ev.target.name==='query'){state.query=ev.target.value;const r=root.querySelector('.search-results');if(r)r.innerHTML=searchResults();}});
+root.addEventListener('submit',ev=>{
+ if(ev.target.id==='event-editor'){ev.preventDefault();submitEvent(ev.target);}
+ if(ev.target.id==='new-calendar'){ev.preventDefault();const f=new FormData(ev.target),s=loadScheduler();if(createCalendar(s,f.get('name'),f.get('color'))){saveScheduler(s);render();}}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&state.dialog){state.dialog=null;render();}});
 async function init(){
- try{
-  const response=await fetch('./data.json');if(!response.ok)throw new Error('Calendar unavailable');data=await response.json();
-  selected=clamp(today());({year:viewYear,month:viewMonth}=toEgyptian(selected,data.years));render();
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Offline install:',error));
- }catch(error){root.innerHTML='<div class="error">رنبت · Ⲣⲉⲛⲡⲉⲧ · 𓆳𓏏𓏤<br>↻</div>';console.error(error);}
+ try{const r=await fetch('./data.json');if(!r.ok)throw Error('Calendar data unavailable');data=await r.json();state.focus=clamp(state.focus);render();
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);}
+ }catch(e){root.textContent='Renpet: '+e.message;console.error(e);}
 }
 init();
