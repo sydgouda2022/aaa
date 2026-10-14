@@ -137,7 +137,7 @@ jobs:
               && grep -q '"version":"0.8.1"' /tmp/renpet-data \
               && grep -q '<svg' /tmp/renpet-numeral \
               && grep -q '"Renpet"' /tmp/renpet-manifest \
-              && grep -q '#1034A6' /tmp/renpet-manifest \
+              && grep -q '#187568' /tmp/renpet-manifest \
               && grep -q 'renpet.scheduler.v1' /tmp/renpet-scheduler \
               && grep -q 'createCalendar' /tmp/renpet-scheduler \
               && grep -q 'calendar-manager' /tmp/renpet-scheduler-css \
