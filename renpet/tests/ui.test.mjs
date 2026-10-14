@@ -19,7 +19,7 @@ assert.ok(!root.innerHTML.includes('year-grid'),'Legacy year grid must not rende
 assert.ok(root.innerHTML.includes('apple-bottom'),'Apple-style bottom bar must render');
 assert.ok(!root.innerHTML.includes('Renpet:'),'App must not display runtime error');
 const click=(name,value)=>{
- const button={disabled:false,dataset:{[name.slice(5)]:value},hasAttribute:k=>k===name};
+ const button={disabled:false,dataset:{[name.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:value},hasAttribute:k=>k===name};
  handlers.click({target:{closest:selector=>selector==='button'?button:null}});
 };
 assert.ok(root.innerHTML.includes('month-agenda'),'Month view must include selected-day agenda');
