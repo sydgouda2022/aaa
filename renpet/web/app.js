@@ -59,13 +59,32 @@ function yearView(){
 }
 function dayView(){
  const daily=items(state.focus),all=daily.filter(i=>i.allDay),timed=daily.filter(i=>!i.allDay);
+ const ordered=[...timed].sort((a,b)=>a.startMinutes-b.startMinutes||a.endMinutes-b.endMinutes);
+ const clusters=[];let current=[],end=-1;
+ for(const item of ordered){
+  if(current.length&&item.startMinutes>=end){clusters.push(current);current=[];end=-1;}
+  current.push(item);end=Math.max(end,item.endMinutes||item.startMinutes+60);
+ }
+ if(current.length)clusters.push(current);
+ const layout=new Map();
+ for(const cluster of clusters){
+  const ends=[];
+  for(const item of cluster){
+   let col=ends.findIndex(v=>v<=item.startMinutes);
+   if(col<0){col=ends.length;ends.push(-1);}
+   ends[col]=Math.max(item.endMinutes||item.startMinutes+60,item.startMinutes+15);
+   layout.set(item.id,{col,cols:0});
+  }
+  for(const item of cluster)layout.get(item.id).cols=ends.length;
+ }
  const blocks=timed.map(i=>{
   const start=Math.max(0,Math.min(1439,i.startMinutes||0)),end=Math.max(start+15,Math.min(1440,i.endMinutes||start+60));
   const cal=schedule.calendars.find(c=>c.id===i.calendarId);
   const color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
-  return '<button class="timeline-event" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(27,(end-start)/60*64-3)+'px" data-edit="'+safe(i.id)+'"><strong>'+safe(i.title)+'</strong><small>'+timeString(start)+' – '+timeString(end)+'</small></button>';
+  const pos=layout.get(i.id)||{col:0,cols:1},width=100/pos.cols;
+  return '<div class="timeline-event" role="button" tabindex="0" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(27,(end-start)/60*64-3)+'px;left:calc('+width*pos.col+'% + 1px);width:calc('+width+'% - 3px)" data-edit="'+safe(i.id)+'"><span class="event-drag" aria-label="Move event"><strong>'+safe(i.title)+'</strong><small>'+timeString(start)+' – '+timeString(end)+'</small></span><span class="event-resize" aria-label="Resize event"></span></div>';
  }).join('');
- const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeString(h*60)+'</span><div class="timeline-slot" data-hour="'+h+'"></div></div>').join('');
+ const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeString(h*60)+'</span><button class="timeline-slot" data-hour="'+h+'" aria-label="'+safe(T().add)+' '+timeString(h*60)+'"></button></div>').join('');
  return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div></div></div>';
 }
 function weekView(){
@@ -182,6 +201,44 @@ root.addEventListener('submit',ev=>{
  if(ev.target.id==='event-editor'){ev.preventDefault();submitEvent(ev.target);}
  if(ev.target.id==='new-calendar'){ev.preventDefault();const f=new FormData(ev.target),s=loadScheduler();if(createCalendar(s,f.get('name'),f.get('color'))){saveScheduler(s);render();}}
 });
+// Pointer-based 15-minute drag and resize; commit only on pointer release.
+let activeDrag=null,suppressEditUntil=0;
+const snap=n=>Math.round(n/15)*15;
+root.addEventListener('pointerdown',ev=>{
+ const block=ev.target.closest('.timeline-event');
+ if(!block||ev.button!==0)return;
+ const item=loadScheduler().items.find(i=>i.id===block.dataset.edit);
+ if(!item||item.allDay||item.repeat!=='none')return;
+ const mode=ev.target.closest('.event-resize')?'resize':'move';
+ activeDrag={id:item.id,mode,y:ev.clientY,start:item.startMinutes,end:item.endMinutes||item.startMinutes+60,block,moved:false};
+ block.setPointerCapture?.(ev.pointerId);
+});
+root.addEventListener('pointermove',ev=>{
+ const drag=activeDrag;if(!drag)return;
+ const delta=snap((ev.clientY-drag.y)/64*60);
+ if(Math.abs(ev.clientY-drag.y)>6)drag.moved=true;
+ if(!drag.moved)return;
+ const duration=Math.max(15,drag.end-drag.start);
+ const start=drag.mode==='move'?Math.max(0,Math.min(1440-duration,drag.start+delta)):drag.start;
+ const end=drag.mode==='resize'?Math.max(start+15,Math.min(1440,drag.end+delta)):start+duration;
+ drag.next={start,end};
+ drag.block.style.top=(start/60*64)+'px';
+ drag.block.style.height=Math.max(27,(end-start)/60*64-3)+'px';
+ const label=drag.block.querySelector('small');if(label)label.textContent=timeString(start)+' – '+timeString(end);
+});
+function finishDrag(ev,cancel=false){
+ const drag=activeDrag;if(!drag)return;
+ activeDrag=null;
+ if(!drag.moved||cancel){if(drag.moved)render();return;}
+ suppressEditUntil=Date.now()+450;
+ if(!drag.next){render();return;}
+ const sched=loadScheduler(),item=sched.items.find(i=>i.id===drag.id);
+ if(item){item.startMinutes=drag.next.start;item.endMinutes=drag.next.end;item.updatedAt=new Date().toISOString();saveScheduler(sched);}
+ render();
+}
+root.addEventListener('pointerup',ev=>finishDrag(ev));
+root.addEventListener('pointercancel',ev=>finishDrag(ev,true));
+root.addEventListener('click',ev=>{if(Date.now()<suppressEditUntil&&ev.target.closest('[data-edit]')){ev.stopImmediatePropagation();ev.preventDefault();}},true);
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(state.dialog)state.dialog=null;else if(state.more)state.more=false;else if(state.menu)state.menu=false;else if(state.search)state.search=false;render();}});
 let gesture=null;
 root.addEventListener('touchstart',ev=>{
