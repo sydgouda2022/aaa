@@ -13,7 +13,7 @@ assert.match(result.text,/DTSTART:20261014T090000/);
 assert.match(result.text,/DTEND:20261014T100000/);
 assert.match(result.text,/LOCATION:القاهرة/);
 assert.match(result.text,/السطر الأول\\nالسطر الثاني/);
-assert.ok(result.text.includes('SUMMARY:موعد، مهم\\\\; جداً\\\\\\\\ملاحظة'));
+assert.match(result.text,/SUMMARY:موعد، مهم\\; جداً\\\\ملاحظة/);
 assert.ok(result.text.split('\r\n').every(line=>new TextEncoder().encode(line).length<=75));
 const allDay={...item,id:'b',allDay:true,startDay:days('2026-10-14'),endDay:days('2026-10-16')};
 const multi=exportICS({...state,items:[allDay]},years,resolver,opts);
