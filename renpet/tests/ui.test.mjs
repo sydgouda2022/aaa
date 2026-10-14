@@ -26,6 +26,7 @@ assert.ok(root.innerHTML.includes('month-agenda'),'Month view must include selec
 click('data-date',String(dayNumber('2026-10-16')));
 assert.ok(root.innerHTML.includes('month-agenda'),'First date tap must select, not navigate');
 click('data-date',String(dayNumber('2026-10-16')));
+console.log('AFTER SECOND TAP',root.innerHTML.slice(0,650));
 assert.ok(root.innerHTML.includes('timeline-hour'),'Second date tap opens day timeline');
 click('data-back','');
 assert.ok(root.innerHTML.includes('month-agenda'),'Back from day returns to month');
