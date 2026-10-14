@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: renpet-pages-production
@@ -66,6 +66,15 @@ jobs:
           (root/'sw.js').write_text(sw,encoding='utf-8')
           print('Service worker assets:',len(files),'cache',stamp)
           PY
+      - name: Materialize generated support modules as tracked source
+        run: |
+          git config user.name "Renpet Source Migration"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f renpet/web/scheduler.js renpet/web/scheduler.css renpet/web/backup-core.mjs renpet/web/ics-core.mjs renpet/web/backup.css renpet/web/style.css renpet/web/data.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Track Renpet scheduler, styles and data as source files"
+            git push origin HEAD:main
+          fi
       - name: Validate Renpet build
         run: |
           node --check renpet/web/app.js
