@@ -1,11 +1,13 @@
 import { createBackup, parseBackup, restoreBackup } from './backup-core.mjs';
+import { exportICS } from './ics-core.mjs';
+import { occursOn, loadScheduler } from './scheduler.js';
 
 // Backup and restore work entirely on the user's device. No account or upload.
 const root = document.querySelector('#app');
 const words = {
-  ar: { trigger:'النسخ الاحتياطي', title:'بيانات رنبت', info:'احتفظ بنسخة من مواعيدك وتقاويمك وإعداداتك على جهازك. لا تُرسل أي بيانات إلى الإنترنت.', export:'تصدير نسخة', import:'استعادة نسخة', close:'إغلاق', confirm:'استعادة النسخة ستستبدل البيانات الموجودة من نفس النوع. هل تريد المتابعة؟', done:'تمت استعادة البيانات. سيُعاد تحميل رنبت.', empty:'لا توجد بيانات محفوظة للتصدير.' },
-  cop: { trigger:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', title:'Ⲣⲉⲛⲡⲉⲧ · ⲇⲉⲇⲟⲙⲉⲛⲁ', info:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ ⲉ̀ⲡⲉⲕⲥⲱⲙⲁ. Ⲙ̀ⲙⲟⲛ ⲟⲩⲱⲣⲡ ⲉ̀ⲡⲓⲓⲛⲧⲉⲣⲛⲉⲧ.', export:'Ⲥⲱⲧⲡ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', import:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', close:'Ϣⲧⲁⲙ', confirm:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ?', done:'Ⲁⲩⲧⲁϩⲟ ⲛ̀ⲛⲓⲇⲉⲇⲟⲙⲉⲛⲁ.', empty:'Ⲙ̀ⲙⲟⲛ ⲇⲉⲇⲟⲙⲉⲛⲁ.' },
-  egy: { trigger:'𓏞 𓂋𓏤', title:'𓆳𓏏𓏤 · 𓏞', info:'𓏞 · 𓂋𓏤𓈖𓆎𓏏𓊖', export:'𓏞 ↓', import:'𓏞 ↑', close:'𓐍𓏏𓅓', confirm:'𓏞 ↑ ?', done:'𓏞 ✓', empty:'𓏞 —' }
+  ar: { trigger:'النسخ الاحتياطي', title:'بيانات رنبت', info:'احتفظ بنسخة من مواعيدك وتقاويمك وإعداداتك على جهازك. لا تُرسل أي بيانات إلى الإنترنت.', export:'تصدير نسخة', ics:'تصدير إلى Apple / Google Calendar', import:'استعادة نسخة', close:'إغلاق', confirm:'استعادة النسخة ستستبدل البيانات الموجودة من نفس النوع. هل تريد المتابعة؟', done:'تمت استعادة البيانات. سيُعاد تحميل رنبت.', empty:'لا توجد بيانات محفوظة للتصدير.' },
+  cop: { trigger:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', title:'Ⲣⲉⲛⲡⲉⲧ · ⲇⲉⲇⲟⲙⲉⲛⲁ', info:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ ⲉ̀ⲡⲉⲕⲥⲱⲙⲁ. Ⲙ̀ⲙⲟⲛ ⲟⲩⲱⲣⲡ ⲉ̀ⲡⲓⲓⲛⲧⲉⲣⲛⲉⲧ.', export:'Ⲥⲱⲧⲡ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', ics:'ICS · Apple / Google Calendar', import:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', close:'Ϣⲧⲁⲙ', confirm:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ?', done:'Ⲁⲩⲧⲁϩⲟ ⲛ̀ⲛⲓⲇⲉⲇⲟⲙⲉⲛⲁ.', empty:'Ⲙ̀ⲙⲟⲛ ⲇⲉⲇⲟⲙⲉⲛⲁ.' },
+  egy: { trigger:'𓏞 𓂋𓏤', title:'𓆳𓏏𓏤 · 𓏞', info:'𓏞 · 𓂋𓏤𓈖𓆎𓏏𓊖', export:'𓏞 ↓', ics:'ICS ↓', import:'𓏞 ↑', close:'𓐍𓏏𓅓', confirm:'𓏞 ↑ ?', done:'𓏞 ✓', empty:'𓏞 —' }
 };
 const lang = () => words[document.body.dataset.language] ? document.body.dataset.language : 'ar';
 const tr = () => words[lang()];
@@ -17,8 +19,8 @@ function close() {
   dialog = null;
   if (lastFocus?.isConnected) lastFocus.focus();
 }
-function download(text, filename) {
-  const url = URL.createObjectURL(new Blob([text], { type:'application/json;charset=utf-8' }));
+function download(text, filename, mime='application/json;charset=utf-8') {
+  const url = URL.createObjectURL(new Blob([text], { type:mime }));
   const a = document.createElement('a');
   a.href = url; a.download = filename;
   document.body.append(a); a.click(); a.remove();
@@ -29,6 +31,18 @@ function exportData() {
     const stamp = new Date().toISOString().slice(0, 10);
     download(createBackup(localStorage), 'renpet-backup-' + stamp + '.json');
   } catch (error) { window.alert(error.message || tr().empty); }
+}
+async function exportCalendar() {
+  try {
+    const response=await fetch('./data.json');
+    if(!response.ok)throw Error('Calendar data unavailable');
+    const data=await response.json();
+    const {text,count}=exportICS(loadScheduler(localStorage),data.years,occursOn,{
+      today:Math.floor(Date.now()/86400000)
+    });
+    if(!count){window.alert(tr().empty);return;}
+    download(text,'renpet-calendar-'+new Date().toISOString().slice(0,10)+'.ics','text/calendar;charset=utf-8');
+  } catch(error){window.alert(error.message||'ICS export failed');}
 }
 async function importData() {
   const picker = document.createElement('input');
@@ -60,6 +74,7 @@ function open() {
     <div class="renpet-backup-head"><h2 id="renpet-backup-heading"></h2><button type="button" data-backup="close" class="renpet-backup-close" aria-label=""></button></div>
     <p class="renpet-backup-info"></p>
     <button type="button" data-backup="export" class="renpet-backup-action"></button>
+    <button type="button" data-backup="ics" class="renpet-backup-action secondary"></button>
     <button type="button" data-backup="import" class="renpet-backup-action secondary"></button>
   </section>`;
   dialog.querySelector('h2').textContent = t.title;
@@ -68,12 +83,14 @@ function open() {
   dialog.querySelector('[data-backup="close"]').setAttribute('aria-label', t.close);
   dialog.querySelector('[data-backup="export"]').textContent = t.export;
   dialog.querySelector('[data-backup="import"]').textContent = t.import;
+  dialog.querySelector('[data-backup="ics"]').textContent = t.ics;
   dialog.dir = lang() === 'ar' ? 'rtl' : 'ltr';
   dialog.addEventListener('click', event => {
     const action = event.target.closest('[data-backup]')?.dataset.backup;
     if (action === 'close' || event.target === dialog) close();
     else if (action === 'export') exportData();
     else if (action === 'import') importData();
+    else if (action === 'ics') exportCalendar();
   });
   document.body.append(dialog);
   dialog.querySelector('[data-backup="close"]').focus();
