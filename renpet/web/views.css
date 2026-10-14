@@ -47,3 +47,11 @@ main.renpet-views-active > :not(.renpet-view-controls):not(.renpet-view-panel):n
 .renpet-list-group{padding:0 0 16px;border-bottom:1px solid #e6eaf1}
 .renpet-list-group+.renpet-list-group{padding-top:10px}
 @media(max-width:420px){.renpet-month-cell{min-height:63px}.renpet-month-grid[style*="10"] .renpet-month-cell{min-height:52px}.renpet-month-cell small{font-size:.55rem}.renpet-stacked-mark b,.renpet-detailed-mark b{font-size:.51rem}.renpet-view-switch button{font-size:.78rem}}
+
+/* Distinct appointment-density settings in every agenda view. */
+.renpet-compact .renpet-appointment{padding:7px 10px;margin:3px 0;align-items:center;gap:8px}
+.renpet-compact .renpet-event-body strong{font-size:.82rem;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.renpet-stacked .renpet-appointment{padding:12px 13px;min-height:48px;background:color-mix(in srgb,var(--event-color) 10%,white)}
+.renpet-stacked .renpet-event-time{font-weight:700}
+.renpet-detailed .renpet-appointment{padding:17px 14px;min-height:72px;gap:16px}
+.renpet-detailed .renpet-event-body strong{font-size:1rem}
