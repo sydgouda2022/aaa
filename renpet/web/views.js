@@ -2,7 +2,7 @@
 // Replaces the legacy month/year overview only in the calendar tab.
 import { DAY, dayNumber, isoDate, toEgyptian, toGregorian, monthGrid, festivalHits, nativeNumber } from './calendar.js';
 import { LOCALES } from './locales.js';
-import { loadScheduler, itemsForDay } from './scheduler.js';
+import { loadScheduler, occursOn } from './scheduler.js';
 
 const root = document.querySelector('#app');
 const STORE = 'renpet.view.v2';
@@ -44,7 +44,7 @@ function monthLength(e){return e.month===13?data.years.find(y=>y.year===e.year).
 function formatTitle(day){const e=toEgyptian(day,data.years);return `${nameMonth(e.month)} · ${number(e.year)}`;}
 function getItems(day){
   const state=loadScheduler();
-  try{return itemsForDay(state,day,data.years);}catch{return [];}
+  try { const visible=new Set(state.calendars.filter(c=>c.visible!==false).map(c=>c.id)); return state.items.filter(i=>visible.has(i.calendarId)&&occursOn(i,day,data.years)).sort((a,b)=>a.startMinutes-b.startMinutes); } catch { return []; }
 }
 function itemColor(item){const state=loadScheduler();return state.calendars.find(c=>c.id===item.calendarId)?.color||'#1034A6';}
 function itemClock(item){
