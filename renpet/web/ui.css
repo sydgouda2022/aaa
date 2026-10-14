@@ -189,3 +189,76 @@ html[dir=rtl] [data-back] svg{transform:scaleX(-1)}
 .timeline-event small{font-size:11px}
 
 .timeline-events{pointer-events:none}.timeline-event{pointer-events:auto;touch-action:none;user-select:none;display:flex;flex-direction:column;padding:0;overflow:hidden}.event-drag{display:flex;flex-direction:column;gap:2px;flex:1;min-height:0;width:100%;padding:4px 6px;overflow:hidden;cursor:grab}.event-drag:active{cursor:grabbing}.event-resize{height:10px;min-height:10px;width:100%;border-top:1px solid color-mix(in srgb,var(--event) 40%,transparent);cursor:ns-resize;position:relative}.event-resize:after{content:'';display:block;width:24px;height:3px;border-radius:4px;background:var(--event);margin:3px auto}.timeline-slot{background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;min-width:0;display:block;width:100%;text-align:start;cursor:pointer}
+
+/* Renpet 1.3 — Apple Calendar visual language. Style only: existing calendar behavior is retained. */
+:root{--ios-border:#dedee2;--ios-surface:rgba(250,250,252,.94);--ios-text:#09090b}
+body{background:#fff;color:var(--ios-text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,sans-serif}
+.app-shell{background:#fff;max-width:none}
+.ios-toolbar{padding:env(safe-area-inset-top,0px) 19px 0;background:rgba(255,255,255,.98);box-shadow:none;border:0;z-index:12}
+.ios-top-row{min-height:78px;align-items:center;gap:14px}
+.ios-pill{border:1px solid var(--ios-border);background:var(--ios-surface);border-radius:999px;box-shadow:0 1px 1px rgba(0,0,0,.015)}
+.ios-top-row .breadcrumb{min-width:0}
+.ios-top-row .ios-back{display:flex;align-items:center;gap:5px;border:1px solid var(--ios-border);border-radius:999px;background:#fafafa;padding:0 14px;min-height:46px;max-width:45vw;font-size:17px;font-weight:500;overflow:hidden}
+.ios-top-row .ios-back span{overflow:hidden;text-overflow:ellipsis}
+.ios-top-row .ios-back svg{width:21px;height:21px;flex:none}
+.ios-top-row .ios-actions{display:flex;align-items:center;gap:0;padding:0 5px;flex-shrink:0}
+.ios-top-row .ios-actions button{width:51px;height:48px;min-width:0;min-height:0;padding:0;border:0;border-radius:999px;background:transparent;color:#0b0b0d}
+.ios-top-row .ios-actions button svg{width:26px;height:26px;stroke-width:2}
+.ios-top-row .ios-actions [data-new] svg{width:28px;height:28px}
+.ios-top-row .ios-actions button:active,.ios-bottom button:active,.ios-top-row .ios-back:active{background:rgba(120,120,128,.12)}
+.ios-headline{padding:12px 0 16px;align-items:flex-end;border-bottom:0}
+.ios-headline h1{font-size:clamp(34px,9vw,43px);font-weight:750;letter-spacing:-1.4px;line-height:1.08;color:#050505}
+.ios-period-arrows{display:flex;gap:0;align-items:center}
+.ios-period-arrows button{width:38px;height:36px;min-width:38px;min-height:36px;font-size:27px;color:var(--green);font-weight:400}
+.ios-view-popover{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);inset-inline-end:19px;z-index:32;width:min(325px,calc(100vw - 42px));border:1px solid #d4d4d8;border-radius:28px;padding:12px 16px 15px;background:rgba(253,253,255,.98);box-shadow:0 12px 36px rgba(0,0,0,.14);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.ios-menu-scrim{position:fixed;inset:0;z-index:31;background:transparent}
+.ios-view-options{display:flex;flex-direction:column}
+.ios-view-choice{width:100%;display:flex;align-items:center;gap:16px;min-height:53px;padding:5px 4px;border:0;background:transparent;color:#151517;text-align:start;font-size:17px}
+.ios-view-choice .ios-check{width:18px;color:#111;font-size:19px;font-weight:650}
+.ios-view-choice .ios-view-symbol{font-size:23px;min-width:27px;text-align:center;color:#202024}
+.ios-view-choice svg{width:23px;height:23px;color:#161618}
+.ios-menu-separator{height:1px;background:#dedee3;margin:8px 0}
+.ios-view-secondary{display:flex;gap:6px;padding-top:4px}
+.ios-view-secondary button{flex:1;min-height:38px;border:0;border-radius:10px;background:#f0f0f2;color:#3c3c40;font-size:13px}
+.ios-view-secondary button.selected{background:#fff;color:var(--green);box-shadow:0 1px 4px #0002;font-weight:700}
+.ios-bottom{position:relative;display:flex;justify-content:space-between;align-items:center;padding:8px 22px max(16px,env(safe-area-inset-bottom));min-height:78px;background:#fff;border:0;gap:16px}
+.ios-bottom .bottom-left,.ios-bottom .bottom-right{display:flex;align-items:center}
+.ios-bottom .ios-pill{min-height:50px}
+.ios-bottom .ios-today{min-width:0;flex:none;padding:0 18px;min-height:50px;border:1px solid var(--ios-border);border-radius:999px;background:#fafafa;color:#0d0d0f;font-size:17px;font-weight:500}
+.ios-bottom .bottom-right{padding:0 6px}
+.ios-bottom .bottom-right button{width:57px;min-width:57px;min-height:48px;flex:none;padding:0;display:grid;place-items:center;border:0;background:transparent;color:#0b0b0d}
+.ios-bottom .bottom-right button svg{width:25px;height:25px;stroke-width:2}
+.month-scroll{padding:0 15px 0;max-width:none}
+.month-section .subtle{font-size:13px;margin:0;padding:8px 6px 10px}
+.month-section .week-headers{border-bottom:1px solid #d3d3d8;padding:8px 0 11px}
+.month-section .week-headers span{font-size:12px;font-weight:500;color:#8e8e93}
+.month-section .date,.month-section .blank{min-height:clamp(63px,11.4vh,99px);border-bottom:1px solid #dedee2;padding-top:9px;gap:4px}
+.month-section .date .day-number{font-size:20px;width:37px;height:37px;font-weight:520}
+.month-section .date small{font-size:12px;color:#8e8e93}
+.month-section .date.chosen .day-number{background:var(--green);color:#fff;font-weight:700}
+.month-section .date.is-today:not(.chosen) .day-number{color:#ee4d4d}
+.month-section .dots i{width:6px;height:6px}
+.month-section .fest-mark{font-size:10px;color:#c3a05b}
+.month-agenda{border-top:5px solid #f6f6f8;margin:9px -15px 0;padding:0 15px;min-height:200px}
+.month-agenda .agenda{padding:18px 6px 28px}
+.month-agenda .agenda h3{font-size:23px;letter-spacing:-.4px}
+.month-agenda .empty{padding-top:44px;font-size:17px;color:#8e8e93}
+.year-month strong{color:var(--green)}
+.sheet{background:#f4f4f6}
+.sheet-head{background:#fff}
+.simple-header{background:#fff}
+@media(max-width:420px){
+ .ios-toolbar{padding-inline:17px}
+ .ios-top-row{min-height:72px}
+ .ios-top-row .ios-actions button{width:46px;height:46px}
+ .ios-top-row .ios-back{padding:0 12px;min-height:44px}
+ .ios-headline h1{font-size:39px}
+ .month-scroll{padding-inline:12px}
+ .month-section .date,.month-section .blank{min-height:clamp(59px,10.2vh,92px)}
+ .month-section .date .day-number{font-size:18px;width:34px;height:34px}
+ .month-agenda{margin-inline:-12px;padding-inline:12px}
+ .ios-bottom{padding-inline:17px}
+ .ios-bottom .bottom-right button{width:51px;min-width:51px}
+ .ios-view-popover{inset-inline-end:15px}
+}
+@media(min-width:650px){.month-scroll{max-width:650px;margin:auto}.ios-top-row,.ios-headline{max-width:850px;margin-inline:auto}.ios-bottom{padding-inline:max(22px,calc((100vw - 800px)/2))}}
