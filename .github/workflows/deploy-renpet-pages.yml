@@ -61,6 +61,7 @@ jobs:
           node --check renpet/web/backup-core.mjs
           node --check renpet/web/ics-core.mjs
           node --check renpet/web/sw.js
+          node renpet/tests/ui.test.mjs
           node renpet/tests/scheduler.test.mjs
           node renpet/tests/backup.test.mjs
           node renpet/tests/ics.test.mjs
