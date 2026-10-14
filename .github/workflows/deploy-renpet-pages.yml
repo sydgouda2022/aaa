@@ -1,4 +1,4 @@
-name: Deploy Renpet 0.3.0 to Cloudflare
+name: Deploy Renpet 0.4.0 to Cloudflare
 on:
   push:
     paths:
@@ -25,12 +25,15 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
+      - name: Apply Renpet 0.4.0 scheduler UI
+        run: tar -xzf renpet/build-assets/v040-web.tar.gz -C renpet
       - name: Rebuild packaged assets
         run: |
           gzip -dc renpet/build-assets/style.css.gz > renpet/web/style.css
           cat renpet/build-assets/data.part1 renpet/build-assets/data.part2 renpet/build-assets/data.part3 > /tmp/renpet-data.json.gz
           gzip -t /tmp/renpet-data.json.gz
           gzip -dc /tmp/renpet-data.json.gz > renpet/web/data.json
+          sed -i 's/"version":"0.3.0"/"version":"0.4.0"/' renpet/web/data.json
           # The UI's numeric hieroglyphs are self-contained SVG outlines.
           # Remove the temporary test subset font and use platform fallback for
           # non-numeric hieroglyphic labels in this test deployment.
@@ -60,13 +63,16 @@ jobs:
           node --check renpet/web/app.js
           node --check renpet/web/calendar.js
           node --check renpet/web/locales.js
+          node --check renpet/web/scheduler.js
           node --check renpet/web/sw.js
+          node renpet/tests/scheduler.test.mjs
           test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 333
           grep -q '<title>Renpet</title>' renpet/web/index.html
           grep -q '"name":"Renpet"' renpet/web/manifest.webmanifest
           python - <<'PY'
           import json
           d=json.load(open('renpet/web/data.json',encoding='utf-8'))
+          assert d['version']=='0.4.0'
           assert d['min_date']=='1900-01-01'
           assert d['max_date']=='2200-12-31'
           assert d['years'][0]['year']==6155 and d['years'][-1]['year']==6457
@@ -97,6 +103,8 @@ jobs:
               curl -fsSL --max-time 20 "$BASE/data.json" | grep -q '"min_date"'
               curl -fsSL --max-time 20 "$BASE/assets/numerals/6282.svg" | grep -q '<svg'
               curl -fsSL --max-time 20 "$BASE/manifest.webmanifest" | grep -q '"Renpet"'
+              curl -fsSL --max-time 20 "$BASE/scheduler.js" | grep -q 'renpet.scheduler.v1'
+              curl -fsSL --max-time 20 "$BASE/scheduler.css" | grep -q 'editor-sheet'
               echo "Renpet live at $BASE"
               exit 0
             fi
