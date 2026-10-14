@@ -54,8 +54,9 @@ function itemClock(item){
   return `${h}:${m}`;
 }
 function eventMarkup(item){
-  const title=esc(item.title||t().events);
-  return `<div class="renpet-appointment" style="--event-color:${/^#[0-9a-f]{6}$/i.test(itemColor(item))?itemColor(item):'#1034A6'}"><span class="renpet-event-time">${esc(itemClock(item))}</span><div class="renpet-event-body"><strong>${title}</strong>${display==='detailed'&&item.location?`<small>${esc(item.location)}</small>`:''}${display==='detailed'&&item.notes?`<small>${esc(item.notes)}</small>`:''}</div>${item.kind==='reminder'?'☑':''}</div>`;
+ const title=esc(item.title||t().events),color=itemColor(item);
+ const safe=/^#[0-9a-f]{6}$/i.test(color)?color:'#187568';
+ return `<button type="button" class="renpet-appointment" data-renpet-item="${esc(item.id)}" style="--event-color:${safe}"><span class="renpet-event-time">${esc(itemClock(item))}</span><span class="renpet-event-body"><strong>${title}</strong>${display==='detailed'&&item.location?`<small>${esc(item.location)}</small>`:''}${display==='detailed'&&item.notes?`<small>${esc(item.notes)}</small>`:''}</span>${item.kind==='reminder'?'☑':''}</button>`;
 }
 function eventsFor(day){
   const items=getItems(day);
@@ -194,6 +195,30 @@ function quickAdd(){
  });
  document.body.append(overlay);overlay.querySelector('[name="title"]').focus();
 }
+function editItem(id){
+ const state=loadScheduler(),item=state.items.find(i=>i.id===id);
+ if(!item)return;
+ const langAr=language()==='ar',date=isoDate(item.startDay),time=String(Math.floor((item.startMinutes||0)/60)).padStart(2,'0')+':'+String((item.startMinutes||0)%60).padStart(2,'0');
+ const overlay=document.createElement('div');overlay.className='renpet-quick-overlay';
+ overlay.innerHTML=`<form class="renpet-quick-sheet" role="dialog" aria-modal="true"><div class="renpet-sheet-head"><button type="button" data-close aria-label="${langAr?'إغلاق':'Close'}">×</button><h2>${langAr?'تفاصيل الموعد':'Event details'}</h2><button type="submit">${langAr?'حفظ':'Save'}</button></div><label>${langAr?'العنوان':'Title'}<input name="title" required maxlength="200" value="${esc(item.title)}"></label><label>${langAr?'التاريخ':'Date'}<input name="date" type="date" required value="${date}"></label><label>${langAr?'الوقت':'Time'}<input name="time" type="time" value="${time}"></label><label>${langAr?'المكان':'Location'}<input name="location" maxlength="300" value="${esc(item.location||'')}"></label><label>${langAr?'ملاحظات':'Notes'}<textarea name="notes" rows="3">${esc(item.notes||'')}</textarea></label><button type="button" class="renpet-delete-event" data-delete>${langAr?'حذف الموعد':'Delete event'}</button></form>`;
+ overlay.addEventListener('click',ev=>{
+  if(ev.target===overlay||ev.target.closest('[data-close]'))overlay.remove();
+  if(ev.target.closest('[data-delete]')&&window.confirm(langAr?'حذف هذا الموعد؟':'Delete this event?')){
+   state.items=state.items.filter(i=>i.id!==id);saveScheduler(state);overlay.remove();updatePanel();
+  }
+ });
+ overlay.querySelector('form').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const form=new FormData(ev.currentTarget),newDay=dayNumber(String(form.get('date'))),timeParts=String(form.get('time')||'09:00').split(':').map(Number);
+  if(!Number.isInteger(newDay)||!String(form.get('title')).trim())return;
+  const span=Math.max(0,item.endDay-item.startDay);
+  item.title=String(form.get('title')).trim();item.startDay=newDay;item.endDay=newDay+span;
+  item.startMinutes=timeParts[0]*60+timeParts[1];item.endMinutes=Math.min(item.startMinutes+60,1439);
+  item.location=String(form.get('location')||'');item.notes=String(form.get('notes')||'');item.updatedAt=new Date().toISOString();
+  saveScheduler(state);overlay.remove();focus=clamp(newDay,data);updatePanel();
+ });
+ document.body.append(overlay);overlay.querySelector('[name="title"]').focus();
+}
 function installListeners(){
  root.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b)return;
@@ -201,6 +226,7 @@ function installListeners(){
   if(b.hasAttribute('data-renpet-options')){event.stopImmediatePropagation();const menu=activeMain.querySelector('.renpet-view-menu');menu.hidden=!menu.hidden;return;}
   if(b.hasAttribute('data-renpet-search')){event.stopImmediatePropagation();const p=activeMain.querySelector('.renpet-search-panel');p.hidden=!p.hidden;if(!p.hidden)p.querySelector('input').focus();return;}
   if(b.hasAttribute('data-renpet-add')){event.stopImmediatePropagation();quickAdd();return;}
+  if(b.dataset.renpetItem){event.stopImmediatePropagation();editItem(b.dataset.renpetItem);return;}
   if(b.dataset.renpetResult){event.stopImmediatePropagation();focus=clamp(Number(b.dataset.renpetResult),data);view='day';persist();activeMain.querySelector('.renpet-search-panel').hidden=true;updatePanel();return;}
   if(b.dataset.renpetYear){event.stopImmediatePropagation();const e=toEgyptian(focus,data.years);const y=e.year+Number(b.dataset.renpetYear);if(data.years.some(v=>v.year===y)){focus=toGregorian({year:y,month:e.month,day:Math.min(e.day,monthLength({year:y,month:e.month}))},data.years);updatePanel();}return;}
   if(b.dataset.renpetMove){event.stopImmediatePropagation();move(Number(b.dataset.renpetMove));return;}

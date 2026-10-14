@@ -110,3 +110,7 @@ main.renpet-views-active[data-renpet-view="month"] .renpet-view-panel{padding-in
  .renpet-view-menu{animation:renpet-reveal .16s ease-out}
  @keyframes renpet-reveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 }
+
+.renpet-appointment{box-sizing:border-box;width:100%;font-family:inherit;text-align:start;cursor:pointer}
+.renpet-appointment:focus-visible{outline:2px solid var(--renpet-nile);outline-offset:-2px}
+.renpet-delete-event{border:0;border-radius:10px;background:#fff;color:#c83232;min-height:44px;font-size:16px;font-weight:600;cursor:pointer}
