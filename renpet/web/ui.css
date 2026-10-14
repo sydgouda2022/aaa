@@ -177,3 +177,13 @@ html[dir=rtl] [data-back] svg{transform:scaleX(-1)}
 .hour-row>div{min-height:65px}
 @media(min-width:650px){.year-months{grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}.month-scroll{max-width:620px;margin:auto}.month-section .date,.month-section .blank{min-height:68px}}
 @media(max-width:390px){.apple-toolbar .headline h1{font-size:32px}.month-section .date,.month-section .blank{min-height:50px}.month-section .date .day-number{height:27px;width:27px;font-size:14px}.month-agenda{margin-top:7px}.mini-grid span{font-size:8px}}
+
+/* iOS-style 24-hour time grid */
+.timeline{position:relative;min-height:1536px;margin:12px 12px 24px 8px}
+.timeline-hour{display:flex;align-items:flex-start;height:64px;gap:10px}
+.timeline-hour>span{width:54px;flex-shrink:0;text-align:end;color:var(--muted);font-size:12px;transform:translateY(-8px)}
+.timeline-slot{height:64px;flex:1;border-top:1px solid var(--line);cursor:pointer}
+.timeline-events{position:absolute;top:0;bottom:0;left:72px;right:4px;pointer-events:none}
+.timeline-event{pointer-events:auto;position:absolute;inset-inline:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;overflow:hidden;border:0;border-inline-start:4px solid var(--event);border-radius:6px;background:color-mix(in srgb,var(--event) 18%,white);padding:4px 8px;color:var(--ink);text-align:start;font-size:13px}
+.timeline-event strong{font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timeline-event small{font-size:11px}
