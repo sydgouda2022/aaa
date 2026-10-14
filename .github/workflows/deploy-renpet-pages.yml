@@ -26,7 +26,10 @@ jobs:
         with:
           node-version: '24'
       - name: Apply Renpet 0.4.0 scheduler UI
-        run: tar -xzf renpet/build-assets/v040-web.tar.gz -C renpet
+        run: |
+          base64 -d renpet/build-assets/v040-web.tar.gz.b64 > /tmp/renpet-v040.tar.gz
+          gzip -t /tmp/renpet-v040.tar.gz
+          tar -xzf /tmp/renpet-v040.tar.gz -C renpet
       - name: Rebuild packaged assets
         run: |
           gzip -dc renpet/build-assets/style.css.gz > renpet/web/style.css
