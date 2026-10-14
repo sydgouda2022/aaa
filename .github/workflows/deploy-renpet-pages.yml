@@ -127,7 +127,7 @@ jobs:
               && curl -fsSL --max-time 20 "$BASE/backup.js" -o /tmp/renpet-backup \
               && curl -fsSL --max-time 20 "$BASE/views.js" -o /tmp/renpet-views \
               && grep -q '<title>Renpet</title>' /tmp/renpet-index \
-              && grep -q '"version":"0.5.0"' /tmp/renpet-data \
+              && grep -q '"version":"0.6.1"' /tmp/renpet-data \
               && grep -q '<svg' /tmp/renpet-numeral \
               && grep -q '"Renpet"' /tmp/renpet-manifest \
               && grep -q '#1034A6' /tmp/renpet-manifest \
