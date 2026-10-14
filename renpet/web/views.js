@@ -108,6 +108,12 @@ function paint(){
   controls.innerHTML=`<div class="renpet-view-switch" role="group" aria-label="${esc(t().views)}">${['day','week','month','list'].map(v=>`<button type="button" data-renpet-view="${v}" aria-pressed="${v===view}" class="${v===view?'active':''}">${esc(t()[v])}</button>`).join('')}</div><div class="renpet-view-navigation"><button type="button" data-renpet-move="-1" aria-label="${esc(t().previous)}">‹</button><strong class="renpet-view-title">${esc(formatTitle(focus))}</strong><button type="button" data-renpet-move="1" aria-label="${esc(t().next)}">›</button></div><div class="renpet-display-picker"><label for="renpet-display-style">${esc(t().views)}</label><select id="renpet-display-style">${['compact','stacked','detailed'].map(v=>`<option value="${v}" ${display===v?'selected':''}>${esc(t()[v])}</option>`).join('')}</select></div>`;
   const panel=document.createElement('div');panel.className='renpet-view-panel';
   main.prepend(panel);main.prepend(controls);
+  // Remove the retired year board and month/year switch from the DOM,
+  // rather than merely visually hiding them. Preserve any active editor.
+  for (const child of [...main.children]) {
+    if (child === controls || child === panel || child.matches('[role="dialog"],.modal,.sheet,form') || child.querySelector('[role="dialog"]')) continue;
+    child.remove();
+  }
   updatePanel();
 }
 function updatePanel(){
