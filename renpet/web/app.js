@@ -133,7 +133,7 @@ function managerView(){
 function nav(){
  const labels=[['today',T().today],['year',LOCALES[lang()].year],['month',T().month],['list',T().list]];
  const glyphs={today:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>',year:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M10 3v18M3 10h18"/>',month:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h1M3 12h1M3 18h1"/>'};
- return '<nav class="bottom-nav ios-bottom ux-bottom" aria-label="'+safe(T().view)+'">'+labels.map(([v,label])=>{
+ return '<nav class="ux-bottom" aria-label="'+safe(T().view)+'">'+labels.map(([v,label])=>{
   const active=v==='today'?state.view==='day'&&state.focus===today():state.view===v;
   return '<button type="button" data-primary-view="'+v+'" class="ux-nav-item'+(active?' active':'')+'" aria-current="'+(active?'page':'false')+'"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+glyphs[v]+'</svg><span>'+safe(label)+'</span></button>';
  }).join('')+'</nav>';
