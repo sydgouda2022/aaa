@@ -28,8 +28,8 @@ button svg{flex-shrink:0}
 .app-shell{display:flex;flex-direction:column;width:100%;max-width:850px;margin:0 auto;height:100dvh;min-height:0;overflow:hidden;background:var(--bg)}
 .main-scroll{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .main-scroll::-webkit-scrollbar{display:none}
-.ux-toolbar{flex:0 0 auto;padding:env(safe-area-inset-top,0px) 22px 0;background:var(--bg);position:relative;z-index:4}
-.ux-toolbar-top{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:67px}
+.ux-toolbar{flex:0 0 auto;padding:env(safe-area-inset-top,0px) 16px 0;background:var(--bg);position:relative;z-index:4}
+.ux-toolbar-top{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:50px}
 .ux-back{flex:1;min-width:0}
 .ux-back button{display:flex;align-items:center;gap:4px;min-height:44px;max-width:150px;padding:0;border:0;background:transparent;color:var(--green);font-size:14px}
 .ux-back button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -39,15 +39,12 @@ html[dir=rtl] .ux-back button svg{transform:scaleX(-1)}
 .ux-toolbar-actions button{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--surface);color:var(--green);box-shadow:0 1px 2px #15271e0c}
 .ux-toolbar-actions button:active{background:var(--mint)}
 .ux-toolbar-actions svg{width:21px;height:21px}
-.ux-toolbar-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:13px 0 19px}
+.ux-toolbar-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0 9px}
 .ux-heading{flex:1;min-width:0}
-.ux-heading h1{margin:0;line-height:1.07;font-size:clamp(32px,9vw,42px);font-weight:750;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ux-heading p{margin:9px 0 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ux-heading-actions{display:flex;flex:0 0 auto;flex-direction:column;align-items:flex-end;gap:8px;max-width:43%}
-.ux-language{display:flex;min-width:105px;max-width:155px;align-items:center;border-radius:999px;background:var(--mint);overflow:hidden}
-.ux-language select{width:100%;border:0;background:transparent;color:var(--deep-green);padding:8px 9px;font-size:12px;text-overflow:ellipsis}
+.ux-heading h1{margin:0;line-height:1.05;font-size:clamp(27px,7.5vw,36px);font-weight:740;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ux-heading p{margin:4px 0 0;font-size:11px;color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ux-period-controls{display:flex;gap:3px}
-.ux-period-controls button{min-width:34px;min-height:30px;border:0;background:transparent;color:var(--green);font-size:24px;line-height:1}
+.ux-period-controls button{min-width:44px;min-height:44px;border:0;background:transparent;color:var(--green);font-size:26px;line-height:1}
 .search-panel{padding:0 0 14px;background:var(--bg)}
 .search-panel input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:13px;background:#fff;font-size:16px}
 .search-results{max-height:235px;overflow:auto}
@@ -55,48 +52,48 @@ html[dir=rtl] .ux-back button svg{transform:scaleX(-1)}
 .search-results small{font-size:12px;color:var(--muted)}
 
 /* The four primary views share one bottom navigation. */
-.ux-bottom{display:flex;flex:0 0 auto;min-height:77px;align-items:center;justify-content:space-around;gap:2px;padding:7px 7px max(9px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
-.ux-bottom .ux-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:55px;padding:5px 2px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:11px;line-height:1.15}
+.ux-bottom{display:flex;flex:0 0 auto;min-height:66px;align-items:center;justify-content:space-around;gap:2px;padding:5px 7px max(6px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
+.ux-bottom .ux-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;padding:4px 2px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:11px;line-height:1.15}
 .ux-bottom .ux-nav-item.active{color:var(--green);font-weight:740}
 .ux-bottom .ux-nav-item svg{height:23px;width:23px}
 .ux-bottom .ux-nav-item:active{background:var(--mint)}
 
 /* Month: same date cell in Arabic / Coptic / hieroglyphs. Only geometry changes. */
-.month-scroll{max-width:670px;margin:0 auto;padding:0 22px 24px}
-.month-section{margin:0}
-.month-section .date-range{margin:0;padding:0 0 12px;font-size:12px}
+.month-scroll{max-width:670px;margin:0 auto;padding:0 13px 5px;min-height:0;height:100%;display:flex;flex-direction:column}
+.month-section{flex:0 0 auto;margin:0}
+.month-section .date-range{margin:0;padding:0 0 5px;font-size:10px;line-height:13px}
 .week-headers,.dates{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.week-headers{padding:12px 0 10px;border-top:1px solid var(--line)}
+.week-headers{padding:6px 0 5px;border-top:1px solid var(--line)}
 .week-headers span{text-align:center;font-size:12px;font-weight:580;color:var(--muted);overflow:hidden;white-space:nowrap}
 .dates{gap:2px 0}
-.date,.blank{position:relative;min-width:0;min-height:60px;border:0;background:transparent}
-.date{display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:11px;padding:5px 0 2px}
-.date .day-number{display:grid;place-items:center;width:auto;min-width:33px;max-width:100%;height:33px;padding:0 3px;border-radius:12px;font-size:16px;line-height:1;font-weight:630;white-space:nowrap}
-.date .day-number .glyph{height:20px;max-width:95%}
+.date,.blank{position:relative;min-width:0;min-height:44px;border:0;background:transparent}
+.date{display:flex;flex-direction:column;align-items:center;gap:0;border-radius:11px;padding:2px 0 1px}
+.date .day-number{display:grid;place-items:center;width:auto;min-width:30px;max-width:100%;height:29px;padding:0 3px;border-radius:12px;font-size:15px;line-height:1;font-weight:630;white-space:nowrap}
+.date .day-number .glyph{height:17px;max-width:95%}
 .date.chosen .day-number{background:var(--green);color:#fff;padding-inline:7px}
 .date.chosen .day-number .glyph{filter:brightness(0) invert(1)}
 .date.is-today:not(.chosen) .day-number{border:1px solid var(--green);color:var(--green)}
-.date small{color:var(--muted);font-size:10px;line-height:12px}
-.date .dots{display:flex;justify-content:center;align-items:center;gap:3px;height:6px}
+.date small{color:var(--muted);font-size:9px;line-height:10px}
+.date .dots{display:flex;justify-content:center;align-items:center;gap:3px;height:4px}
 .dots i{display:block;height:4px;width:4px;border-radius:50%}
 .fest-mark{position:absolute;inset-inline-end:2px;top:3px;color:var(--gold);font-size:9px;font-style:normal}
 .date:active,.date:hover{background:var(--mint)}
-.month-section.ten-day .decades{display:flex;flex-direction:column;gap:11px;padding-top:5px}
+.month-section.ten-day .decades{display:flex;flex-direction:column;gap:5px;padding-top:2px}
 .renpet-decade{min-width:0}
-.decade-label{margin:0 0 5px;font-size:11px;font-weight:560;color:var(--muted)}
+.decade-label{margin:0 0 2px;font-size:10px;font-weight:560;color:var(--muted)}
 .decade-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px 5px}
-.decade-days .date{min-height:50px}
-.decade-days .date .day-number{height:30px;font-size:15px}
+.decade-days .date{min-height:39px}
+.decade-days .date .day-number{height:26px;font-size:14px}
 body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
-.month-agenda{margin:13px 0 0;padding:8px 0 0;min-height:150px;border-top:1px solid var(--line)}
-.month-agenda .agenda{padding:7px 0 15px}
+.month-agenda{flex:1 1 auto;min-height:112px;overflow-y:auto;overscroll-behavior:contain;margin:7px 0 0;padding:6px 0 0;border-top:1px solid var(--line)}
+.month-agenda .agenda{padding:4px 0 11px}
 
 /* Shared agenda: appointment and reminder cards */
-.agenda{padding:16px 20px 22px}
-.agenda h3{margin:0 0 4px;font-size:19px}
-.agenda .subtle{margin:0 0 12px;font-size:12px}
-.agenda .empty{padding:20px 4px}
-.event-row{display:flex;align-items:center;gap:10px;width:100%;min-height:70px;padding:12px;margin:8px 0;text-align:start;border:0;border-radius:14px;background:var(--surface);box-shadow:0 1px 0 #1b29240b}
+.agenda{padding:10px 13px 13px}
+.agenda h3{margin:0 0 2px;font-size:18px}
+.agenda .subtle{margin:0;font-size:11px}
+.agenda .empty{padding:10px 4px}
+.event-row{display:flex;align-items:center;gap:10px;width:100%;min-height:54px;padding:9px;margin:6px 0;text-align:start;border:0;border-radius:12px;background:var(--surface);box-shadow:0 1px 0 #1b29240b}
 .event-row:before{content:'';display:block;align-self:stretch;flex:0 0 4px;min-height:40px;border-radius:3px;background:var(--event)}
 .event-clock{flex:0 0 52px;font-size:12px;color:var(--muted)}
 .event-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -106,17 +103,9 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .reminder-box svg{width:18px;height:18px}
 
 /* Year: precisely twelve month tiles plus a separate epagomenal entry. */
-.year-overview{max-width:750px;margin:auto;padding:0 22px 27px}
-.year-caption{margin:2px 0 16px;color:var(--muted);font-size:12px}
-.year-months{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.year-month{min-width:0;min-height:119px;padding:11px;border:0;border-radius:14px;background:var(--surface);text-align:start}
-.year-month.active-month{background:var(--mint)}
-.year-month strong{display:block;margin:0 0 7px;font-size:clamp(13px,3.2vw,17px);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mini-grid{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1px 0;direction:ltr}
-.mini-grid span{display:grid;place-items:center;min-width:0;min-height:12px;color:var(--muted);font-size:8px;white-space:nowrap;overflow:hidden}
-.mini-grid .glyph{height:8px;max-width:100%}
-.mini-grid .mini-selected{background:var(--green);color:#fff;border-radius:5px}
-.mini-grid .mini-today{outline:1px solid var(--green)}
+.year-overview{max-width:650px;margin:auto;padding:0 16px 20px}
+.year-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.year-month{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;min-height:62px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:start}
 .epagomenal-tile{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:12px 0 0;padding:12px;border:0;border-radius:13px;background:var(--gold-soft);color:var(--deep-green);text-align:start}
 .epagomenal-tile strong{flex:1}
 .epagomenal-tile small{font-size:11px;color:var(--muted)}
@@ -141,14 +130,8 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .list-page .agenda{padding:13px 4px 18px;border-bottom:1px solid var(--line)}
 
 /* Secondary features have ONE entry point, and open over the calendar. */
-.more-scrim,.ux-panel-backdrop{position:fixed;inset:0;background:#15281a45}
-.more-scrim{z-index:18}
-.more-sheet{position:fixed;z-index:19;bottom:calc(81px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(440px,calc(100% - 24px));padding:8px;border:1px solid var(--line);border-radius:19px;background:#fff;box-shadow:0 10px 35px #0002}
-.more-sheet button{display:flex;align-items:center;gap:14px;width:100%;min-height:50px;padding:8px 10px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--green);text-align:start;font-size:15px}
-.more-sheet button:last-child{border:0}
-.more-sheet svg{width:21px;height:21px}
 .ux-panel-backdrop{z-index:25}
-.ux-panel{position:fixed;z-index:26;inset:env(safe-area-inset-top,0px) 0 0;display:flex;flex-direction:column;width:min(100%,600px);max-height:calc(100dvh - env(safe-area-inset-top,0px));margin:0 auto;background:var(--bg);border-radius:20px 20px 0 0;box-shadow:0 -8px 30px #0002;overflow:hidden}
+.ux-panel{position:fixed;z-index:26;inset:auto 0 0;display:flex;flex-direction:column;width:min(100%,600px);max-height:min(70dvh,650px);margin:0 auto;background:var(--bg);border-radius:22px 22px 0 0;box-shadow:0 -8px 30px #0002;overflow:hidden}
 .ux-panel-head{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;min-height:58px;padding:0 18px;background:#fff;border-bottom:1px solid var(--line)}
 .ux-panel-head strong{font-size:17px}
 .ux-panel-head button{min-width:43px;min-height:43px;padding:0;border:0;background:transparent;color:var(--green);font-size:30px}
@@ -167,10 +150,6 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .cal-row button{margin-inline-start:auto;border:0;background:transparent;color:#b44141;font-size:24px}
 .color-dot{width:12px;height:12px;flex-shrink:0;border-radius:50%}
 .primary{display:block;width:100%;min-height:46px;padding:12px;border:0;border-radius:11px;background:var(--green);color:#fff}
-.festival{display:flex;align-items:center;gap:12px;text-align:start;min-height:57px;width:100%;padding:13px 2px;border:0;border-bottom:1px solid var(--line);background:transparent}
-.festival span{color:var(--gold)}
-.festival small{margin-inline-start:auto;color:var(--muted);font-size:11px}
-.festival-detail{padding:12px;border-radius:10px;background:var(--soft);font-size:13px}
 .delete{width:100%;padding:13px;border:0;border-radius:11px;background:white;color:#b32c35;font-weight:650}
 
 /* One event-editor sheet, shared by all four views. */
@@ -193,26 +172,62 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .time-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .time-fields label{display:flex;flex-direction:column;gap:5px;font-size:14px;color:var(--muted)}
 
-@media(max-width:390px){
- .ux-toolbar{padding-inline:14px}
- .ux-toolbar-top{min-height:61px}
- .ux-toolbar-actions{gap:5px}
- .ux-toolbar-actions button{width:42px;height:42px}
- .ux-toolbar-head{padding-top:10px}
- .ux-heading h1{font-size:33px}
- .ux-language{min-width:88px;max-width:112px}
- .month-scroll,.year-overview{padding-inline:13px}
- .year-months{gap:7px}
- .year-month{padding:8px;min-height:110px}
- .date .day-number{font-size:15px}
- .event-clock{flex-basis:43px}
-}
-@media(min-width:650px){
- .decade-days{grid-template-columns:repeat(10,minmax(0,1fr))}
- .date{min-height:68px}
- .year-months{gap:17px}
- .year-month{min-height:153px;padding:14px}
- .mini-grid span{min-height:16px;font-size:10px}
- .ux-panel{inset:6dvh 0 auto;max-height:88dvh;border-radius:23px}
-}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+
+/* Compact, readable daily navigation and selected-day preview. */
+.year-brand{display:inline-flex;align-items:center;min-height:44px;color:var(--green);font-size:15px;font-weight:650}
+.year-shortcut{min-height:44px;display:inline-flex;align-items:center;gap:5px;max-width:180px;padding:0;border:0;background:transparent;color:var(--green);font-size:14px}
+.year-shortcut .glyph{height:15px}
+.agenda-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}
+.agenda-heading h3{font-size:17px;line-height:1.3;flex-shrink:0}
+.agenda-heading .subtle{flex:1;text-align:end}
+.agenda-empty{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;color:var(--muted);font-size:13px}
+.agenda-empty p{margin:0}
+.festival-in-agenda{display:flex;gap:9px;align-items:start;padding:7px 9px;margin:4px 0;border-radius:9px;background:var(--gold-soft)}
+.festival-in-agenda>span{color:var(--gold);font-size:12px}
+.festival-in-agenda div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.festival-in-agenda strong{font-size:12px;font-weight:650}
+.festival-in-agenda small{font-size:10px;color:var(--muted)}
+.year-season{margin:0 0 15px}
+.year-season h2{font-size:13px;letter-spacing:.3px;font-weight:700;color:var(--deep-green);margin:0 0 7px}
+.year-month.active-month{border-color:var(--green);background:var(--mint)}
+.year-month-name{font-weight:690;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.year-month-index{color:var(--muted);font-size:12px;flex-shrink:0}
+.year-month-index .glyph{height:17px}
+.schedule-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px 24px;max-width:400px;min-height:320px;margin:0 auto;text-align:center}
+.schedule-empty h2{font-size:19px;margin:0}
+.schedule-empty p{font-size:13px;color:var(--muted);margin:0 0 14px}
+.schedule-empty .empty-art{font-size:40px;color:var(--gold)}
+.schedule-empty .primary{max-width:225px}
+.settings-actions{display:flex;flex-direction:column;gap:0;background:#fff;border:1px solid var(--line);border-radius:14px}
+.settings-actions button{display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:start;font-size:14px}
+.settings-actions button:last-child{border:0}
+.settings-actions button span{font-size:22px;color:var(--muted)}
+.advanced-fields{padding:0;border:0}
+.advanced-fields>summary{display:flex;align-items:center;justify-content:space-between;min-height:45px;list-style:none;padding:12px;border-radius:11px;background:var(--surface);color:var(--green);font-size:14px;font-weight:670;cursor:pointer}
+.advanced-fields>summary::-webkit-details-marker{display:none}
+.advanced-fields>summary:after{content:'⌄';font-size:20px}
+.advanced-fields[open]>summary:after{transform:rotate(180deg)}
+.advanced-fields>label{display:flex;flex-direction:column;gap:7px;margin:12px 0;color:var(--muted);font-size:14px}
+.advanced-fields input,.advanced-fields select,.advanced-fields textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;font-size:16px;color:var(--ink)}
+@font-face{font-family:RenpetEgyptian;src:url('assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+body[data-language=egy] {font-family:RenpetEgyptian,-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+body[data-language=egy] .ux-bottom .ux-nav-item{font-size:15px}
+body[data-language=egy] .year-month-name{font-size:19px}
+body[data-language=egy] .year-shortcut{font-size:16px}
+@media(max-width:390px){
+ .ux-toolbar{padding-inline:13px}
+ .ux-toolbar-top{min-height:48px}
+ .ux-toolbar-head{padding:2px 0 6px}
+ .ux-heading h1{font-size:29px}
+ .month-scroll{padding-inline:10px}
+ .date,.blank{min-height:42px}
+ .year-month{min-height:58px}
+}
+@media(min-height:800px){
+ .date,.blank{min-height:49px}
+ .month-agenda{min-height:150px}
+}
+
+@media(min-width:650px){.decade-days{grid-template-columns:repeat(10,minmax(0,1fr))}}
