@@ -278,3 +278,7 @@ body[data-language=egy] .decade-days .date .day-number .glyph{height:23px;max-wi
  .mini-grid span{min-height:16px;font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Five-column decade strip for a full ten-day Week view on narrow iPhones. */
+.week-strip[data-week="10"]{grid-template-columns:repeat(5,minmax(0,1fr));row-gap:5px}
+@media(min-width:650px){.week-strip[data-week="10"]{grid-template-columns:repeat(10,minmax(0,1fr))}}
