@@ -14,14 +14,14 @@ const WORDS={
 };
 let schedule=loadScheduler();
 let previousRenderKey=null;
-let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={tab:'calendar',view:'month',focus:today(),display:'compact',menu:false,more:false,search:false,query:'',dialog:null,festival:null,manage:false};
+let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={view:'month',focus:today(),panel:null,more:false,search:false,query:'',dialog:null,festival:null};
 try{const x=JSON.parse(localStorage.getItem(SETTINGS)||'null');if(x){if(LOCALES[x.language])prefs.language=x.language;if(typeof x.gregorian==='boolean')prefs.gregorian=x.gregorian;if(typeof x.festivals==='boolean')prefs.festivals=x.festivals;if(x.weeks&&typeof x.weeks==='object')prefs.weeks=x.weeks;}}catch{}
-try{const x=JSON.parse(localStorage.getItem(VIEWS)||'null');if(['year','day','week','month','list'].includes(x?.view))state.view=x.view;if(['compact','stacked','detailed'].includes(x?.display))state.display=x.display;}catch{}
+try{const x=JSON.parse(localStorage.getItem(VIEWS)||'null');if(['year','day','month','list'].includes(x?.view))state.view=x.view;}catch{}
 const lang=()=>prefs.language,T=()=>WORDS[lang()],N=n=>nativeNumber(n,lang());
 const week=()=>[7,10].includes(prefs.weeks[lang()])?prefs.weeks[lang()]:(lang()==='ar'?7:10);
 const min=()=>dayNumber(data.min_date),max=()=>dayNumber(data.max_date),clamp=d=>Math.min(max(),Math.max(min(),d));
 const savePrefs=()=>{try{localStorage.setItem(SETTINGS,JSON.stringify(prefs));}catch{}};
-const saveView=()=>{try{localStorage.setItem(VIEWS,JSON.stringify({view:state.view,display:state.display}));}catch{}};
+const saveView=()=>{try{localStorage.setItem(VIEWS,JSON.stringify({view:state.view}));}catch{}};
 const egy=d=>toEgyptian(d,data.years);
 const monthName=m=>m===13?LOCALES[lang()].epagomenal:lang()==='egy'?('𓇹 '+N(m)):data.months[lang()][m-1];
 const numHtml=n=>lang()==='egy'&&n<=333?'<img class="glyph" src="assets/numerals/'+n+'.svg" alt="'+safe(N(n))+'">':safe(N(n));
@@ -36,7 +36,7 @@ const icon=name=>{const p={back:'<path d="m15 5-7 7 7 7"/>',search:'<circle cx="
 function eventRow(i,day=state.focus){
  const cal=schedule.calendars.find(c=>c.id===i.calendarId),color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
  const clock=i.allDay?T().allDay:String(Math.floor(i.startMinutes/60)).padStart(2,'0')+':'+String(i.startMinutes%60).padStart(2,'0');
- return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+safe(clock)+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(state.display==='detailed'&&i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
+ return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+safe(clock)+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
 }
 function agenda(d){const a=items(d);return '<section class="agenda"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<p class="subtle">'+safe(greg(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+'</p>':'')+(a.length?a.map(i=>eventRow(i,d)).join(''):'<p class="empty">'+safe(T().noEvents)+'</p>')+'</section>';}
 
@@ -114,19 +114,16 @@ function dayView(){
  const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeString(h*60)+'</span><button class="timeline-slot" data-hour="'+h+'" aria-label="'+safe(T().add)+' '+timeString(h*60)+'"></button></div>').join('');
  return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div></div></div>';
 }
-function weekView(){
- const w=week(),e=egy(state.focus),start=w===10?state.focus-(e.day-1)%10:state.focus-(new Date(state.focus*DAY).getUTCDay()+6)%7;
- return '<div class="week-page"><div class="week-strip" data-week="'+w+'" style="--cols:'+w+'">'+Array.from({length:w},(_,i)=>{const d=start+i;return '<button class="'+(d===state.focus?'active':'')+'" data-pick="'+d+'"><small>'+(w===7?safe(LOCALES[lang()].shortWeekdays?.[i]||N(i+1)):numHtml(i+1))+'</small><strong>'+numHtml(egy(d).day)+'</strong></button>';}).join('')+'</div>'+agenda(state.focus)+'</div>';
-}
+
 function listView(){const groups=[];for(let d=state.focus;d<=Math.min(max(),state.focus+59);d++)if(items(d).length)groups.push(agenda(d));return '<div class="list-page">'+(groups.join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div>';}
 function festivalView(){
- if(!prefs.festivals)return '<p class="empty">'+safe(T().noEvents)+'</p>';
  const e=egy(state.focus),start=monthStart(e),found=new Map();
  for(let d=start;d<start+monthDays(e);d++)for(const f of festivalHits(d,data.years,data.festivals))found.set(f.id,f);
  return '<section class="page"><h1>'+safe(T().festivals)+'</h1><p>'+safe(monthName(e.month))+' '+numHtml(e.year)+'</p><div class="festival-list">'+([...found.values()].map(f=>'<button class="festival" data-festival="'+safe(f.id)+'"><span>✦</span><strong>'+safe(lang()==='ar'?f.ar:T().festivals)+'</strong><small>'+safe(greg(f.start))+'</small></button>'+(state.festival===f.id?'<p class="festival-detail">'+safe(lang()==='ar'?f.description_ar:monthName(egy(f.start).month))+'</p>':'')).join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div></section>';
 }
+
 function settingsView(){
- return '<section class="page"><h1>'+safe(T().settings)+'</h1><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-group"><button class="setting-action" data-backup>'+safe(T().backup)+' ›</button><button class="setting-action" data-manage>'+safe(T().manage)+' ›</button></div><p class="build-label">'+safe(T().version)+' 2.0.0</p></section>';
+ return '<section class="page preferences-page"><h1>'+safe(T().settings)+'</h1><div class="settings-group"><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><p class="build-label">'+safe(T().version)+' 2.1.0</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -136,21 +133,20 @@ function managerView(){
 function nav(){
  const labels=[['today',T().today],['year',LOCALES[lang()].year],['month',T().month],['list',T().list]];
  const glyphs={today:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>',year:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M10 3v18M3 10h18"/>',month:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h1M3 12h1M3 18h1"/>'};
- return '<nav class="bottom-nav ios-bottom ux-bottom" aria-label="'+safe(T().view)+'">'+labels.map(([v,label])=>{
-  const active=state.tab==='calendar'&&!state.manage&&(v==='today'?state.view==='day'&&state.focus===today():state.view===v);
+ return '<nav class="ux-bottom" aria-label="'+safe(T().view)+'">'+labels.map(([v,label])=>{
+  const active=v==='today'?state.view==='day'&&state.focus===today():state.view===v;
   return '<button type="button" data-primary-view="'+v+'" class="ux-nav-item'+(active?' active':'')+'" aria-current="'+(active?'page':'false')+'"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+glyphs[v]+'</svg><span>'+safe(label)+'</span></button>';
  }).join('')+'</nav>';
 }
+
 function toolbar(){
- const e=egy(state.focus),year=state.view==='year',month=state.view==='month';
- const backLabel=year?'':month?N(e.year):monthName(e.month);
- const heading=year?numHtml(e.year):month?safe(monthName(e.month)):state.view==='list'?safe(T().list):numHtml(e.day)+' '+safe(monthName(e.month));
+ const e=egy(state.focus),year=state.view==='year',month=state.view==='month',isList=state.view==='list';
+ const backLabel=month?N(e.year):monthName(e.month);
+ const heading=year?numHtml(e.year):month?safe(monthName(e.month)):isList?safe(T().list):numHtml(e.day)+' '+safe(monthName(e.month));
  const options=Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('');
  const season=e.month===13?LOCALES[lang()].epagomenal:(lang()==='ar'?['آخت','برت','شمو'][Math.floor((e.month-1)/4)]:monthName(e.month));
- const popover=state.menu?'<div class="ios-menu-scrim" data-dismiss-menu></div><div class="view-menu ios-view-popover" role="menu"><div class="ios-view-options">'+['compact','stacked','detailed'].map(v=>'<button class="ios-view-choice '+(state.display===v?'selected':'')+'" data-display="'+v+'"><span class="ios-check">'+(state.display===v?'✓':'')+'</span><span class="ios-view-symbol">'+(v==='compact'?'▱':v==='stacked'?'▤':'▦')+'</span>'+safe(T()[v])+'</button>').join('')+'</div><div class="ios-menu-separator"></div><div class="ios-view-secondary">'+['day','week','month','list'].map(v=>'<button data-view="'+v+'" class="'+(state.view===v?'selected':'')+'">'+safe(T()[v])+'</button>').join('')+'</div></div>':'';
- return '<header class="toolbar ios-toolbar ux-toolbar"><div class="tool-row ios-top-row"><div class="breadcrumb">'+(year?'':'<button class="ios-back" data-back aria-label="'+safe(T().previous)+'">'+icon('back')+'<span>'+safe(backLabel)+'</span></button>')+'</div><div class="tool-actions ios-actions"><button data-menu aria-label="'+safe(T().view)+'" aria-expanded="'+state.menu+'">'+icon('list')+'</button><button data-search aria-label="'+safe(T().search)+'">'+icon('search')+'</button><button data-new aria-label="'+safe(T().add)+'">'+icon('plus')+'</button><button data-more aria-label="'+safe(T().settings)+'">'+icon('settings')+'</button></div></div><div class="headline ios-headline ux-headline"><div class="ux-heading"><h1>'+heading+'</h1><p>'+safe(season)+' · '+safe(LOCALES[lang()].year)+' '+safe(N(e.year))+'</p></div><div class="ux-heading-actions"><label class="ux-language"><span class="sr-only">'+safe(T().language)+'</span><select name="language" aria-label="'+safe(T().language)+'">'+options+'</select></label><div class="ios-period-arrows"><button data-prev aria-label="'+safe(T().previous)+'">‹</button><button data-next aria-label="'+safe(T().next)+'">›</button></div></div></div>'+(state.search?'<div class="search-panel"><input type="search" name="query" value="'+safe(state.query)+'" placeholder="'+safe(T().search)+'" autocomplete="off"><div class="search-results">'+searchResults()+'</div></div>':'')+popover+'</header>';
+ return '<header class="toolbar ux-toolbar"><div class="ux-toolbar-top"><div class="ux-back">'+(year?'': '<button data-back aria-label="'+safe(T().previous)+'">'+icon('back')+'<span>'+safe(backLabel)+'</span></button>')+'</div><div class="ux-toolbar-actions"><button data-search aria-label="'+safe(T().search)+'" aria-expanded="'+state.search+'">'+icon('search')+'</button><button data-new aria-label="'+safe(T().add)+'">'+icon('plus')+'</button><button data-more aria-label="'+safe(T().settings)+'" aria-expanded="'+state.more+'">'+icon('settings')+'</button></div></div><div class="ux-toolbar-head"><div class="ux-heading"><h1>'+heading+'</h1><p>'+safe(season)+' · '+safe(LOCALES[lang()].year)+' '+safe(N(e.year))+'</p></div><div class="ux-heading-actions"><label class="ux-language"><span class="sr-only">'+safe(T().language)+'</span><select name="language" aria-label="'+safe(T().language)+'">'+options+'</select></label><div class="ux-period-controls"><button data-prev aria-label="'+safe(T().previous)+'">‹</button><button data-next aria-label="'+safe(T().next)+'">›</button></div></div></div>'+(state.search?'<div class="search-panel"><input type="search" name="query" value="'+safe(state.query)+'" placeholder="'+safe(T().search)+'" autocomplete="off"><div class="search-results">'+searchResults()+'</div></div>':'')+'</header>';
 }
-
 function searchResults(){return searchItems(schedule,state.query).slice(0,60).map(i=>'<button data-result="'+i.startDay+'"><strong>'+safe(i.title)+'</strong><small>'+safe(greg(i.startDay))+'</small></button>').join('')||'<p class="empty">'+safe(T().noEvents)+'</p>';}
 function dateFields(d){const e=egy(d);return '<div class="date-fields"><input name="egyYear" type="number" min="'+data.years[0].year+'" max="'+data.years.at(-1).year+'" value="'+e.year+'" required><select name="egyMonth">'+Array.from({length:13},(_,i)=>'<option value="'+(i+1)+'" '+(e.month===i+1?'selected':'')+'>'+safe(monthName(i+1))+'</option>').join('')+'</select><select name="egyDay">'+Array.from({length:monthDays(e)},(_,i)=>'<option value="'+(i+1)+'" '+(e.day===i+1?'selected':'')+'>'+N(i+1)+'</option>').join('')+'</select></div><small class="date-preview">'+safe(greg(d,{day:'numeric',month:'long',year:'numeric'}))+'</small>';}
 const timeString=n=>String(Math.floor((n||0)/60)).padStart(2,'0')+':'+String((n||0)%60).padStart(2,'0');
@@ -159,23 +155,34 @@ function editor(){
  const sched=schedule;
  return '<div class="sheet-overlay"><form id="event-editor" class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><button type="button" data-close>'+safe(T().cancel)+'</button><strong>'+safe(item?T().event:T().add)+'</strong><button class="save-button" type="submit">'+safe(T().save)+'</button></div><div class="sheet-body"><div class="kind-toggle"><label><input type="radio" name="kind" value="event" '+(kind==='event'?'checked':'')+'>'+safe(T().event)+'</label><label><input type="radio" name="kind" value="reminder" '+(kind==='reminder'?'checked':'')+'>'+safe(T().reminder)+'</label></div><label>'+safe(T().title)+'<input name="title" required maxlength="200" value="'+safe(item?.title||'')+'"></label><label>'+safe(T().date)+dateFields(d)+'</label><label class="check-row">'+safe(T().allDay)+'<input type="checkbox" name="allDay" '+(item?.allDay?'checked':'')+'></label><div class="time-fields"><label>'+safe(T().start)+'<input type="time" name="start" value="'+timeString(item?.startMinutes??((state.dialog?.hour??9)*60))+'"></label><label>'+safe(T().end)+'<input type="time" name="end" value="'+timeString(item?.endMinutes??((state.dialog?.hour??9)*60+60))+'"></label></div><label>'+safe(T().location)+'<input name="location" maxlength="300" value="'+safe(item?.location||'')+'"></label><label>'+safe(T().notes)+'<textarea name="notes" rows="3">'+safe(item?.notes||'')+'</textarea></label><label>'+safe(T().calendars)+'<select name="calendarId">'+sched.calendars.map(c=>'<option value="'+safe(c.id)+'" '+(c.id===(item?.calendarId||sched.calendars[0].id)?'selected':'')+'>'+safe(calName(c))+'</option>').join('')+'</select></label><label>'+safe(T().repeat)+'<select name="repeat">'+[['none',T().none],['daily',T().daily],['weekly',T().weekly],['egy10',T().decan],['egyMonthly',T().monthly],['egyYearly',T().yearly]].map(([v,n])=>'<option value="'+v+'" '+((item?.repeat||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label><label>'+safe(T().alert)+'<select name="alert">'+[['none',T().none],['atTime','0'],['5min','5'],['15min','15'],['1hour','60'],['1day','1440']].map(([v,n])=>'<option value="'+v+'" '+((item?.alert||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label>'+(item?'<button type="button" class="delete" data-delete="'+safe(item.id)+'">'+safe(T().delete)+'</button>':'')+'</div></form></div>';
 }
+
+function panelContent(){
+ if(!state.panel)return '';
+ const panels={settings:settingsView,festivals:festivalView,calendars:managerView};
+ const title={settings:T().settings,festivals:T().festivals,calendars:T().calendars};
+ const body=panels[state.panel]?.();
+ if(!body)return '';
+ return '<div class="ux-panel-backdrop" data-dismiss-panel></div><section class="ux-panel" role="dialog" aria-modal="true" aria-label="'+safe(title[state.panel])+'"><div class="ux-panel-head"><strong>'+safe(title[state.panel])+'</strong><button data-close-panel aria-label="'+safe(T().close||T().cancel)+'">×</button></div><div class="ux-panel-body">'+body+'</div></section>';
+}
 function render(){
  if(!data)return;
- const viewKey=state.tab+'|'+(state.manage?'manage':state.view);
+ const viewKey=state.view;
  const oldMain=root.querySelector('#main-content');
  const keepScroll=viewKey===previousRenderKey?oldMain?.scrollTop:0;
  schedule=loadScheduler();
- document.documentElement.lang=LOCALES[lang()].html;document.documentElement.dir=lang()==='ar'?'rtl':'ltr';document.body.dataset.language=lang();
- const content=state.manage?managerView():state.tab==='settings'?settingsView():state.tab==='festivals'?festivalView():state.view==='year'?yearView():state.view==='day'?dayView():state.view==='week'?weekView():state.view==='list'?listView():monthView();
- root.innerHTML='<div class="app-shell">'+(state.tab==='calendar'&&!state.manage?toolbar():'<header class="simple-header"><button data-return>'+icon('back')+'</button><span>Renpet</span></header>')+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'+(state.more?'<div class="more-scrim" data-dismiss-more></div><div class="more-sheet"><button data-tab="festivals">'+icon('star')+safe(T().festivals)+'</button><button data-tab="settings">'+icon('settings')+safe(T().settings)+'</button><button data-backup>'+icon('calendar')+safe(T().backup)+'</button></div>':'')+(state.dialog?editor():'');
+ document.documentElement.lang=LOCALES[lang()].html;
+ document.documentElement.dir=lang()==='ar'?'rtl':'ltr';
+ document.body.dataset.language=lang();
+ const content=state.view==='year'?yearView():state.view==='day'?dayView():state.view==='list'?listView():monthView();
+ root.innerHTML='<div class="app-shell">'+toolbar()+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'+(state.more?'<div class="more-scrim" data-dismiss-more></div><div class="more-sheet" role="menu"><button data-open-panel="settings">'+icon('settings')+safe(T().settings)+'</button><button data-open-panel="festivals">'+icon('star')+safe(T().festivals)+'</button><button data-open-panel="calendars">'+icon('calendar')+safe(T().calendars)+'</button><button data-backup>'+icon('calendar')+safe(T().backup)+'</button></div>':'')+panelContent()+(state.dialog?editor():'');
  const main=root.querySelector('#main-content');
  if(main&&keepScroll)main.scrollTop=keepScroll;
  previousRenderKey=viewKey;
 }
+
 function navigate(step){
  if(state.view==='year'){const y=egy(state.focus).year+step;if(data.years.some(v=>v.year===y))state.focus=yearStart(y);}
  else if(state.view==='day')state.focus+=step;
- else if(state.view==='week')state.focus+=step*week();
  else if(state.view==='list')state.focus+=step*30;
  else{const e=egy(state.focus),next=adjacent(e,step);if(next)state.focus=monthStart(next)+Math.min(e.day,monthDays(next))-1;}
  state.focus=clamp(state.focus);render();
@@ -194,51 +201,57 @@ function submitEvent(form){
  if(!saveScheduler(sched)){alert('Unable to save event');return;}
  state.dialog=null;state.focus=clamp(startDay);render();
 }
+
 root.addEventListener('click',ev=>{
  if(ev.target.closest('[data-dismiss-more]')){state.more=false;render();return;}
- if(ev.target.closest('[data-dismiss-menu]')){state.menu=false;render();return;}
+ if(ev.target.closest('[data-dismiss-panel]')){state.panel=null;render();return;}
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
  const b=ev.target.closest('button');if(!b||b.disabled)return;
+ if(b.hasAttribute('data-close-panel')){state.panel=null;render();return;}
  if(b.hasAttribute('data-close')){state.dialog=null;render();return;}
  if(b.hasAttribute('data-hour')){state.dialog={kind:'event',hour:Number(b.dataset.hour)};render();return;}
  if(b.hasAttribute('data-new')){state.dialog={kind:'event'};render();root.querySelector('[name="title"]')?.focus();return;}
  if(b.hasAttribute('data-edit')){state.dialog={id:b.dataset.edit};render();return;}
- if(b.hasAttribute('data-delete')){if(confirm(T().confirm)){const s=loadScheduler();removeItem(s,b.dataset.delete);saveScheduler(s);state.dialog=null;render();}return;}
- if(b.hasAttribute('data-complete')){const s=loadScheduler(),item=s.items.find(i=>i.id===b.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(s);render();}return;}
- if(b.hasAttribute('data-menu')){state.menu=!state.menu;render();return;}
- if(b.hasAttribute('data-display')){state.display=b.dataset.display;state.menu=false;saveView();render();return;}
+ if(b.hasAttribute('data-delete')){if(confirm(T().confirm)){const v=loadScheduler();removeItem(v,b.dataset.delete);saveScheduler(v);state.dialog=null;render();}return;}
  if(b.hasAttribute('data-search')){state.search=!state.search;state.query='';render();if(state.search)root.querySelector('[name="query"]')?.focus();return;}
- if(b.hasAttribute('data-view')){state.view=b.dataset.view;state.menu=false;saveView();render();return;}
- if(b.hasAttribute('data-date')){const next=clamp(Number(b.dataset.date));if(state.focus===next){state.view='day';saveView();}state.focus=next;render();return;}
- if(b.hasAttribute('data-open-month')){const y=egy(state.focus).year;state.focus=clamp(monthStart({year:y,month:Number(b.dataset.openMonth)})+Math.min(egy(state.focus).day,monthDays({year:y,month:Number(b.dataset.openMonth)}))-1);state.view='month';saveView();render();return;}
- if(b.hasAttribute('data-pick')){state.focus=clamp(Number(b.dataset.pick));render();return;}
+ if(b.hasAttribute('data-date')){
+  const next=clamp(Number(b.dataset.date));
+  if(state.focus===next){state.view='day';saveView();}
+  state.focus=next;render();return;
+ }
+ if(b.hasAttribute('data-open-month')){
+  const y=egy(state.focus).year,m=Number(b.dataset.openMonth);
+  state.focus=clamp(monthStart({year:y,month:m})+Math.min(egy(state.focus).day,monthDays({year:y,month:m}))-1);
+  state.view='month';saveView();render();return;
+ }
  if(b.hasAttribute('data-result')){state.focus=clamp(Number(b.dataset.result));state.view='day';state.search=false;saveView();render();return;}
  if(b.hasAttribute('data-prev')){navigate(-1);return;}
  if(b.hasAttribute('data-next')){navigate(1);return;}
- if(b.hasAttribute('data-back')){state.view=state.view==='month'?'year':'month';state.menu=false;saveView();render();return;}
+ if(b.hasAttribute('data-back')){state.view=state.view==='month'?'year':'month';saveView();render();return;}
  if(b.hasAttribute('data-primary-view')){
   const v=b.dataset.primaryView;
-  state.tab='calendar';state.manage=false;state.more=false;state.menu=false;state.search=false;
+  state.panel=null;state.more=false;state.search=false;
   if(v==='today'){state.focus=clamp(today());state.view='day';}
   else if(['year','month','list'].includes(v))state.view=v;
   saveView();render();return;
  }
- if(b.hasAttribute('data-today')){state.focus=clamp(today());state.tab='calendar';state.manage=false;state.more=false;state.view='day';saveView();render();return;}
- if(b.hasAttribute('data-tab')){state.tab=b.dataset.tab;state.manage=false;state.more=false;state.menu=false;state.search=false;render();return;}
  if(b.hasAttribute('data-more')){state.more=!state.more;render();return;}
- if(b.hasAttribute('data-return')){state.tab='calendar';state.manage=false;render();return;}
- if(b.hasAttribute('data-manage')){state.more=false;state.manage=true;render();return;}
+ if(b.hasAttribute('data-open-panel')){
+  if(['settings','festivals','calendars'].includes(b.dataset.openPanel)){state.panel=b.dataset.openPanel;state.more=false;render();}
+  return;
+ }
+ if(b.hasAttribute('data-manage')){state.panel='calendars';state.more=false;render();return;}
  if(b.hasAttribute('data-backup')){state.more=false;render();openBackup();return;}
  if(b.hasAttribute('data-festival')){state.festival=state.festival===b.dataset.festival?null:b.dataset.festival;render();return;}
- if(b.hasAttribute('data-remove-cal')){const s=loadScheduler();removeCalendar(s,b.dataset.removeCal);saveScheduler(s);render();return;}
+ if(b.hasAttribute('data-remove-cal')){const v=loadScheduler();removeCalendar(v,b.dataset.removeCal);saveScheduler(v);render();return;}
 });
+
 root.addEventListener('change',ev=>{
  const el=ev.target;
  if(el.name==='language'&&LOCALES[el.value])prefs.language=el.value;
  else if(el.name==='gregorian'||el.name==='festivals')prefs[el.name]=el.checked;
  else if(el.name==='week')prefs.weeks[lang()]=Number(el.value);
- else if(el.name==='display'){state.display=el.value;saveView();render();return;}
  else if(el.hasAttribute('data-visible')){const s=loadScheduler();updateCalendar(s,el.dataset.visible,{visible:el.checked});saveScheduler(s);render();return;}
  else if(el.closest('#event-editor')&&['egyYear','egyMonth','egyDay'].includes(el.name)){
   const form=el.form,y=Number(form.elements.egyYear.value),m=Number(form.elements.egyMonth.value),d=Number(form.elements.egyDay.value);
@@ -299,10 +312,10 @@ function finishDrag(ev,cancel=false){
 root.addEventListener('pointerup',ev=>finishDrag(ev));
 root.addEventListener('pointercancel',ev=>finishDrag(ev,true));
 root.addEventListener('click',ev=>{if(Date.now()<suppressEditUntil&&ev.target.closest('[data-edit]')){ev.stopImmediatePropagation();ev.preventDefault();}},true);
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(state.dialog)state.dialog=null;else if(state.more)state.more=false;else if(state.menu)state.menu=false;else if(state.search)state.search=false;render();}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(state.dialog)state.dialog=null;else if(state.panel)state.panel=null;else if(state.more)state.more=false;else if(state.search)state.search=false;render();}});
 let gesture=null;
 root.addEventListener('touchstart',ev=>{
- if(ev.touches.length!==1||state.dialog||state.more||state.tab!=='calendar'||state.manage)return;
+ if(ev.touches.length!==1||state.dialog||state.panel||state.more)return;
  gesture={x:ev.touches[0].clientX,y:ev.touches[0].clientY};
 },{passive:true});
 root.addEventListener('touchend',ev=>{
