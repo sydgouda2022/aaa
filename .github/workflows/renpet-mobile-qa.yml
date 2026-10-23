@@ -1,0 +1,41 @@
+name: Renpet 3 free iPhone UX verification
+on:
+  pull_request:
+    branches: [main]
+    paths: ['renpet/**','.github/workflows/renpet-mobile-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Free local-browser tooling and assets
+        run: |
+          npm install --no-save --prefix /tmp/renpet-pw playwright@1.56.1
+          mkdir -p renpet/web/assets/fonts
+          curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
+          python renpet/tools/make_numerals.py
+          if ! command -v google-chrome >/dev/null; then /tmp/renpet-pw/node_modules/.bin/playwright install chromium; fi
+      - name: Start Renpet for interaction tests
+        run: |
+          nohup python -m http.server 8765 --bind 127.0.0.1 --directory renpet/web >/tmp/renpet-python.log 2>&1 &
+          sleep 2
+          curl -fsS http://127.0.0.1:8765/ >/dev/null
+      - name: Exercise live HTML, CSS and events at two iPhone sizes
+        env:
+          NODE_PATH: /tmp/renpet-pw/node_modules
+        run: node renpet/tests/mobile-ux.cjs
+      - name: Save screenshots and issue report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpet-3-mobile-qa
+          path: renpet-mobile-evidence/
+          retention-days: 14
