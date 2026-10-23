@@ -13,6 +13,7 @@ const WORDS={
  egy:{day:'𓇳',week:'𓇳𓏥',month:'𓇹',list:'𓏏𓏤',today:'𓇳',calendar:'𓆳𓏏',calendars:'𓆳𓏥',festivals:'𓎛𓂋𓏏',settings:'𓏞',search:'𓁹',add:'𓏭',event:'𓏏𓏤',reminder:'𓏏𓏥',title:'𓂋𓈖',location:'𓊖',notes:'𓏞',date:'𓆳',start:'𓄂',end:'𓏏',allDay:'𓇳',repeat:'𓎛𓂋',alert:'𓏭',none:'—',daily:'𓇳',weekly:'𓇳𓏥',decan:'𓎆',monthly:'𓇹',yearly:'𓆳',save:'𓏞',cancel:'𓐍',delete:'𓂧',confirm:'𓂧 ?',noEvents:'𓏏𓏤 —',language:'𓂋𓈖',gregorian:'Gregorian',festivalSetting:'𓎛𓂋𓏏',weekLength:'𓇳𓏥',backup:'ICS ↓',manage:'𓆳𓏥',newCalendar:'𓆳𓏏',name:'𓂋𓈖',color:'𓇋𓈖',show:'𓁹',hide:'𓏏',done:'𓏞',view:'𓁹',compact:'𓏏',stacked:'𓏥',detailed:'𓂋𓏤',all:'𓏥',results:'𓏏𓏥',version:'v',time:'𓇳',minute:'𓏏',hour:'𓇳',previous:'𓄂',next:'𓏭'}
 };
 let schedule=loadScheduler();
+let previousRenderKey=null;
 let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={tab:'calendar',view:'month',focus:today(),display:'compact',menu:false,more:false,search:false,query:'',dialog:null,festival:null,manage:false};
 try{const x=JSON.parse(localStorage.getItem(SETTINGS)||'null');if(x){if(LOCALES[x.language])prefs.language=x.language;if(typeof x.gregorian==='boolean')prefs.gregorian=x.gregorian;if(typeof x.festivals==='boolean')prefs.festivals=x.festivals;if(x.weeks&&typeof x.weeks==='object')prefs.weeks=x.weeks;}}catch{}
 try{const x=JSON.parse(localStorage.getItem(VIEWS)||'null');if(['year','day','week','month','list'].includes(x?.view))state.view=x.view;if(['compact','stacked','detailed'].includes(x?.display))state.display=x.display;}catch{}
@@ -115,7 +116,7 @@ function dayView(){
 }
 function weekView(){
  const w=week(),e=egy(state.focus),start=w===10?state.focus-(e.day-1)%10:state.focus-(new Date(state.focus*DAY).getUTCDay()+6)%7;
- return '<div class="week-page"><div class="week-strip" style="--cols:'+w+'">'+Array.from({length:w},(_,i)=>{const d=start+i;return '<button class="'+(d===state.focus?'active':'')+'" data-pick="'+d+'"><small>'+(w===7?safe(LOCALES[lang()].shortWeekdays?.[i]||N(i+1)):numHtml(i+1))+'</small><strong>'+numHtml(egy(d).day)+'</strong></button>';}).join('')+'</div>'+agenda(state.focus)+'</div>';
+ return '<div class="week-page"><div class="week-strip" data-week="'+w+'" style="--cols:'+w+'">'+Array.from({length:w},(_,i)=>{const d=start+i;return '<button class="'+(d===state.focus?'active':'')+'" data-pick="'+d+'"><small>'+(w===7?safe(LOCALES[lang()].shortWeekdays?.[i]||N(i+1)):numHtml(i+1))+'</small><strong>'+numHtml(egy(d).day)+'</strong></button>';}).join('')+'</div>'+agenda(state.focus)+'</div>';
 }
 function listView(){const groups=[];for(let d=state.focus;d<=Math.min(max(),state.focus+59);d++)if(items(d).length)groups.push(agenda(d));return '<div class="list-page">'+(groups.join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div>';}
 function festivalView(){
@@ -151,7 +152,7 @@ function toolbar(){
 }
 
 function searchResults(){return searchItems(schedule,state.query).slice(0,60).map(i=>'<button data-result="'+i.startDay+'"><strong>'+safe(i.title)+'</strong><small>'+safe(greg(i.startDay))+'</small></button>').join('')||'<p class="empty">'+safe(T().noEvents)+'</p>';}
-function dateFields(d){const e=egy(d);return '<div class="date-fields"><input name="egyYear" type="number" min="'+data.years[0].year+'" max="'+data.years.at(-1).year+'" value="'+e.year+'" required><select name="egyMonth">'+Array.from({length:13},(_,i)=>'<option value="'+(i+1)+'" '+(e.month===i+1?'selected':'')+'>'+safe(monthName(i+1))+'</option>').join('')+'</select><select name="egyDay">'+Array.from({length:30},(_,i)=>'<option value="'+(i+1)+'" '+(e.day===i+1?'selected':'')+'>'+N(i+1)+'</option>').join('')+'</select></div><small class="date-preview">'+safe(greg(d,{day:'numeric',month:'long',year:'numeric'}))+'</small>';}
+function dateFields(d){const e=egy(d);return '<div class="date-fields"><input name="egyYear" type="number" min="'+data.years[0].year+'" max="'+data.years.at(-1).year+'" value="'+e.year+'" required><select name="egyMonth">'+Array.from({length:13},(_,i)=>'<option value="'+(i+1)+'" '+(e.month===i+1?'selected':'')+'>'+safe(monthName(i+1))+'</option>').join('')+'</select><select name="egyDay">'+Array.from({length:monthDays(e)},(_,i)=>'<option value="'+(i+1)+'" '+(e.day===i+1?'selected':'')+'>'+N(i+1)+'</option>').join('')+'</select></div><small class="date-preview">'+safe(greg(d,{day:'numeric',month:'long',year:'numeric'}))+'</small>';}
 const timeString=n=>String(Math.floor((n||0)/60)).padStart(2,'0')+':'+String((n||0)%60).padStart(2,'0');
 function editor(){
  const item=state.dialog?.id?schedule.items.find(i=>i.id===state.dialog.id):null,d=item?.startDay??state.focus,kind=item?.kind||state.dialog?.kind||'event';
@@ -160,10 +161,16 @@ function editor(){
 }
 function render(){
  if(!data)return;
+ const viewKey=state.tab+'|'+(state.manage?'manage':state.view);
+ const oldMain=root.querySelector('#main-content');
+ const keepScroll=viewKey===previousRenderKey?oldMain?.scrollTop:0;
  schedule=loadScheduler();
  document.documentElement.lang=LOCALES[lang()].html;document.documentElement.dir=lang()==='ar'?'rtl':'ltr';document.body.dataset.language=lang();
  const content=state.manage?managerView():state.tab==='settings'?settingsView():state.tab==='festivals'?festivalView():state.view==='year'?yearView():state.view==='day'?dayView():state.view==='week'?weekView():state.view==='list'?listView():monthView();
  root.innerHTML='<div class="app-shell">'+(state.tab==='calendar'&&!state.manage?toolbar():'<header class="simple-header"><button data-return>'+icon('back')+'</button><span>Renpet</span></header>')+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'+(state.more?'<div class="more-scrim" data-dismiss-more></div><div class="more-sheet"><button data-tab="festivals">'+icon('star')+safe(T().festivals)+'</button><button data-tab="settings">'+icon('settings')+safe(T().settings)+'</button><button data-backup>'+icon('calendar')+safe(T().backup)+'</button></div>':'')+(state.dialog?editor():'');
+ const main=root.querySelector('#main-content');
+ if(main&&keepScroll)main.scrollTop=keepScroll;
+ previousRenderKey=viewKey;
 }
 function navigate(step){
  if(state.view==='year'){const y=egy(state.focus).year+step;if(data.years.some(v=>v.year===y))state.focus=yearStart(y);}
@@ -235,6 +242,14 @@ root.addEventListener('change',ev=>{
  else if(el.hasAttribute('data-visible')){const s=loadScheduler();updateCalendar(s,el.dataset.visible,{visible:el.checked});saveScheduler(s);render();return;}
  else if(el.closest('#event-editor')&&['egyYear','egyMonth','egyDay'].includes(el.name)){
   const form=el.form,y=Number(form.elements.egyYear.value),m=Number(form.elements.egyMonth.value),d=Number(form.elements.egyDay.value);
+  if(data.years.some(x=>x.year===y)&&m>=1&&m<=13&&el.name!=='egyDay'){
+   const count=monthDays({year:y,month:m}),dayField=form.elements.egyDay;
+   if(dayField){
+    const chosen=Math.min(Math.max(1,d),count);
+    dayField.innerHTML=Array.from({length:count},(_,i)=>'<option value="'+(i+1)+'">'+N(i+1)+'</option>').join('');
+    dayField.value=String(chosen);
+   }
+  }
   const preview=form.querySelector('.date-preview');
   if(preview)preview.textContent=data.years.some(x=>x.year===y)&&d<=monthDays({year:y,month:m})?greg(toGregorian({year:y,month:m,day:d},data.years),{day:'numeric',month:'long',year:'numeric'}):'—';
   return;
