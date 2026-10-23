@@ -51,10 +51,11 @@ assert.equal(document.body.dataset.language,'cop');
 click('data-tab','calendar');
 click('data-new','');
 assert.ok(root.innerHTML.includes('id="event-editor"'),'Event editor must open');
+click('data-close','');
 
 click('data-primary-view','month');
 assert.ok(root.innerHTML.includes('month-agenda'),'Month selection uses unified renderer');
-const selected = dayNumber('2026-10-16');
+const selected = dayNumber('2026-10-17');
 click('data-date',String(selected));
 for(const listener of handlers.change)listener({target:{name:'language',value:'cop'}});
 assert.equal(document.body.dataset.language,'cop');
