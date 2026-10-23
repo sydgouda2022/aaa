@@ -106,7 +106,6 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .year-overview{max-width:650px;margin:auto;padding:0 16px 20px}
 .year-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .year-month{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;min-height:62px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:start}
-.year-month.active-month{background:var(--mint)}
 .epagomenal-tile{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:12px 0 0;padding:12px;border:0;border-radius:13px;background:var(--gold-soft);color:var(--deep-green);text-align:start}
 .epagomenal-tile strong{flex:1}
 .epagomenal-tile small{font-size:11px;color:var(--muted)}
@@ -173,29 +172,11 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .time-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .time-fields label{display:flex;flex-direction:column;gap:5px;font-size:14px;color:var(--muted)}
 
-@media(max-width:390px){
-.ux-toolbar{flex:0 0 auto;padding:env(safe-area-inset-top,0px) 16px 0;background:var(--bg);position:relative;z-index:4}
-.ux-toolbar-top{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:50px}
- .ux-toolbar-actions{gap:5px}
- .ux-toolbar-actions button{width:42px;height:42px}
-.ux-toolbar-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0 9px}
-.ux-heading h1{margin:0;line-height:1.05;font-size:clamp(27px,7.5vw,36px);font-weight:740;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- .month-scroll,.year-overview{padding-inline:13px}
-.year-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-.year-month{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;min-height:62px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:start}
-.date .day-number{display:grid;place-items:center;width:auto;min-width:30px;max-width:100%;height:29px;padding:0 3px;border-radius:12px;font-size:15px;line-height:1;font-weight:630;white-space:nowrap}
- .event-clock{flex-basis:43px}
-}
-@media(min-width:650px){
- .decade-days{grid-template-columns:repeat(10,minmax(0,1fr))}
-.date{display:flex;flex-direction:column;align-items:center;gap:0;border-radius:11px;padding:2px 0 1px}
-.year-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-.year-month{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0;min-height:62px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:start}
-}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 
 /* Compact, readable daily navigation and selected-day preview. */
+.year-brand{display:inline-flex;align-items:center;min-height:44px;color:var(--green);font-size:15px;font-weight:650}
 .year-shortcut{min-height:44px;display:inline-flex;align-items:center;gap:5px;max-width:180px;padding:0;border:0;background:transparent;color:var(--green);font-size:14px}
 .year-shortcut .glyph{height:15px}
 .agenda-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}
@@ -203,7 +184,6 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .agenda-heading .subtle{flex:1;text-align:end}
 .agenda-empty{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;color:var(--muted);font-size:13px}
 .agenda-empty p{margin:0}
-.agenda-add{min-width:88px;min-height:40px;padding:8px 12px;border:0;border-radius:999px;background:var(--mint);color:var(--green);font-weight:700}
 .festival-in-agenda{display:flex;gap:9px;align-items:start;padding:7px 9px;margin:4px 0;border-radius:9px;background:var(--gold-soft)}
 .festival-in-agenda>span{color:var(--gold);font-size:12px}
 .festival-in-agenda div{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -249,3 +229,5 @@ body[data-language=egy] .year-shortcut{font-size:16px}
  .date,.blank{min-height:49px}
  .month-agenda{min-height:150px}
 }
+
+@media(min-width:650px){.decade-days{grid-template-columns:repeat(10,minmax(0,1fr))}}
