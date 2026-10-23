@@ -38,24 +38,50 @@ function eventRow(i,day=state.focus){
  return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+safe(clock)+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(state.display==='detailed'&&i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
 }
 function agenda(d){const a=items(d);return '<section class="agenda"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<p class="subtle">'+safe(greg(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+'</p>':'')+(a.length?a.map(i=>eventRow(i,d)).join(''):'<p class="empty">'+safe(T().noEvents)+'</p>')+'</section>';}
+
+function dateButton(c){
+ if(!c)return '<span class="blank" aria-hidden="true"></span>';
+ const d=c.gregorian,ev=items(d),hits=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
+ const dots=ev.slice(0,3).map(i=>{
+  const col=schedule.calendars.find(x=>x.id===i.calendarId)?.color||'#176C59';
+  return '<i style="background:'+( /^#[0-9a-f]{6}$/i.test(col)?col:'#176C59')+'"></i>';
+ }).join('');
+ return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+numHtml(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(hits.length?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
+}
 function monthSection(e){
- const start=monthStart(e),w=week(),cells=monthGrid(e.year,e.month,w,data.years);
- const headers=Array.from({length:w},(_,i)=>w===7?(LOCALES[lang()].shortWeekdays?.[i]||N(i+1)):N(i+1)).map(v=>'<span>'+safe(v)+'</span>').join('');
- const grid=cells.map(c=>{if(!c)return '<span class="blank"></span>';const d=c.gregorian,ev=items(d),hits=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
- return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+numHtml(c.day)+'</span>'+(prefs.gregorian?'<small>'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+ev.slice(0,3).map(i=>{const col=schedule.calendars.find(x=>x.id===i.calendarId)?.color||'#187568';return '<i style="background:'+(/^#[0-9a-f]{6}$/i.test(col)?col:'#187568')+'"></i>';}).join('')+'</span>'+(hits.length?'<em class="fest-mark">✦</em>':'')+'</button>';}).join('');
- return '<section class="month-section">'+(prefs.gregorian?'<p class="subtle">'+safe(greg(start,{day:'numeric',month:'short'}))+' – '+safe(greg(start+monthDays(e)-1,{day:'numeric',month:'short'}))+'</p>':'')+'<div class="week-headers" style="--cols:'+w+'">'+headers+'</div><div class="dates" style="--cols:'+w+'">'+grid+'</div></section>';
+ const w=week(),start=monthStart(e),length=monthDays(e);
+ const secondary=prefs.gregorian?'<p class="subtle date-range">'+safe(greg(start,{day:'numeric',month:'short'}))+' – '+safe(greg(start+length-1,{day:'numeric',month:'short'}))+'</p>':'';
+ if(w===10){
+  // Use a shared five-column responsive grid for each real Egyptian decade.
+  // The epagomenal period contains only five or six days, never thirty.
+  const groups=Array.from({length:Math.ceil(length/10)},(_,i)=>{
+   const offset=i*10,size=Math.min(10,length-offset);
+   const dates=Array.from({length:size},(_,k)=>dateButton({day:offset+k+1,gregorian:start+offset+k})).join('');
+   return '<div class="renpet-decade"><div class="decade-label">'+(e.month===13?safe(LOCALES[lang()].epagomenal):safe(N(i+1))+' / '+safe(N(10)))+'</div><div class="decade-days">'+dates+'</div></div>';
+  }).join('');
+  return '<section class="month-section ten-day" data-week="10">'+secondary+'<div class="decades">'+groups+'</div></section>';
+ }
+ const cells=monthGrid(e.year,e.month,7,data.years);
+ const headers=Array.from({length:7},(_,i)=>LOCALES[lang()].shortWeekdays?.[i]||N(i+1));
+ return '<section class="month-section seven-day" data-week="7">'+secondary+'<div class="week-headers" style="--cols:7">'+headers.map(h=>'<span>'+safe(h)+'</span>').join('')+'</div><div class="dates" style="--cols:7">'+cells.map(dateButton).join('')+'</div></section>';
 }
 function monthView(){
  const e=egy(state.focus);
  return '<div class="month-scroll">'+monthSection(e)+'<div class="month-agenda">'+agenda(state.focus)+'</div></div>';
 }
+
 function yearView(){
  const e=egy(state.focus),w=week();
- return '<div class="year-overview"><div class="year-overview-heading">'+numHtml(e.year)+'</div><div class="year-months">'+Array.from({length:13},(_,idx)=>{
-  const month=idx+1,cells=monthGrid(e.year,month,w,data.years),start=monthStart({year:e.year,month});
-  const days=cells.map(c=>'<span class="'+(c?.gregorian===today()?'mini-today':'')+'">'+(c?safe(N(c.day)):'')+'</span>').join('');
-  return '<button class="year-month" data-open-month="'+month+'" aria-label="'+safe(monthName(month))+'"><strong>'+safe(monthName(month))+'</strong><div class="mini-grid" style="--cols:'+w+'">'+days+'</div></button>';
- }).join('')+'</div></div>';
+ const cards=Array.from({length:12},(_,idx)=>{
+  const month=idx+1,start=monthStart({year:e.year,month});
+  const dates=Array.from({length:30},(_,j)=>{
+   const d=start+j;
+   return '<span class="'+(d===today()?'mini-today ':'')+(d===state.focus?'mini-selected':'')+'">'+safe(N(j+1))+'</span>';
+  }).join('');
+  return '<button class="year-month'+(month===e.month?' active-month':'')+'" data-open-month="'+month+'" aria-label="'+safe(monthName(month))+'"><strong>'+safe(monthName(month))+'</strong><div class="mini-grid'+(w===10?' mini-decade':'')+'" style="--cols:'+(w===10?5:7)+'">'+dates+'</div></button>';
+ }).join('');
+ const epagCount=data.years.find(y=>y.year===e.year).days-360;
+ return '<div class="year-overview"><p class="year-caption">'+safe(N(e.year))+' · '+safe(N(12))+' '+safe(T().month)+'</p><div class="year-months">'+cards+'</div><button class="epagomenal-tile" data-open-month="13"><span>✦</span><strong>'+safe(LOCALES[lang()].epagomenal)+'</strong><small>'+safe(N(epagCount))+' '+safe(T().day)+'</small></button></div>';
 }
 function dayView(){
  const daily=items(state.focus),all=daily.filter(i=>i.allDay),timed=daily.filter(i=>!i.allDay);
@@ -178,7 +204,7 @@ root.addEventListener('click',ev=>{
  if(b.hasAttribute('data-search')){state.search=!state.search;state.query='';render();if(state.search)root.querySelector('[name="query"]')?.focus();return;}
  if(b.hasAttribute('data-view')){state.view=b.dataset.view;state.menu=false;saveView();render();return;}
  if(b.hasAttribute('data-date')){const next=clamp(Number(b.dataset.date));if(state.focus===next){state.view='day';saveView();}state.focus=next;render();return;}
- if(b.hasAttribute('data-open-month')){const y=egy(state.focus).year;state.focus=clamp(monthStart({year:y,month:Number(b.dataset.openMonth)}));state.view='month';saveView();render();return;}
+ if(b.hasAttribute('data-open-month')){const y=egy(state.focus).year;state.focus=clamp(monthStart({year:y,month:Number(b.dataset.openMonth)})+Math.min(egy(state.focus).day,monthDays({year:y,month:Number(b.dataset.openMonth)}))-1);state.view='month';saveView();render();return;}
  if(b.hasAttribute('data-pick')){state.focus=clamp(Number(b.dataset.pick));render();return;}
  if(b.hasAttribute('data-result')){state.focus=clamp(Number(b.dataset.result));state.view='day';state.search=false;saveView();render();return;}
  if(b.hasAttribute('data-prev')){navigate(-1);return;}
