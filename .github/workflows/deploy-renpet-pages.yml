@@ -88,6 +88,7 @@ jobs:
           print('Calendar data and version validated')
           PY
       - name: Install Wrangler
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: npm install --global wrangler@4
       - name: Deploy Renpet Worker
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
