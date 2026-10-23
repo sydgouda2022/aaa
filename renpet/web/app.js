@@ -8,13 +8,13 @@ const root=document.querySelector('#app'), SETTINGS='renpet.settings.v1', VIEWS=
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{const d=new Date();return dayNumber([d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'));};
 const WORDS={
- ar:{day:'يوم',week:'أسبوع',month:'شهر',list:'قائمة',today:'اليوم',calendar:'التقويم',calendars:'التقاويم',festivals:'الأعياد',settings:'الإعدادات',search:'بحث',add:'إضافة',event:'موعد',reminder:'تذكير',title:'العنوان',location:'المكان',notes:'ملاحظات',date:'التاريخ المصري',start:'البداية',end:'النهاية',allDay:'طوال اليوم',repeat:'التكرار',alert:'التنبيه',none:'بدون',daily:'يومي',weekly:'أسبوعي',decan:'كل ١٠ أيام',monthly:'شهري مصري',yearly:'سنوي مصري',save:'حفظ',cancel:'إلغاء',delete:'حذف',confirm:'حذف هذا الموعد؟',noEvents:'لا توجد مواعيد',language:'اللغة',gregorian:'إظهار التاريخ الميلادي',festivalSetting:'إظهار الأعياد المصرية',weekLength:'أيام الأسبوع',backup:'النسخ الاحتياطي وتصدير ICS',manage:'إدارة التقاويم',newCalendar:'تقويم جديد',name:'الاسم',color:'اللون',show:'إظهار',hide:'إخفاء',done:'تم',view:'طريقة العرض',compact:'مختصر',stacked:'متراص',detailed:'تفصيلي',all:'الكل',results:'نتائج البحث',version:'الإصدار',time:'الوقت',minute:'دقيقة',hour:'ساعة',previous:'السابق',next:'التالي'},
- cop:{day:'Ϩⲟⲟⲩ',week:'Ⲉⲃⲇⲟⲙⲁⲥ',month:'Ⲉⲃⲟⲧ',list:'Ⲕⲁⲧⲁⲗⲟⲅⲟⲥ',today:'Ⲫⲟⲟⲩ',calendar:'Ⲡⲓϩⲙⲉ',calendars:'Ⲛⲓϩⲙⲉ',festivals:'Ⲛⲓϣⲁⲓ',settings:'Ⲛⲓⲥⲙⲓⲛⲉ',search:'Ϣⲓⲛⲓ',add:'Ⲧⲱⲟⲩⲛ',event:'Ⲉⲣⲅⲟⲛ',reminder:'Ⲣⲉⲙⲉⲙⲃⲉⲣ',title:'Ⲣⲁⲛ',location:'Ⲙⲁ',notes:'Ⲛⲓⲥⲁϫⲓ',date:'Ⲡⲓⲉϩⲟⲟⲩ',start:'Ⲁⲣⲭⲏ',end:'Ⲑⲁⲏ',allDay:'Ϩⲟⲟⲩ',repeat:'Ⲧⲱⲃϩ',alert:'Ⲁⲗⲉⲣⲧ',none:'—',daily:'Ϩⲟⲟⲩ',weekly:'Ⲉⲃⲇⲟⲙⲁⲥ',decan:'10',monthly:'Ⲉⲃⲟⲧ',yearly:'Ⲣⲟⲙⲡⲓ',save:'Ⲥⲱⲛϩ',cancel:'Ϣⲧⲁⲙ',delete:'Ⲃⲱⲗ',confirm:'Ⲃⲱⲗ?',noEvents:'Ⲙ̀ⲙⲟⲛ',language:'Ⲁⲥⲡⲓ',gregorian:'Gregorian',festivalSetting:'Ⲛⲓϣⲁⲓ',weekLength:'Ⲛⲓⲉϩⲟⲟⲩ',backup:'ICS · Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ',manage:'Ⲛⲓϩⲙⲉ',newCalendar:'Ⲃⲉⲣⲓ',name:'Ⲣⲁⲛ',color:'Ⲟⲩⲣⲱⲙⲓ',show:'Ⲟⲩⲱⲛϩ',hide:'Ϩⲱⲡ',done:'Ⲧⲉⲗⲟⲥ',view:'Ⲟⲩⲱⲛϩ',compact:'Ⲕⲟⲩϫⲓ',stacked:'Ⲥⲱⲟⲩϩ',detailed:'Ⲧⲉⲗⲓⲟⲥ',all:'Ⲧⲏⲣⲟⲩ',results:'Ⲛⲓⲉⲣⲅⲟⲛ',version:'Version',time:'Ⲟⲩⲛⲟⲩ',minute:'min',hour:'hour',previous:'Ϩⲁⲑⲏ',next:'Ⲥⲁ'},
- egy:{day:'𓇳',week:'𓇳𓏥',month:'𓇹',list:'𓏏𓏤',today:'𓇳',calendar:'𓆳𓏏',calendars:'𓆳𓏥',festivals:'𓎛𓂋𓏏',settings:'𓏞',search:'𓁹',add:'𓏭',event:'𓏏𓏤',reminder:'𓏏𓏥',title:'𓂋𓈖',location:'𓊖',notes:'𓏞',date:'𓆳',start:'𓄂',end:'𓏏',allDay:'𓇳',repeat:'𓎛𓂋',alert:'𓏭',none:'—',daily:'𓇳',weekly:'𓇳𓏥',decan:'𓎆',monthly:'𓇹',yearly:'𓆳',save:'𓏞',cancel:'𓐍',delete:'𓂧',confirm:'𓂧 ?',noEvents:'𓏏𓏤 —',language:'𓂋𓈖',gregorian:'Gregorian',festivalSetting:'𓎛𓂋𓏏',weekLength:'𓇳𓏥',backup:'ICS ↓',manage:'𓆳𓏥',newCalendar:'𓆳𓏏',name:'𓂋𓈖',color:'𓇋𓈖',show:'𓁹',hide:'𓏏',done:'𓏞',view:'𓁹',compact:'𓏏',stacked:'𓏥',detailed:'𓂋𓏤',all:'𓏥',results:'𓏏𓏥',version:'v',time:'𓇳',minute:'𓏏',hour:'𓇳',previous:'𓄂',next:'𓏭'}
+ ar:{day:'يوم',week:'أسبوع',month:'شهر',list:'قائمة',today:'اليوم',calendar:'التقويم',calendars:'التقاويم',festivals:'الأعياد',settings:'الإعدادات',search:'بحث',add:'إضافة',event:'موعد',reminder:'تذكير',title:'العنوان',location:'المكان',notes:'ملاحظات',date:'التاريخ المصري',start:'البداية',end:'النهاية',allDay:'طوال اليوم',repeat:'التكرار',alert:'التنبيه',none:'بدون',daily:'يومي',weekly:'أسبوعي',decan:'كل ١٠ أيام',monthly:'شهري مصري',yearly:'سنوي مصري',save:'حفظ',cancel:'إلغاء',delete:'حذف',confirm:'حذف هذا الموعد؟',noEvents:'لا توجد مواعيد',language:'اللغة',gregorian:'إظهار التاريخ الميلادي',festivalSetting:'إظهار الأعياد المصرية',weekLength:'أيام الأسبوع',backup:'النسخ الاحتياطي وتصدير ICS',manage:'إدارة التقاويم',newCalendar:'تقويم جديد',name:'الاسم',color:'اللون',show:'إظهار',hide:'إخفاء',done:'تم',view:'طريقة العرض',compact:'مختصر',stacked:'متراص',detailed:'تفصيلي',all:'الكل',results:'نتائج البحث',version:'الإصدار',time:'الوقت',minute:'دقيقة',hour:'ساعة',previous:'السابق',next:'التالي',moreOptions:'خيارات إضافية',dataAndBackup:'البيانات والنسخ الاحتياطي',addFirst:'أضف موعدًا',noUpcoming:'لا توجد مواعيد قادمة'},
+ cop:{day:'Ϩⲟⲟⲩ',week:'Ⲉⲃⲇⲟⲙⲁⲥ',month:'Ⲉⲃⲟⲧ',list:'Ⲕⲁⲧⲁⲗⲟⲅⲟⲥ',today:'Ⲫⲟⲟⲩ',calendar:'Ⲡⲓϩⲙⲉ',calendars:'Ⲛⲓϩⲙⲉ',festivals:'Ⲛⲓϣⲁⲓ',settings:'Ⲛⲓⲥⲙⲓⲛⲉ',search:'Ϣⲓⲛⲓ',add:'Ⲧⲱⲟⲩⲛ',event:'Ⲉⲣⲅⲟⲛ',reminder:'Ⲣⲉⲙⲉⲙⲃⲉⲣ',title:'Ⲣⲁⲛ',location:'Ⲙⲁ',notes:'Ⲛⲓⲥⲁϫⲓ',date:'Ⲡⲓⲉϩⲟⲟⲩ',start:'Ⲁⲣⲭⲏ',end:'Ⲑⲁⲏ',allDay:'Ϩⲟⲟⲩ',repeat:'Ⲧⲱⲃϩ',alert:'Ⲁⲗⲉⲣⲧ',none:'—',daily:'Ϩⲟⲟⲩ',weekly:'Ⲉⲃⲇⲟⲙⲁⲥ',decan:'10',monthly:'Ⲉⲃⲟⲧ',yearly:'Ⲣⲟⲙⲡⲓ',save:'Ⲥⲱⲛϩ',cancel:'Ϣⲧⲁⲙ',delete:'Ⲃⲱⲗ',confirm:'Ⲃⲱⲗ?',noEvents:'Ⲙ̀ⲙⲟⲛ',language:'Ⲁⲥⲡⲓ',gregorian:'Gregorian',festivalSetting:'Ⲛⲓϣⲁⲓ',weekLength:'Ⲛⲓⲉϩⲟⲟⲩ',backup:'ICS · Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ',manage:'Ⲛⲓϩⲙⲉ',newCalendar:'Ⲃⲉⲣⲓ',name:'Ⲣⲁⲛ',color:'Ⲟⲩⲣⲱⲙⲓ',show:'Ⲟⲩⲱⲛϩ',hide:'Ϩⲱⲡ',done:'Ⲧⲉⲗⲟⲥ',view:'Ⲟⲩⲱⲛϩ',compact:'Ⲕⲟⲩϫⲓ',stacked:'Ⲥⲱⲟⲩϩ',detailed:'Ⲧⲉⲗⲓⲟⲥ',all:'Ⲧⲏⲣⲟⲩ',results:'Ⲛⲓⲉⲣⲅⲟⲛ',version:'Version',time:'Ⲟⲩⲛⲟⲩ',minute:'min',hour:'hour',previous:'Ϩⲁⲑⲏ',next:'Ⲥⲁ',moreOptions:'Ⲛⲓⲕⲉ ⲉⲣⲅⲟⲛ',dataAndBackup:'ICS · Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ',addFirst:'Ⲉⲣⲅⲟⲛ +',noUpcoming:'Ⲙ̀ⲙⲟⲛ ⲉⲣⲅⲟⲛ'},
+ egy:{day:'𓇳',week:'𓇳𓏥',month:'𓇹',list:'𓏏𓏤',today:'𓇳',calendar:'𓆳𓏏',calendars:'𓆳𓏥',festivals:'𓎛𓂋𓏏',settings:'𓏞',search:'𓁹',add:'𓏭',event:'𓏏𓏤',reminder:'𓏏𓏥',title:'𓂋𓈖',location:'𓊖',notes:'𓏞',date:'𓆳',start:'𓄂',end:'𓏏',allDay:'𓇳',repeat:'𓎛𓂋',alert:'𓏭',none:'—',daily:'𓇳',weekly:'𓇳𓏥',decan:'𓎆',monthly:'𓇹',yearly:'𓆳',save:'𓏞',cancel:'𓐍',delete:'𓂧',confirm:'𓂧 ?',noEvents:'𓏏𓏤 —',language:'𓂋𓈖',gregorian:'Gregorian',festivalSetting:'𓎛𓂋𓏏',weekLength:'𓇳𓏥',backup:'ICS ↓',manage:'𓆳𓏥',newCalendar:'𓆳𓏏',name:'𓂋𓈖',color:'𓇋𓈖',show:'𓁹',hide:'𓏏',done:'𓏞',view:'𓁹',compact:'𓏏',stacked:'𓏥',detailed:'𓂋𓏤',all:'𓏥',results:'𓏏𓏥',version:'v',time:'𓇳',minute:'𓏏',hour:'𓇳',previous:'𓄂',next:'𓏭',moreOptions:'𓏥',dataAndBackup:'ICS ↓',addFirst:'𓏭',noUpcoming:'𓏏𓏤 —'}
 };
 let schedule=loadScheduler();
 let previousRenderKey=null;
-let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={view:'month',focus:today(),panel:null,more:false,search:false,query:'',dialog:null,festival:null};
+let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={view:'month',focus:today(),panel:null,search:false,query:'',dialog:null};
 try{const x=JSON.parse(localStorage.getItem(SETTINGS)||'null');if(x){if(LOCALES[x.language])prefs.language=x.language;if(typeof x.gregorian==='boolean')prefs.gregorian=x.gregorian;if(typeof x.festivals==='boolean')prefs.festivals=x.festivals;if(x.weeks&&typeof x.weeks==='object')prefs.weeks=x.weeks;}}catch{}
 try{const x=JSON.parse(localStorage.getItem(VIEWS)||'null');if(['year','day','month','list'].includes(x?.view))state.view=x.view;}catch{}
 const lang=()=>prefs.language,T=()=>WORDS[lang()],N=n=>nativeNumber(n,lang());
@@ -38,8 +38,11 @@ function eventRow(i,day=state.focus){
  const clock=i.allDay?T().allDay:String(Math.floor(i.startMinutes/60)).padStart(2,'0')+':'+String(i.startMinutes%60).padStart(2,'0');
  return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+safe(clock)+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
 }
-function agenda(d){const a=items(d);return '<section class="agenda"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<p class="subtle">'+safe(greg(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+'</p>':'')+(a.length?a.map(i=>eventRow(i,d)).join(''):'<p class="empty">'+safe(T().noEvents)+'</p>')+'</section>';}
-
+function agenda(d){
+ const a=items(d),festivals=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
+ const festivalCards=festivals.map(f=>'<div class="festival-in-agenda"><span aria-hidden="true">✦</span><div><strong>'+safe(f.ar)+'</strong><small>'+safe(f.duration>1?N(f.duration)+' '+T().day:T().festivals)+'</small></div></div>').join('');
+ return '<section class="agenda"><div class="agenda-heading"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<span class="subtle">'+safe(greg(d,{weekday:'short',day:'numeric',month:'short'}))+'</span>':'')+'</div>'+festivalCards+(a.length?a.map(i=>eventRow(i,d)).join(''):festivals.length?'':'<div class="agenda-empty"><p>'+safe(T().noEvents)+'</p><button data-new class="agenda-add">'+safe(T().add)+' +</button></div>')+'</section>';
+}
 function dateButton(c){
  if(!c)return '<span class="blank" aria-hidden="true"></span>';
  const d=c.gregorian,ev=items(d),hits=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
@@ -47,7 +50,7 @@ function dateButton(c){
   const col=schedule.calendars.find(x=>x.id===i.calendarId)?.color||'#176C59';
   return '<i style="background:'+( /^#[0-9a-f]{6}$/i.test(col)?col:'#176C59')+'"></i>';
  }).join('');
- return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+numHtml(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(hits.length?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
+ return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+numHtml(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(hits.some(f=>f.start===d)?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
 }
 function monthSection(e){
  const w=week(),start=monthStart(e),length=monthDays(e);
@@ -72,17 +75,16 @@ function monthView(){
 }
 
 function yearView(){
- const e=egy(state.focus),w=week();
- const cards=Array.from({length:12},(_,idx)=>{
-  const month=idx+1,start=monthStart({year:e.year,month});
-  const dates=Array.from({length:30},(_,j)=>{
-   const d=start+j;
-   return '<span class="'+(d===today()?'mini-today ':'')+(d===state.focus?'mini-selected':'')+'">'+safe(N(j+1))+'</span>';
+ const e=egy(state.focus),seasons=lang()==='ar'?['آخت','برت','شمو']:['Akhet','Peret','Shemu'];
+ const groups=Array.from({length:3},(_,season)=>{
+  const months=Array.from({length:4},(_,index)=>{
+   const m=season*4+index+1;
+   return '<button class="year-month'+(m===e.month?' active-month':'')+'" data-open-month="'+m+'" aria-label="'+safe(monthName(m))+'"><span class="year-month-name">'+safe(monthName(m))+'</span><span class="year-month-index">'+numHtml(m)+'</span></button>';
   }).join('');
-  return '<button class="year-month'+(month===e.month?' active-month':'')+'" data-open-month="'+month+'" aria-label="'+safe(monthName(month))+'"><strong>'+safe(monthName(month))+'</strong><div class="mini-grid'+(w===10?' mini-decade':'')+'" style="--cols:'+(w===10?5:7)+'">'+dates+'</div></button>';
+  return '<section class="year-season"><h2>'+safe(seasons[season])+'</h2><div class="year-months">'+months+'</div></section>';
  }).join('');
- const epagCount=data.years.find(y=>y.year===e.year).days-360;
- return '<div class="year-overview"><p class="year-caption">'+safe(N(e.year))+' · '+safe(N(12))+' '+safe(T().month)+'</p><div class="year-months">'+cards+'</div><button class="epagomenal-tile" data-open-month="13"><span>✦</span><strong>'+safe(LOCALES[lang()].epagomenal)+'</strong><small>'+safe(N(epagCount))+' '+safe(T().day)+'</small></button></div>';
+ const days=monthDays({year:e.year,month:13});
+ return '<div class="year-overview">'+groups+'<button class="epagomenal-tile" data-open-month="13"><span>✦</span><strong>'+safe(LOCALES[lang()].epagomenal)+'</strong><small>'+safe(N(days))+' '+safe(T().day)+'</small></button></div>';
 }
 function dayView(){
  const daily=items(state.focus),all=daily.filter(i=>i.allDay),timed=daily.filter(i=>!i.allDay);
@@ -115,15 +117,14 @@ function dayView(){
  return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div></div></div>';
 }
 
-function listView(){const groups=[];for(let d=state.focus;d<=Math.min(max(),state.focus+59);d++)if(items(d).length)groups.push(agenda(d));return '<div class="list-page">'+(groups.join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div>';}
-function festivalView(){
- const e=egy(state.focus),start=monthStart(e),found=new Map();
- for(let d=start;d<start+monthDays(e);d++)for(const f of festivalHits(d,data.years,data.festivals))found.set(f.id,f);
- return '<section class="page"><h1>'+safe(T().festivals)+'</h1><p>'+safe(monthName(e.month))+' '+numHtml(e.year)+'</p><div class="festival-list">'+([...found.values()].map(f=>'<button class="festival" data-festival="'+safe(f.id)+'"><span>✦</span><strong>'+safe(lang()==='ar'?f.ar:T().festivals)+'</strong><small>'+safe(greg(f.start))+'</small></button>'+(state.festival===f.id?'<p class="festival-detail">'+safe(lang()==='ar'?f.description_ar:monthName(egy(f.start).month))+'</p>':'')).join('')||'<p class="empty">'+safe(T().noEvents)+'</p>')+'</div></section>';
+function listView(){
+ const groups=[];
+ for(let d=state.focus;d<=Math.min(max(),state.focus+59);d++)if(items(d).length)groups.push(agenda(d));
+ return '<div class="list-page">'+(groups.join('')||'<div class="schedule-empty"><div class="empty-art" aria-hidden="true">▤</div><h2>'+safe(T().noUpcoming)+'</h2><p>'+safe(T().noEvents)+'</p><button class="primary" data-new>'+safe(T().addFirst)+'</button></div>')+'</div>';
 }
 
 function settingsView(){
- return '<section class="page preferences-page"><h1>'+safe(T().settings)+'</h1><div class="settings-group"><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><p class="build-label">'+safe(T().version)+' 2.1.0</p></section>';
+ return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 3.0.0</p></section>';
 }
 function managerView(){
  const a=schedule;
