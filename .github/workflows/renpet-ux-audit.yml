@@ -1,0 +1,50 @@
+name: Renpet mobile UX audit (free Playwright)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'renpet/tests/browser-ux-audit.cjs'
+      - '.github/workflows/renpet-ux-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install free browser test dependency
+        run: |
+          npm install --no-save --prefix /tmp/renpet-pw playwright@1.56.1
+          if command -v google-chrome >/dev/null; then google-chrome --version; else /tmp/renpet-pw/node_modules/.bin/playwright install chromium; fi
+      - name: Build Egyptian numeral assets
+        run: python renpet/tools/make_numerals.py
+      - name: Start the real Renpet application on localhost
+        run: |
+          nohup python -m http.server 8765 --bind 127.0.0.1 --directory renpet/web >/tmp/renpet-server.log 2>&1 &
+          sleep 2
+          curl -fsS http://127.0.0.1:8765/ >/dev/null
+      - name: Exercise the UI as a real mobile user
+        env:
+          NODE_PATH: /tmp/renpet-pw/node_modules
+          RENPET_AUDIT_URL: http://127.0.0.1:8765/
+        run: |
+          node renpet/tests/browser-ux-audit.cjs | tee /tmp/renpet-audit.log
+          tail -n 75 /tmp/renpet-audit.log
+      - name: Store screenshots and JSON findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpet-mobile-ux-evidence
+          path: renpet-ux-audit/
+          retention-days: 14
