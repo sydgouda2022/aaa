@@ -19,7 +19,7 @@ assert.ok(has('data-primary-view="today"')&&has('data-primary-view="month"')&&ha
 assert.ok(!has('data-primary-view="year"')&&!has('data-more')&&!has('data-menu'),'Old redundant navigation removed');
 assert.ok(has('data-open-year'),'Year accessible through heading');
 assert.ok(has('data-week="7"'),'Arabic defaults to seven-day grid');
-assert.ok(!has('fest-mark"'),'Festival indicators limited to first day of multi-day period');
+assert.ok(has('month-agenda'),'Festivals and events are displayed in the selected-day agenda');
 click('data-open-year');
 assert.ok(has('year-overview')&&has('year-season'),'Year is readable season/month navigator');
 assert.equal((root.innerHTML.match(/data-open-month="/g)||[]).length,13,'12 months and epagomenal entry');
