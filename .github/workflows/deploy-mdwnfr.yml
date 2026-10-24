@@ -6,6 +6,7 @@ on:
       - 'mdwnfr/.source/**'
       - 'shared-language/src/lexicon_install.mjs'
       - 'shared-language/src/publish_release.py'
+      - 'shared-language/src/compile_lexica.py'
       - 'shared-language/adapters/mdwnfr-worker.js'
       - 'shared-language/adapters/mdwnfr-offline-publication.py'
       - 'shared-language/releases/dev-late-egyptian/**'
@@ -46,11 +47,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p /tmp/lexicon-sources
+          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/lexicon-sources/tla.jsonl
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexicon-sources/aed.xml
+          echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexicon-sources/tla.jsonl' | sha256sum -c -
+          echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
           cp shared-language/src/lexicon_install.mjs mdwnfr/web/lexicon-install.mjs
           cp shared-language/adapters/mdwnfr-worker.js mdwnfr/web/worker.js
           cp shared-language/adapters/mdwnfr-offline-publication.py mdwnfr/tools/offline_publication.py
-          python shared-language/src/publish_release.py --catalog mdwnfr/core/mdwnfr/data/lexicon.json --out mdwnfr/web/lexicon
-          cmp mdwnfr/web/lexicon/lexicon.json shared-language/releases/dev-late-egyptian/lexicon.json
+          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --out mdwnfr/web/lexicon
+          python shared-language/src/publish_release.py --catalog mdwnfr/web/lexicon/lexicon.json --out mdwnfr/web/lexicon
+          cp mdwnfr/web/lexicon/lexicon.json mdwnfr/core/mdwnfr/data/lexicon.json
+          python - <<'PY'
+          import json,sqlite3
+          from pathlib import Path
+          dest=Path('mdwnfr/web/lexicon')
+          data=json.loads((dest/'manifest.json').read_text())
+          assert data['spelling_records']>=6000 and data['complete'] is False
+          db=sqlite3.connect(dest/'lexicon.sqlite3')
+          assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
+          db.close()
+          PY
           node --test shared-language/tests/lexicon_install.test.mjs
       - name: Install redistributable Egyptian font
         shell: bash
@@ -99,6 +116,7 @@ jobs:
           node --check dist/lexicon-install.mjs
           test -s dist/lexicon/manifest.json
           test -s dist/lexicon/lexicon.json
+          test -s dist/lexicon/lexicon.sqlite3
           node --check dist/storage.js
           node --check dist/sw.js
           node tools/test_recovery_storage.mjs
@@ -141,9 +159,10 @@ jobs:
             if curl -fsS --max-time 25 "$base/" -o /tmp/mdwnfr-public-index \
               && curl -fsS --max-time 25 "$base/manifest.webmanifest" -o /tmp/mdwnfr-public-manifest \
               && curl -fsS --max-time 25 "$base/runtime-status.json" -o /tmp/mdwnfr-public-status \
+              && curl -fsS --max-time 25 "$base/lexicon/manifest.json" -o /tmp/mdwnfr-public-lexicon \
               && grep -q 'MdwNfr' /tmp/mdwnfr-public-index \
               && grep -q 'standalone' /tmp/mdwnfr-public-manifest \
-              && python -c "import json; assert json.load(open('/tmp/mdwnfr-public-status'))['offline_ready']"; then
+              && python -c "import json; assert json.load(open('/tmp/mdwnfr-public-status'))['offline_ready']; assert json.load(open('/tmp/mdwnfr-public-lexicon'))['spelling_records']>=6000"; then
               echo 'Public PWA responding with complete runtime inventory'
               exit 0
             fi
