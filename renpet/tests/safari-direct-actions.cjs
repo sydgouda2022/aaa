@@ -23,7 +23,7 @@ async function main(){
      const now=new Date();
      const iso=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
      const day=Math.floor(Date.parse(iso+'T00:00:00Z')/86400000);
-     const s=JSON.parse(localStorage.getItem('renpet.scheduler.v1'));
+     const s=JSON.parse(localStorage.getItem('renpet.scheduler.v1'))||{version:1,calendars:[{id:'personal',name:{ar:'شخصي',cop:'ⲛⲟⲩⲓ',egy:'𓀀'},color:'#187568',visible:true}],items:[]};
      const id='gesture-'+Date.now()+Math.random().toString(36).slice(2);
      s.items.push({id,kind:'event',title,startDay:day,endDay:day,startMinutes:600,endMinutes:660,
       allDay:false,calendarId:s.calendars[0].id,alert:'none',repeat:'none',location:'',notes:'',
