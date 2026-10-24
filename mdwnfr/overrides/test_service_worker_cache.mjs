@@ -3,7 +3,8 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
 const script=fs.readFileSync(new URL('../dist/sw.js',import.meta.url),'utf-8');
-assert.match(script,/mdwnfr-offline-0\.1\.47/);
+const cacheName=(script.match(/const CACHE = '([^']+)';/)||[])[1];
+assert.match(cacheName,/^mdwnfr-offline-[a-f0-9]{16}$/,'Published cache must be fingerprinted');
 const handlers=new Map();
 const matched=[];
 const records=new Map([['/app.js','OFFLINE_APP'],['/style.css','OFFLINE_CSS'],['/index.html','OFFLINE_HOME']]);
@@ -15,7 +16,7 @@ const cache={async match(key){
 let online=false;
 const ctx={
  self:{location:{origin:'https://mdwnfr.example'},addEventListener(name,handler){handlers.set(name,handler);}},
- caches:{async open(name){assert.equal(name,'mdwnfr-offline-0.1.47');return cache;}},
+ caches:{async open(name){assert.equal(name,cacheName);return cache;}},
  fetch:async()=>{if(!online)throw Error('Offline');return new Response('NETWORK');},
  URL,Response,Headers,crypto:globalThis.crypto,
 };
