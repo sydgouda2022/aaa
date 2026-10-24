@@ -154,7 +154,11 @@ jobs:
         run: |
           set -euo pipefail
           npm install --global wrangler@4
-          wrangler deploy --config wrangler.toml
+          for attempt in 1 2 3; do
+            if wrangler deploy --config wrangler.toml; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            sleep $((attempt * 10))
+          done
       - name: Public PWA smoke test
         shell: bash
         run: |

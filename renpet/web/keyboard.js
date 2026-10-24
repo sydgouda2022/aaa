@@ -19,7 +19,7 @@ function persist(){
 function contextPrevious(){
  const lang=keyboardLanguage();if(!active||!lang)return '';
  const before=active.value.slice(0,current().start).trimEnd();
- const word=before.match(lang==='cop'?/[\p{Script=Coptic}\p{Script=Greek}\p{Mark}]+$/u:/[\u{13000}-\u{1342f}\u{13460}-\u{143ff}]+$/u);
+ const word=before.match(lang==='cop'?/[\p{Script=Coptic}\p{Script=Greek}\p{Mark}]+$/u:/[\u{13000}-\u{1345f}\u{13460}-\u{143ff}]+$/u);
  return word?.[0]||'';
 }
 function remember(text){

@@ -57,6 +57,36 @@ The compiler prints coverage reports and writes `coverage.json`, `manifest.json`
 - `deploy-renpet-pages.yml` and `deploy-mdwnfr.yml`: reconstruct and verify the same source editions, then check deployed release counts via HTTPS smoke tests.
 - `renpet-mobile-qa.yml`: exercises iPhone-size WebKit/Chromium calendar input, save/reopen and offline behavior against the source-expanded packs.
 
+## Coverage-measurement milestone (2026-10-24)
+
+The source-pinned leave-one-AES-document-out benchmark now ships as
+`src/benchmark_late_egyptian.py` and `heldout_coverage.json` in the canonical
+SQLite artifact. Evaluating **13,112 complete, lemma-linked Unicode tokens** in
+seven scorable curated works (one selected text contains no usable Unicode
+tokens) produced **90.18% token coverage** and **66.67% distinct
+lemma-spelling coverage**. The TLA-only baseline was **76.78% token coverage**
+and **56.63% type coverage**. These are cross-document internal scores, NOT
+generalization to unseen literature as a whole or to unencoded texts.
+The 95%/90% acceptance targets are **not met**.
+
+An explicit Unicode spatial-control grammar now recognizes balanced,
+undamaged Egyptian format controls rather than silently rejecting them.
+Full sign-code sequences from AES can be decoded using official Unicode
+Gardiner names only when each sign resolves uniquely and an explicitly
+present Unicode spelling is not damaged. All conversion methods are recorded
+in the attestation reference. Mixed markup, uncertain editorial glyphs,
+incomplete Gardiner codes, and reconstruction from transliteration are
+rejected. All of these rules have unit tests.
+
+We audited nine additional Ramesside poetry and scribal selections. In the
+pinned openly licensed AES release they yielded **zero** complete,
+lemma-linked Unicode spellings. The documents remain candidate-only, and
+neither the 7,186 spelling-record count nor the 20,652 Coptic forms count is
+inflated. Further increases require additional genuine sign-encoded evidence,
+source-by-source philological stage checks, or independently reviewed
+transcriptions of manuscript material. ORAEC's continuous Unicode text lines
+cannot be blindly segmented into attested *words*.
+
 ## What is still NOT 100% linguistically complete
 
 The downloadable TLA v19 premium dataset contains a *filtered portion* of known Late Egyptian materials; curated AES literary evidence substantially improves coverage but does not supply the entire historical stage, not the entire TLA corpus. Some attested words use non-Unicode or unencoded signs (1,034 word occurrences in this import), which cannot become valid native-sign suggestions without independent source verification. AED additionally contains many broader-stage transliteration-only entries; those are **not** automatically converted into Late Egyptian written words.
