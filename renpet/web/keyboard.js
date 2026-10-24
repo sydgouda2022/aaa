@@ -23,7 +23,22 @@ async function load(lang){
   const res=await fetch('./assets/dictionaries/'+endpoint);
   if(!res.ok)throw new Error(res.status);
   catalog[lang]=await res.json();
- }catch(err){console.warn('Renpet dictionary unavailable offline:',endpoint,err);catalog[lang]={rows:[],pages:{uni:[],bi:[],tri:[]}};}
+  if(lang==='egy'){
+   // Keep MDWNFR-style phonogram key pages independent of the attested
+   // TLA Earlier Egyptian word corpus. Future Late Egyptian packs can be
+   // added without touching the keyboard layout.
+   const words=await fetch('./assets/dictionaries/egyptian-wordforms.json');
+   if(words.ok){const pack=await words.json();catalog.egy.rows=pack.rows||[];catalog.egy.source=pack.language_stage;}
+  }else{
+   const popular=await fetch('./assets/dictionaries/coptic-popular.json');
+   if(popular.ok){
+    const pack=await popular.json();
+    catalog.cop.popularity=Object.fromEntries(pack.rows||[]);
+    const known=new Set(catalog.cop.rows.map(r=>r[0]));
+    for(const [word] of pack.rows||[])if(!known.has(word)){catalog.cop.rows.push([word,0]);known.add(word);}
+   }
+  }
+ }catch(err){console.warn('Renpet dictionary unavailable offline:',endpoint,err);catalog[lang]=catalog[lang]||{rows:[],pages:{uni:[],bi:[],tri:[]}};}
  if(active&&keyboardLanguage()===lang)draw();
 }
 function pageButtons(lang){
@@ -51,7 +66,7 @@ function predictBar(lang){
  const options=suggestions(raw,lang,catalog[lang],personal,4);
  if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'𓏭 𓄿 𓆣')+' </span></div>';
  return '<div class="kb-suggestions" role="listbox" aria-label="Prediction candidates">'+options.map((o,i)=>{
-  const dialects=o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.personal?'★':'';
+  const dialects=o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='TLA18'?'TLA':o.personal?'★':o.frequency?'CDO':'';
   return '<button type="button" role="option" data-kb-pick="'+i+'" aria-selected="'+(i===0)+'"><span>'+escape(o.text)+'</span><small>'+(o.raw?'✓':dialects)+'</small></button>';
  }).join('')+'</div>';
 }
