@@ -71,6 +71,7 @@ jobs:
           node renpet/tests/ics-import.test.mjs
           node --check renpet/web/sw.js
           python renpet/tests/test_service_worker_source.py
+          python renpet/tests/test_app_icons.py
           node --test renpet/tests/responsive-layout.test.mjs
           node renpet/tests/ui.test.mjs
           node renpet/tests/keyboard.test.mjs
