@@ -5,7 +5,7 @@ const results=[],errors=[];
 const ROOT='http://127.0.0.1:8765/';
 
 async function scenario(engine,name) {
- const browser=await engine.launch({headless:true});
+ const browser=await engine.launch(name==='chromium'?{channel:'chrome',headless:true,args:['--no-sandbox']}:{headless:true});
  try {
   // This scenario enables service workers (unlike other UI tests) to catch
   // the old ?v= asset cache miss which caused a lone hieroglyphic splash.
