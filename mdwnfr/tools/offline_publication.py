@@ -20,6 +20,7 @@ SHELL = (
     'core/mdwnfr/history.py', 'core/mdwnfr/session.py',
     'core/mdwnfr/layout_sync.py', 'core/mdwnfr/api.py',
     'core/mdwnfr/data/lexicon.json',
+    'core/mdwnfr/data/glyph_geometry.json',
     'lexicon-install.mjs', 'lexicon/lexicon.json', 'lexicon/manifest.json',
     'core/mdwnfr/data/catalog_integrity.json',
     'core/mdwnfr/data/artwork_catalog.json',

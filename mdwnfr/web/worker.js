@@ -32,6 +32,9 @@ async function boot() {
     const artwork=await fetch('/core/mdwnfr/data/artwork_catalog.json',{cache:'force-cache'});
     if(!artwork.ok)throw new Error('Installed clip-art metadata not available');
     pyodide.FS.writeFile('/home/pyodide/mdwnfr/data/artwork_catalog.json',await artwork.text());
+    const ink=await fetch('/core/mdwnfr/data/glyph_geometry.json',{cache:'force-cache'});
+    if(!ink.ok)throw new Error('Verified glyph silhouettes are unavailable');
+    pyodide.FS.writeFile('/home/pyodide/mdwnfr/data/glyph_geometry.json',await ink.text());
     const contour=await fetch('/core/mdwnfr/data/artwork_silhouettes.json',{cache:'force-cache'});
     if(!contour.ok)throw new Error('Installed artwork silhouettes not available');
     pyodide.FS.writeFile('/home/pyodide/mdwnfr/data/artwork_silhouettes.json',await contour.text());

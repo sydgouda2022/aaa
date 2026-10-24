@@ -58,8 +58,6 @@ jobs:
           print('MdwNfr canonical Python+browser lexicon and SQLite verified')
           PY
           python -m compileall -q mdwnfr/core/mdwnfr
-          python mdwnfr/qa/test_keyboard.py -v
-          python mdwnfr/qa/test_quadrat_flow.py -v
           node --check mdwnfr/web/app.js
           node --check mdwnfr/web/worker.js
           node --check mdwnfr/web/storage.js
@@ -84,6 +82,12 @@ jobs:
           f.save(out)
           assert out.stat().st_size>100000 and out.read_bytes()[:4]==b'wOF2'
           PY
+      - name: Generate font-verified glyph silhouettes and test Python engine
+        run: |
+          set -euo pipefail
+          python mdwnfr/tools/generate_glyph_ink.py /tmp/mdwnfr-hieroglyphs.ttf mdwnfr/core/mdwnfr/data/glyph_geometry.json
+          python mdwnfr/qa/test_keyboard.py -v
+          python mdwnfr/qa/test_quadrat_flow.py -v
       - name: Vendor and verify self-hosted Pyodide 0.27.8
         working-directory: mdwnfr
         run: |
