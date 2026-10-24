@@ -2,6 +2,7 @@ import {DAY,dayNumber,toEgyptian,toGregorian,monthGrid,festivalHits,nativeNumber
 import {LOCALES} from './locales.js';
 import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
 import {openBackup} from './backup.js';
+import {initKeyboard,syncKeyboard} from './keyboard.js';
 import {inputClock,timeText,timeHtml,localMinutes,nowLineTop} from './clock.js';
 
 // Single owner of #app. No observers, shadow views, patched DOM or legacy year board.
@@ -126,7 +127,7 @@ function listView(){
 }
 
 function settingsView(){
- return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 3.1.0</p></section>';
+ return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 4.0.0</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -295,7 +296,7 @@ root.addEventListener('change',ev=>{
   if(preview){const day=Number(form.elements.egyDay.value);preview.textContent=data.years.some(x=>x.year===y)&&day<=monthDays({year:y,month:m})?greg(toGregorian({year:y,month:m,day},data.years),{day:'numeric',month:'long',year:'numeric'}):'—';}
   return;
  }else return;
- savePrefs();render();
+ savePrefs();render();syncKeyboard();
 });
 root.addEventListener('input',ev=>{if(ev.target.name==='query'){state.query=ev.target.value;const r=root.querySelector('.search-results');if(r)r.innerHTML=searchResults();}});
 root.addEventListener('submit',ev=>{
@@ -356,7 +357,7 @@ root.addEventListener('touchend',ev=>{
  }
 },{passive:true});
 async function init(){
- try{const r=await fetch('./data.json');if(!r.ok)throw Error('Calendar data unavailable');data=await r.json();state.focus=clamp(state.focus);render();
+ try{const r=await fetch('./data.json');if(!r.ok)throw Error('Calendar data unavailable');data=await r.json();state.focus=clamp(state.focus);render();if(typeof document.createElement==='function')initKeyboard(()=>lang());
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);}
  }catch(e){root.textContent='Renpet: '+e.message;console.error(e);}
 }
