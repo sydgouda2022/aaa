@@ -9,7 +9,7 @@
 .local-time-value:focus-visible,.time-choice:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .sheet{position:relative}
 .time-picker-host[hidden]{display:none!important}
-.time-picker-host{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;min-height:0;overflow:hidden;background:var(--bg);border-radius:20px 20px 0 0}
+.time-picker-host{position:absolute;inset:57px 0 0;z-index:10;display:flex;flex-direction:column;min-height:0;overflow:hidden;background:var(--bg);border-radius:20px 20px 0 0}
 .time-picker-top{display:flex;align-items:center;gap:10px;min-height:62px;flex:0 0 auto;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
 .time-picker-top>button{width:44px;height:44px;flex-shrink:0;border:0;border-radius:50%;background:var(--soft);font-size:26px;color:var(--green)}
 .time-picker-top strong{font-size:17px;min-width:0;flex:1;color:var(--rubric)}
@@ -44,3 +44,8 @@ body[data-language=egy] .time-picker-preview .clock-glyph{height:31px;max-width:
 body[data-language=egy] .time-choice{min-height:58px;flex-basis:58px}
 body[data-language=egy] .time-choice .clock-glyph{height:28px;max-width:48px}
 body[data-language=egy] .time-choice .clock-text{font-size:25px}
+
+/* Editor Save/Cancel must stay touchable while the time picker is open.
+   The old inset:0 positioned the picker above the whole form header on WebKit. */
+.sheet-head{position:relative;z-index:11}
+.time-picker-host{pointer-events:auto}
