@@ -201,6 +201,9 @@ function render(){
  document.body.dataset.language=lang();
  const content=state.view==='year'?yearView():state.view==='day'?dayView():state.view==='list'?listView():monthView();
  root.innerHTML='<div class="app-shell">'+toolbar()+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'+panelContent()+(state.dialog?editor():'');
+ if(['cop','egy'].includes(lang())&&typeof document.createElement==='function'){
+  root.querySelectorAll('input[type="text"],input[type="search"],textarea').forEach(el=>el.setAttribute('inputmode','none'));
+ }
  const main=root.querySelector('#main-content');
  if(main&&keepScroll)main.scrollTop=keepScroll;
  if(main&&viewKey!==previousRenderKey&&state.view==='day'&&state.focus===today()){
