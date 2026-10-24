@@ -27,6 +27,14 @@ jobs:
             curl -fLsS --retry 3 --max-time 120 "$base/$file.json" -o "/tmp/aes/$file.json"
           done
           sha256sum /tmp/aes/*.json
+      - name: Audit selected Late Egyptian documents against TLA baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 3 --max-time 120 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/aes/tla.jsonl
+          echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/aes/tla.jsonl' | sha256sum -c -
+          echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/aes/_aes_sawlit.json' | sha256sum -c -
+          python shared-language/src/audit_aes_late_docs.py --aes /tmp/aes/_aes_sawlit.json --tla /tmp/aes/tla.jsonl --whitelist shared-language/sources/aes_late_documents.json
       - name: Report corpus chronology and verified Unicode spellings
         run: python shared-language/src/audit_aes.py /tmp/aes/*.json > /tmp/aes-audit.jsonl
       - name: Show stage filter feasibility
