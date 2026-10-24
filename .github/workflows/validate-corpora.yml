@@ -1,0 +1,69 @@
+name: Build complete available open-source lexical inventories
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/publish_compiled_coptic.py'
+      - '.github/workflows/validate-corpora.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-lexica:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Native compiler regression
+        run: python -m unittest discover -s shared-language/tests -p 'test_compile_lexica.py' -v
+      - name: Fetch pinned open editions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lexicon-raw
+          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/lexicon-raw/tla.jsonl
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexicon-raw/aed.xml
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/f365e2d239bd12b6897f3a761487e40d384b2b24/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/lexicon-raw/coptic.xml
+          test "$(wc -c </tmp/lexicon-raw/tla.jsonl)" -gt 1000000
+          test "$(wc -c </tmp/lexicon-raw/aed.xml)" -gt 10000000
+          test "$(wc -c </tmp/lexicon-raw/coptic.xml)" -gt 10000000
+          sha256sum /tmp/lexicon-raw/*
+      - name: Compile two canonical SQLite masters and derived prediction releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python shared-language/src/compile_lexica.py egyptian \
+            --tla /tmp/lexicon-raw/tla.jsonl --aed /tmp/lexicon-raw/aed.xml --out /tmp/lexicon-build/egy
+          python shared-language/src/compile_lexica.py coptic \
+            --tei /tmp/lexicon-raw/coptic.xml \
+            --forms renpet/web/assets/dictionaries/coptic.json \
+            --popular renpet/web/assets/dictionaries/coptic-popular.json \
+            --out /tmp/lexicon-build/cop
+          python shared-language/src/publish_release.py --catalog /tmp/lexicon-build/egy/lexicon.json --out /tmp/lexicon-build/egy
+          python shared-language/src/publish_compiled_coptic.py --out /tmp/lexicon-build/cop
+          python - <<'PY'
+          import json, sqlite3
+          from pathlib import Path
+          for name in ('egy','cop'):
+              p=Path('/tmp/lexicon-build')/name
+              catalog=json.loads((p/'lexicon.json').read_text())
+              report=json.loads((p/'coverage.json').read_text())
+              manifest=json.loads((p/'manifest.json').read_text())
+              db=sqlite3.connect(p/'lexicon.sqlite3')
+              assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
+              assert manifest['spelling_records'] > 0
+              assert manifest['complete'] is False
+              assert report['unique_spellings' if name=='egy' else 'unique_written_forms'] == manifest['spelling_records']
+              print('VERIFIED',name, json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audited-egyptian-coptic-sqlite-masters
+          path: |
+            /tmp/lexicon-build/egy/*
+            /tmp/lexicon-build/cop/*
+          retention-days: 14
