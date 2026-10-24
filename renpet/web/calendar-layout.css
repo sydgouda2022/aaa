@@ -141,3 +141,25 @@ body[data-language=egy] .date-fields select[name=endEgyDay]{font-size:27px!impor
 .alert-limit{display:block;font-size:12px;line-height:1.45;color:var(--muted);font-weight:400}
 .renpet-reminder-toast{position:fixed;z-index:1001;inset-inline:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:#143f37;color:white;border-radius:14px;box-shadow:0 8px 32px #0004;max-width:520px;margin-inline:auto}
 .renpet-reminder-toast button{font-size:23px;color:white;background:none;border:0;min-width:40px;min-height:40px}
+
+/* Appointment density in month and year, festival detail overlays */
+.year-mini-day{position:relative}
+.year-mini-dot,.year-mini-festival{position:absolute;bottom:1px;width:4px;height:4px;border-radius:50%;background:#176c59;inset-inline-start:calc(50% - 5px);pointer-events:none}
+.year-mini-festival{background:#b58b34;inset-inline-start:calc(50% + 2px)}
+.year-mini-day.has-appointments{font-weight:800}
+.date-more-count{position:absolute;bottom:3px;inset-inline-end:2px;font:700 9px/1 system-ui;color:var(--ink,#163e36)}
+.festival-in-agenda{width:100%;text-align:start;cursor:pointer;display:flex;align-items:center;gap:10px}
+.festival-in-agenda .festival-title{display:grid;gap:2px;flex:1;min-width:0}
+.festival-detail-overlay{position:fixed;inset:0;z-index:1100;background:#0007;display:grid;place-items:center;padding:16px}
+.festival-detail-sheet{width:min(100%,580px);max-height:min(86dvh,850px);overflow:auto;background:var(--paper,#fff);color:var(--ink,#143b33);border-radius:20px;padding:22px;box-shadow:0 12px 45px #0003}
+.festival-detail-sheet header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.festival-detail-sheet h2{font-size:23px;line-height:1.5;margin:0}
+.festival-detail-sheet header button{min-width:44px;min-height:44px;border:0;background:transparent;font-size:28px;cursor:pointer}
+.festival-detail-sheet .festival-type{font-weight:700;color:#176c59}
+.festival-detail-sheet .festival-when{color:var(--muted,#527064)}
+.festival-detail-sheet .festival-evidence{white-space:pre-line;line-height:1.8;font-size:15px}
+.festival-sources-links{display:flex;flex-wrap:wrap;gap:9px}
+.festival-sources-links a{color:#176c59;text-decoration:underline;min-height:40px;padding:8px 0}
+
+/* Quick add from the selected month agenda */
+.agenda-add-action{min-height:44px;padding:9px 14px;border-radius:11px;border:1px solid #176c59;background:transparent;color:#176c59;font:700 14px system-ui;cursor:pointer;margin-top:9px}

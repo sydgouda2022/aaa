@@ -48,7 +48,7 @@ assert.ok(has('data-open-panel="calendars"')&&has('data-backup'),'Advanced featu
 assert.ok(has('data-open-panel="festivals"'),'Festival source selector is available within Settings');
 click('data-open-panel','festivals');
 assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun remains a selectable source');
-assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,4,'Amun, national, Christian, Muslim choices present');
+assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,6,'Amun, Esna, Isis, national, Christian, Muslim choices present');
 for(const handler of handlers.change||[])handler({target:{
  name:'',checked:false,dataset:{festivalSourceId:'amun-theban'},
  hasAttribute:key=>key==='data-festival-source-id',closest:()=>null

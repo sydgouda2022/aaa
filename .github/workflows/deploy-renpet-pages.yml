@@ -67,6 +67,8 @@ jobs:
           node --check renpet/web/backup.js
           node --check renpet/web/backup-core.mjs
           node --check renpet/web/ics-core.mjs
+          node --check renpet/web/ics-import.mjs
+          node renpet/tests/ics-import.test.mjs
           node --check renpet/web/sw.js
           python renpet/tests/test_service_worker_source.py
           node --test renpet/tests/responsive-layout.test.mjs
