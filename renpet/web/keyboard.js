@@ -148,6 +148,14 @@ export function initKeyboard(getLanguage){
  document.addEventListener('input',e=>{
   if(e.target===active)draw();
  });
+ // Clicking outside dismisses the keyboard without losing the text field.
+ // On iOS a second tap on that still-focused field does not fire focusin;
+ // explicitly reopen on pointerup to preserve a natural editing workflow.
+ document.addEventListener('pointerup',e=>{
+  if(keyboard.hidden&&keyboardLanguage()&&eligible(e.target)){
+   active=e.target;void load(keyboardLanguage());draw();
+  }
+ });
  document.addEventListener('pointerdown',e=>{
   if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target)){
    hide();
