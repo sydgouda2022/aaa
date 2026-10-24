@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#102d51" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>MdwNfr — Egyptian Editor</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/brand-v046-192.png" />
+  <link rel="apple-touch-icon" href="/icons/brand-v046-apple-touch.png" />
+  <link rel="stylesheet" href="/style.css?v=047" />
+</head>
+<body>
+<div class="app" id="app">
+  <!-- The Documents library is always the first screen. No editor is instantiated until open/create. -->
+  <section id="library-screen" class="library-screen" aria-labelledby="library-title">
+    <header class="library-header">
+      <div class="library-header-inner">
+        <img class="library-logo" src="/icons/brand-v046-192.png" alt="" aria-hidden="true"/>
+        <div class="library-heading"><div class="library-overline">MDWNFR</div><h1 id="library-title">Documents</h1></div>
+        <span id="library-state" class="library-status" role="status">Loading documents…</span>
+      </div>
+    </header>
+    <main class="library-main">
+      <div class="library-toolbar">
+        <div><h2>My Documents</h2><p>Stored privately on this device</p></div>
+        <button id="create-document" class="create-document" type="button" disabled aria-label="Create a new document"><span class="create-plus" aria-hidden="true">+</span><span>New Document</span></button>
+      </div>
+      <p class="library-error" id="library-error" role="alert" hidden></p>
+      <p class="lexicon-notice" id="lexicon-notice" role="status" hidden></p>
+      <p class="lexicon-notice" id="offline-notice" role="status" hidden></p>
+      <div class="library-empty" id="library-empty" hidden>
+        <div class="library-empty-icon" aria-hidden="true">𓏞</div>
+        <h3>No documents yet</h3><p>Create your first hieroglyphic document using the + button.</p>
+      </div>
+      <div class="document-grid" id="doc-list" aria-label="Saved documents"></div>
+    </main>
+  </section>
+
+  <section id="editor-screen" class="editor-screen" aria-label="Hieroglyphic text editor" hidden>
+    <header class="topbar editor-topbar">
+      <button id="library" class="editor-nav icon-control" title="Back to Documents" aria-label="Back to Documents">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="back-label">Documents</span>
+      </button>
+      <button id="pages-toggle" type="button" class="icon-control panel-trigger" aria-label="Pages panel" aria-controls="pages-panel" aria-expanded="false" title="Pages">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 3v18M13 8h5M13 12h5M13 16h4"/></svg>
+      </button>
+      <img class="editor-app-icon" src="/icons/brand-v046-192.png" alt="" aria-hidden="true"/>
+      <div class="doc-title-wrap"><input id="docname" class="doc-title" aria-label="Document title" value="Untitled" maxlength="120"/><div class="subtitle">MdwNfr</div></div>
+      <div class="editor-actions">
+        <button id="edit-toggle" type="button" class="header-action panel-trigger" aria-controls="edit-panel" aria-expanded="false">Edit</button>
+        <button id="insert-toggle" type="button" class="header-action panel-trigger" aria-controls="insert-panel" aria-expanded="false">Insert</button>
+      </div>
+      <span id="state" class="status" role="status">Loading…</span>
+      <button id="format-toggle" type="button" class="icon-control panel-trigger" aria-label="Format panel" aria-controls="format-panel" aria-expanded="false" title="Format">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 15l5-11 5 11M9 12h6"/></svg>
+      </button>
+    </header>
+    <main class="workspace" id="editor-workspace">
+      <section class="canvas-area" id="canvas-area" aria-label="Writing surface"><div id="pages" class="pages"></div></section>
+    </main>
+
+    <!-- Panels float above the document. Exactly one panel can be open. -->
+    <aside id="pages-panel" class="floating-panel pages-panel" aria-label="Pages" hidden>
+      <div class="floating-panel-heading"><strong>Pages</strong><span id="page-total">0 pages</span></div>
+      <nav id="pages-overview" class="pages-overview" aria-label="Page thumbnails"></nav>
+    </aside>
+
+    <aside id="edit-panel" class="floating-panel utility-panel" aria-label="Edit" hidden>
+      <div class="floating-panel-heading"><strong>Edit</strong><span>Selection and history</span></div>
+      <div class="format-section">
+        <div class="format-section-title" id="selection-summary">No selection</div>
+        <div class="selection-tools" role="group" aria-label="Selection and clipboard">
+          <button id="select-all" type="button">Select All</button>
+          <button id="copy-selection" type="button" disabled>Copy</button>
+          <button id="cut-selection" type="button" disabled>Cut</button>
+          <button id="paste-selection" type="button">Paste</button>
+        </div>
+        <button id="delete" class="delete-word" type="button">Delete selection</button></div>
+      <div class="format-section">
+        <div class="format-section-title">History</div>
+        <div class="history-tools"><button id="undo" type="button" disabled title="Undo (Ctrl/Cmd+Z)">Undo</button><button id="redo" type="button" disabled title="Redo (Ctrl+Y / Cmd+Shift+Z)">Redo</button></div>
+      </div>
+    </aside>
+    <aside id="insert-panel" class="floating-panel utility-panel" aria-label="Insert" hidden>
+      <div class="floating-panel-heading"><strong>Insert</strong><span>At the insertion point</span></div>
+      <div class="format-section">
+        <div class="format-section-title">Insert</div>
+        <div class="insert-tools"><button id="insert-clipart" type="button" aria-controls="artwork-picker" aria-expanded="false">Clip art</button><button id="insert-image" type="button">Image</button><input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" hidden aria-label="Choose local image" /><button id="insert-table" type="button">Table</button><button id="insert-cartouche" type="button">Cartouche</button></div>
+        <div id="artwork-picker" class="artwork-picker" hidden>
+          <input id="artwork-search" type="search" placeholder="Search 81 Egyptian artworks…" aria-label="Find clip art" />
+          <div id="artwork-grid" class="artwork-grid" aria-label="Clip-art library"></div>
+        </div>
+        <div id="clipart-controls" class="clipart-controls" hidden>
+          <label>Width (mm) <input id="clipart-width" type="number" min="6" max="300" step="1" /></label>
+          <label>Facing <select id="clipart-flip"><option value="auto">Auto inward</option><option value="normal">Original</option><option value="mirror">Flipped</option></select></label>
+          <label>Across band (%) <input id="clipart-horizontal" type="number" min="0" max="100" step="1" aria-label="Artwork horizontal alignment" /></label>
+          <label>Horizontal float (mm; negative = backward) <input id="clipart-float" type="number" min="-2000" max="2000" step="0.1" aria-label="Artwork cross-column offset" /></label>
+          <label>Down page (%) <input id="clipart-vertical" type="number" min="0" max="100" step="1" aria-label="Artwork vertical alignment" /></label>
+          <span class="clipart-note">Drag images or clip art across adjacent columns. Reflow, contour clearance and placement are calculated by Python; no fixed page coordinates are saved.</span>
+        </div>
+        <div id="cartouche-controls" class="cartouche-controls" hidden>
+          <div class="format-section-title">Selected cartouche</div>
+          <label class="format-line">Orientation <select id="cartouche-orientation"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select></label>
+          <label for="cartouche-words">Hieroglyphic words (separate with spaces)</label>
+          <textarea id="cartouche-words" rows="3" aria-label="Cartouche hieroglyphic words" placeholder="𓅓 𓏏 𓂋"></textarea>
+          <div class="table-buttons"><button id="cartouche-save" type="button">Apply words</button><button id="cartouche-keyboard" type="button">Use hieroglyphic keyboard</button></div>
+          <div class="clipart-note">One indivisible object. Signs remain in logical order, and the Python compositor fits the enclosure to its contents.</div>
+        </div>
+        <div id="table-controls" class="table-controls" hidden>
+          <div class="format-section-title">Selected table <span id="table-dimensions"></span></div>
+          <div class="table-buttons"><button id="table-row-add" type="button">+ Row</button><button id="table-row-delete" type="button">− Row</button><button id="table-column-add" type="button">+ Column</button><button id="table-column-delete" type="button">− Column</button></div>
+          <label>Table width (mm, optional) <input id="table-width" type="number" min="15" max="500" step="1" placeholder="Auto"/></label>
+          <div id="table-grid-editor" class="table-grid-editor" aria-label="Choose table cell"></div>
+          <label for="table-cell-value">Cell content (hieroglyphic words separated by spaces, or =formula)</label>
+          <textarea id="table-cell-value" rows="3" aria-label="Selected table cell content" placeholder="𓅓𓏏 or =SUM(A1:B2)"></textarea>
+          <div class="table-buttons"><button id="table-cell-save" type="button">Apply cell</button><button id="table-cell-keyboard" type="button">Use hieroglyphic keyboard</button></div>
+          <div class="clipart-note">All cell edits and row/column changes are reversible. Select cells directly or from this grid. Hieroglyphic Unicode only; formulas use cell references.</div>
+        </div>
+        <div id="nested-position-controls" class="clipart-controls" hidden>
+          <div class="format-section-title">Table / cartouche placement</div>
+          <label>Across reserved columns (%) <input id="nested-horizontal" type="number" min="0" max="100" step="1" aria-label="Nested object horizontal alignment" /></label>
+          <label>Horizontal float (mm; negative = backward) <input id="nested-float" type="number" min="-2000" max="2000" step="0.1" aria-label="Nested object cross-column float" /></label>
+          <label>Down writing frame (%) <input id="nested-vertical" type="number" min="0" max="100" step="1" aria-label="Nested object vertical alignment" /></label>
+          <span class="clipart-note">Drag a cartouche or table border to change its document position. Forward and bounded backward floating expose silhouette-safe writing sectors; all collision checks and clearance are calculated by Python. Long tables remain top-aligned while spanning pages.</span>
+        </div>
+        <p class="coming-soon">Clip art follows its contour and maintains sign clearance. Float across columns while preserving logical document anchors and silhouette clearance.</p>
+      </div>
+    </aside>
+    <aside id="format-panel" class="floating-panel format-panel" aria-label="Format" hidden>
+      <div class="floating-panel-heading"><strong>Format</strong><span>Document &amp; selection</span></div>
+      <div class="format-section">
+        <div class="format-section-title">Document</div>
+        <div class="format-line"><label for="surface">Writing surface</label><select id="surface"><option>A4</option><option>A3</option><option>A2</option><option value="papyrus">Papyrus</option></select></div>
+        <div class="technical-controls" hidden aria-hidden="true">        <div class="format-section-title" id="paper-margin-title">Writing frame margins (mm)</div>
+        <div class="margin-controls" id="paper-margin-controls" role="group" aria-label="Four page margins">
+          <label for="margin-top">Top<input id="margin-top" type="number" min="0" max="80" step="0.5" value="18" /></label>
+          <label for="margin-bottom">Bottom<input id="margin-bottom" type="number" min="0" max="80" step="0.5" value="18" /></label>
+          <label for="margin-left">Left<input id="margin-left" type="number" min="0" max="80" step="0.5" value="18" /></label>
+          <label for="margin-right">Right<input id="margin-right" type="number" min="0" max="80" step="0.5" value="18" /></label>
+        </div>
+        <div class="format-line" id="papyrus-margin-group" hidden>
+          <label for="papyrus-margin">Equal papyrus margin (mm)</label>
+          <input id="papyrus-margin" type="number" min="0" max="80" step="0.5" value="18" />
+        </div>
+</div>
+        <div class="format-line" id="papyrus-group" hidden><label for="papyrus-height">Papyrus height (mm)</label><input id="papyrus-height" type="number" min="80" max="2000" value="300"/></div>
+        <div class="format-line"><span>Direction</span><div class="segmented"><button type="button" id="dir-rtl" aria-label="Right to left">RTL</button><button type="button" id="dir-ltr" aria-label="Left to right">LTR</button></div></div>
+        <select id="direction" class="visually-hidden" aria-label="Writing direction"><option value="rtl">RTL</option><option value="ltr">LTR</option></select>
+      </div>
+      <div class="format-section">
+        <div class="format-section-title">Text / Font <span class="font-name">Hieroglyphics</span></div>
+        <div class="format-line"><label for="font-size">Size</label><div class="size-stepper"><button id="font-decrease" type="button" title="Decrease font size" aria-label="Decrease font size">−</button><input id="font-size" type="number" min="6" max="72" value="22"/><button id="font-increase" type="button" title="Increase font size" aria-label="Increase font size">+</button><button id="bold" type="button" class="bold-control" title="Toggle bold on selected word" aria-pressed="false"><strong>B</strong></button></div></div>
+        <div class="format-line"><span>Color</span><div class="color-controls"><button id="color-black" type="button" class="color-dot black" title="Quick Black" aria-label="Quick black"></button><button id="color-red" type="button" class="color-dot red" title="Quick Red" aria-label="Quick red"></button><label class="custom-color" title="Custom color"><input type="color" id="color-custom" value="#1b2d40" aria-label="Custom color"/><span>Custom</span></label></div></div>
+      </div>
+
+    </aside>
+
+    <button type="button" id="keyboard-toggle" class="keyboard-launcher panel-trigger" aria-label="Keyboard panel" aria-controls="keyboard-panel" aria-expanded="false" title="Hieroglyphic keyboard"><img src="/icons/keyboard_icon.svg" alt="" aria-hidden="true"/></button>
+    <aside class="composer-section keyboard-panel" id="keyboard-panel" aria-label="Hieroglyphic keyboard" hidden>
+      <div class="composer-top"><div class="composer-title" id="composer-title">Compose a word</div><button id="clear" type="button" class="flat-button">Clear</button><button id="backspace" type="button" class="flat-button" title="Erase one sign">⌫</button></div>
+      <div id="composer" class="composer" aria-label="Uncommitted hieroglyphic signs"></div>
+      <div class="suggestion-toolbar" id="suggestion-toolbar" hidden><span>Spelling suggestions</span><button type="button" id="save-personal-word" disabled>Save to My Words</button><button type="button" id="expand-predictions" aria-expanded="false" disabled>All suggestions</button></div>
+      <div class="suggestions" id="suggestions" hidden></div>
+      <div class="expanded-predictions" id="expanded-predictions" aria-label="Expanded spelling suggestions" hidden>
+        <div class="expanded-grid" id="expanded-results"></div>
+        <button id="more-predictions" type="button" hidden>Load more</button>
+      </div>
+      <div class="keyboard-tabs"><button class="tab active" data-tab="unilaterals">Unilaterals</button><button class="tab" data-tab="bilaterals">Bilaterals</button><button class="tab" data-tab="trilaterals">Trilaterals</button></div>
+      <div id="keys" class="keys"></div><div class="numbers-label">EGYPTIAN NUMERALS</div><div id="numbers" class="numbers"></div>
+    </aside>
+    <footer class="bottom-bar"><span id="wordcount">0 words</span><span id="revision">Revision 0</span><div class="zoom-control"><label for="zoom">Zoom</label><select id="zoom"><option value="fit-page">Fit Page</option><option value="fit-width">Fit Page Width</option><option value="1">100%</option><option value="1.5">150%</option><option value="2">200%</option></select></div></footer>
+  </section>
+  <div class="dialog-backdrop hidden" id="dialog-backdrop" role="presentation"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-desc"><h2 id="dialog-title">Document</h2><p id="dialog-desc"></p><input id="dialog-input" class="dialog-input" aria-label="Document name" maxlength="120" hidden/><div class="dialog-actions"><button id="dialog-cancel" type="button">Cancel</button><button id="dialog-ok" type="button">Continue</button></div></div></div>
+</div>
+<script type="module" src="/app.js?v=047"></script>
+</body>
+</html>
