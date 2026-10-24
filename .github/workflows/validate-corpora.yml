@@ -6,6 +6,8 @@ on:
       - 'shared-language/tests/test_compile_lexica.py'
       - 'shared-language/src/compile_lexica.py'
       - 'shared-language/src/aes_unicode.py'
+      - 'shared-language/src/hieroglyphic_unicode.py'
+      - 'shared-language/src/benchmark_late_egyptian.py'
       - 'shared-language/src/aes_late_adapter.py'
       - 'shared-language/sources/aes_late_documents.json'
       - 'shared-language/src/publish_compiled_coptic.py'
@@ -26,6 +28,8 @@ jobs:
         run: |
           python -m unittest discover -s shared-language/tests -p 'test_compile_lexica.py' -v
           python -m unittest discover -s shared-language/tests -p 'test_aes*.py' -v
+          python -m unittest discover -s shared-language/tests -p 'test_hieroglyphic_unicode.py' -v
+          python -m unittest discover -s shared-language/tests -p 'test_benchmark_late_egyptian.py' -v
       - name: Fetch pinned open editions
         shell: bash
         run: |
@@ -53,6 +57,7 @@ jobs:
             --out /tmp/lexicon-build/cop
           python shared-language/src/publish_release.py --catalog /tmp/lexicon-build/egy/lexicon.json --out /tmp/lexicon-build/egy
           python shared-language/src/publish_compiled_coptic.py --out /tmp/lexicon-build/cop
+          python shared-language/src/benchmark_late_egyptian.py --aes /tmp/lexicon-raw/aes_sawlit.json --tla /tmp/lexicon-raw/tla.jsonl --whitelist shared-language/sources/aes_late_documents.json --out /tmp/lexicon-build/egy/heldout_coverage.json
           python - <<'PY'
           import json, sqlite3
           from pathlib import Path
