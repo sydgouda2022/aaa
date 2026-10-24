@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'mdwnfr/.source/**'
+      - 'mdwnfr/overrides/**'
       - 'shared-language/src/lexicon_install.mjs'
       - 'shared-language/src/publish_release.py'
       - 'shared-language/src/compile_lexica.py'
@@ -47,6 +48,13 @@ jobs:
           tar -xzf /tmp/mdwnfr-source.tar.gz -C mdwnfr
           test -s mdwnfr/web/app.js
           test -s mdwnfr/core/mdwnfr/data/lexicon.json
+      - name: Install source-aware MdwNfr keyboard upgrades
+        shell: bash
+        run: |
+          set -euo pipefail
+          python mdwnfr/overrides/patch_keyboard.py mdwnfr
+          python -m py_compile mdwnfr/core/mdwnfr/lexicon.py
+          node --check mdwnfr/web/app.js
       - name: Attach independent verified lexicon installer
         shell: bash
         run: |
@@ -79,6 +87,7 @@ jobs:
           # Keep SQLite in the canonical corpus build artifact, but ship only
           # the browser runtime JSON projection (Cloudflare 25-MiB asset cap).
           rm mdwnfr/web/lexicon/lexicon.sqlite3
+          python mdwnfr/overrides/test_keyboard_current.py -v
           node --test shared-language/tests/lexicon_install.test.mjs
       - name: Install redistributable Egyptian font
         shell: bash
