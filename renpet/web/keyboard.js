@@ -30,7 +30,7 @@ function pageButtons(lang){
  if(lang!=='egy')return '';
  return '<div class="kb-tabs" role="tablist" aria-label="Hieroglyphic sign classes">'+[
   ['uni','𓄿','Uniliterals'],['bi','𓉐','Biliterals'],['tri','𓆣','Triliterals']
- ].map(([p,icon,label])=>'<button type="button" role="tab" aria-selected="'+(tab===p)+'" class="'+(p===tab?'selected':'')+'" data-kb-tab="'+p+'" aria-label="'+label+'"><span>'+icon+'</span><small>'+label+'</small></button>').join('')+'</div>';
+ ].map(([p,icon,label])=>'<button type="button" role="tab" aria-selected="'+(tab===p)+'" class="'+(p===tab?'selected':'')+'" data-kb-tab="'+p+'" aria-label="'+label+'"><span>'+icon+'</span><small>'+(p==='uni'?'Ⅰ':p==='bi'?'Ⅱ':'Ⅲ')+'</small></button>').join('')+'</div>';
 }
 function numberButtons(lang){
  const values=lang==='cop'?COP_NUMBERS:EGY_NUMBERS;
@@ -61,7 +61,7 @@ function draw(){
  if(!active||!active.isConnected||!lang){hide();return;}
  keyboard.hidden=false;
  document.body.classList.add('keyboard-open');
- const title=lang==='cop'?'Coptic · Sahidic + Bohairic':'Hieroglyphic · MDWNFR-style';
+ const title=lang==='cop'?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'𓄿 · 𓉐 · 𓆣';
  keyboard.setAttribute('aria-label',title);
  keyboard.innerHTML='<div class="kb-top"><span class="kb-name">'+title+'</span><button type="button" data-kb-done aria-label="Close keyboard">✓</button></div>'
   +predictBar(lang)+pageButtons(lang)+numberButtons(lang)+keys(lang)
