@@ -7,12 +7,11 @@ import {emptyState,createItem,upsertItem,itemsForDay} from '../web/scheduler.js'
 const read=async name=>JSON.parse(await readFile(new URL('../web/'+name,import.meta.url),'utf8'));
 const data=await read('data.json');
 const actualManifest=await read('festival-sources.json');
-const fetchManifest=async u=>{
- assert.equal(u,'./festival-sources.json');
- return {ok:true,json:async()=>actualManifest};
-};
+const fetchManifest=async u=>({ok:true,json:async()=>
+ u==='./festival-sources.json'?actualManifest:read(u.replace('./',''))
+});
 const catalog=await loadFestivalCatalog(data,fetchManifest);
-assert.equal(catalog.sources.length,1,'Current release offers Amun only');
+assert.equal(catalog.sources.length,4,'Four independently selectable source packs are loaded');
 assert.equal(catalog.sources[0].id,AMUN_SOURCE);
 assert.equal(catalog.sources[0].events.length,data.festivals.length,'Do not change attested Amun date list');
 assert.equal(enabledSourceIds(null,catalog).join(','),AMUN_SOURCE,'Amun enabled for existing users');
@@ -22,6 +21,14 @@ assert.deepEqual(enabledSourceIds([AMUN_SOURCE,AMUN_SOURCE,'nonexistent'],catalo
 
 const festival=data.festivals.find(x=>x.month===1&&x.day===1);
 const newYear=toGregorian({year:6282,month:1,day:1},data.years);
+assert.equal(catalog.sources.find(s=>s.id==='national-egypt').events.length,7);
+assert.equal(catalog.sources.find(s=>s.id==='christian-coptic').events.length,2);
+assert.equal(catalog.sources.find(s=>s.id==='muslim-egypt').events.length,3);
+assert.ok(festivalHitsForDay(dayNumber('2026-04-13'),data.years,catalog,['national-egypt']).some(f=>f.id==='sham-el-nessim-2026'));
+assert.ok(festivalHitsForDay(dayNumber('2026-04-12'),data.years,catalog,['christian-coptic']).some(f=>f.id==='coptic-easter-2026'));
+assert.ok(festivalHitsForDay(dayNumber('2026-03-20'),data.years,catalog,['muslim-egypt']).some(f=>f.id==='eid-al-fitr-2026'));
+assert.equal(festivalHitsForDay(dayNumber('2027-03-20'),data.years,catalog,['muslim-egypt']).length,0,'Movable lunar festivals are never repeated speculatively');
+assert.deepEqual(enabledSourceIds(['national-egypt','christian-coptic','muslim-egypt'],catalog).sort(),['christian-coptic','muslim-egypt','national-egypt']);
 assert.ok(festival,'Existing Amun list contains Wepet Renpet');
 const defaultHits=festivalHitsForDay(newYear,data.years,catalog,[AMUN_SOURCE]);
 assert.ok(defaultHits.some(x=>x.id===festival.id),'Amun calendar dates remain intact');
@@ -60,4 +67,4 @@ assert.equal(festivalHitsForDay(christmas,data.years,future,[]).length,0);
 
 const fallback=await loadFestivalCatalog(data,async()=>{throw Error('offline registry blocked')});
 assert.equal(fallback.sources[0].events.length,data.festivals.length,'Amun remains readable if registry request fails');
-console.log('Festival-source registry and three-rule multi-select tests passed');
+console.log('Four-source registry, per-event fixed/dated rules and calendar isolation passed');
