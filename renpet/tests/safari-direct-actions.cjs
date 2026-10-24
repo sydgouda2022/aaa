@@ -84,8 +84,24 @@ async function main(){
     assert(await p.locator('.event-row[data-edit="'+second+'"]').count()===0,'Month quick-delete still visible');
     const remain=await p.evaluate(id=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')).items.some(i=>i.id===id),second);
     assert(!remain,'Month delete not stored');
+    // List uses the same quick-delete button for a future appointment.
+    const listId=await p.evaluate(day=>{
+      const s=JSON.parse(localStorage.getItem('renpet.scheduler.v1'));
+      const id='list-'+Date.now()+Math.random().toString(36).slice(2);
+      s.items.push({id,title:'list delete test',kind:'event',startDay:day+1,endDay:day+1,
+        startMinutes:660,endMinutes:720,allDay:false,calendarId:s.calendars[0].id,repeat:'none',alert:'none'});
+      localStorage.setItem('renpet.scheduler.v1',JSON.stringify(s));return id;
+    },seed.day);
+    await p.reload({waitUntil:'domcontentloaded'});
+    await p.locator('.month-section').waitFor();
+    await p.locator('[data-primary-view=list]').click();
+    const listRow=p.locator('.event-row-shell:has([data-edit="'+listId+'"])');
+    await listRow.waitFor();
+    await listRow.locator('[data-quick-delete="'+listId+'"]').click();
+    const listStill=await p.evaluate(id=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')).items.some(i=>i.id===id),listId);
+    assert(!listStill,'List direct deletion did not persist');
     await p.screenshot({path:path.join(out,'webkit-'+w+'-'+lang+'-direct-actions.png'),fullPage:true});
-    results.push({width:w,language:lang,resizeFrom:660,resizeTo:after.endMinutes,deletedDay:true,deletedMonth:true,verified:true});
+    results.push({width:w,language:lang,resizeFrom:660,resizeTo:after.endMinutes,deletedDay:true,deletedMonth:true,deletedList:true,verified:true});
    }catch(e){issues.push({width:w,lang,message:String(e.stack||e).slice(0,1250)});
     await p.screenshot({path:path.join(out,'webkit-'+w+'-'+lang+'-direct-actions-FAIL.png'),fullPage:true}).catch(()=>{});
    }finally{await ctx.close();}
