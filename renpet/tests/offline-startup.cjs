@@ -27,10 +27,19 @@ async function scenario(engine,name) {
     if(!cacheNames.some(s=>s.startsWith('renpet-6.5.0-')))throw Error('6.5 service worker did not precache all assets');
     await ctx.setOffline(true);
     const asset=await p.evaluate(async()=>{
-     const response=await fetch('./app.js?v=6.4.0');
-     return {ok:response.ok,type:response.headers.get('content-type'),text:(await response.text()).slice(0,65)};
+     const cacheKeys=await caches.keys();
+     const fullUrl=new URL('./app.js',location.href).href;
+     const cached=await caches.match(fullUrl);
+     const matchWithVersion=await caches.match(fullUrl+'?v=6.4.0',{ignoreSearch:true});
+     try{
+      const response=await fetch('./app.js?v=6.4.0');
+      return {ok:response.ok,type:response.headers.get('content-type'),text:(await response.text()).slice(0,65),
+       cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys};
+     }catch(error){
+      return {ok:false,error:String(error),cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys};
+     }
     });
-    if(!asset.ok||!asset.text.includes('import '))throw Error('Offline query-string module failed: '+JSON.stringify(asset));
+    if(!asset.ok||!asset.text?.includes('import '))throw Error('Offline query-string module failed: '+JSON.stringify(asset));
     await p.reload({waitUntil:'domcontentloaded'});
     await p.locator('.month-section').waitFor({timeout:24000});
     const preserved=await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'));
