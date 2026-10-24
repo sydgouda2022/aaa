@@ -1,0 +1,30 @@
+name: Shared Egyptian Language Platform — Contract Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'shared-language/**'
+      - '.github/workflows/test-shared-language.yml'
+  pull_request:
+    paths:
+      - 'shared-language/**'
+      - '.github/workflows/test-shared-language.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-script-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Validate reusable JS predictor
+        run: node --test shared-language/tests/predict.test.mjs
+      - name: Validate Python pack builder
+        run: python -m unittest discover -s shared-language/tests -p 'test_*.py' -v
