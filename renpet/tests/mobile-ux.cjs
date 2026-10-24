@@ -37,6 +37,20 @@ async function run(){
    await p.clock.fastForward(65000);
    const next=Number.parseFloat((await p.locator('[data-now-line]').getAttribute('style')).match(/top:\s*([0-9.]+)px/)[1]);
    if(!(next>first+0.5))throw Error('Red line did not move as time advanced: '+first+' → '+next);
+   // Full-hour coverage: image assets 31–59 must exist and load offline.
+   await p.clock.fastForward(28*60*1000);
+   const at59=await p.locator('[data-now-line]').getAttribute('aria-label');
+   if(!at59.includes('٥٩'))throw Error('Red marker did not reach minute 59: '+at59);
+   await p.locator('[data-open-panel=settings]').click();
+   await p.locator('[name=language]').selectOption('egy');
+   await p.locator('[data-close-panel]').click();
+   await p.locator('.timeline-now-clock img[src$="/59.svg"]').waitFor({timeout:4000});
+   const loaded=await p.locator('.timeline-now-clock img[src$="/59.svg"]').evaluate(img=>img.complete&&img.naturalWidth>0);
+   if(!loaded)throw Error('Hieroglyphic minute 59 SVG is missing or failed to load');
+   await screenshot(p,name+'-hieroglyphic-minute59');
+   await p.locator('[data-open-panel=settings]').click();
+   await p.locator('[name=language]').selectOption('ar');
+   await p.locator('[data-close-panel]').click();
    await p.locator('[data-next]').click();
    if(await p.locator('[data-now-line]').count())throw Error('Red time line appears on future date');
    await p.locator('[data-prev]').click();
