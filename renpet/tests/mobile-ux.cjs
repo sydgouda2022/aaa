@@ -493,6 +493,60 @@ async function run(){
     return output;
   });
 
+
+  await step(name+' Amun-only multi-select festival sources and personal calendar isolation',async()=>{
+   const q=await ctx.newPage();q.setDefaultTimeout(8000);
+   q.on('dialog',d=>d.accept());
+   await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+   await q.locator('.month-section').waitFor();
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[name=language]').selectOption('ar');
+   const settings=q.locator('.preferences-page');
+   if(await settings.locator('[name=festivals]').count())throw Error('Legacy single festival toggle still present');
+   await settings.locator('[data-open-panel=festivals]').click();
+   const source=q.locator('[data-festival-source-id=amun-theban]');
+   await source.waitFor();
+   if((await q.locator('.festival-source-row').count())!==1)throw Error('There should be only one available source');
+   const initial=await source.isChecked();
+   if(!initial){await source.check();}
+   await screenshot(q,name+'-amun-festival-source-picker');
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   // An event on 1 Thoth (11 Sep 2026) should show a star in the month,
+   // festival information on Day, and appear in the upcoming List.
+   await q.locator('[data-prev]').click();
+   const first=q.locator('[data-date="'+Math.floor(Date.parse('2026-09-11T00:00:00Z')/86400000)+'"]');
+   await first.waitFor();
+   if(!(await first.locator('.fest-mark').count()))throw Error('Amun festival has no month marker');
+   await first.click();
+   await q.locator('.day-festivals [data-festival-source=amun-theban]').waitFor();
+   await screenshot(q,name+'-amun-festival-day');
+   await q.locator('[data-primary-view=list]').click();
+   if(!(await q.locator('.festival-in-agenda[data-festival-source=amun-theban]').count()))throw Error('Amun festival missing from List');
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[data-open-panel=festivals]').click();
+   await source.uncheck();
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   if(await q.locator('.festival-in-agenda').count())throw Error('Disabled Amun festival still appears in List');
+   const setting=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.settings.v1')).festivalSources);
+   if(!Array.isArray(setting)||setting.length)throw Error('Disabled source preference not saved');
+   await q.locator('header [data-new]').click();
+   const editor=q.locator('#event-editor');
+   await editor.locator('[name=title]').fill('festival source isolation check');
+   await editor.locator('.save-button').click();
+   await q.locator('.timeline-event:has-text("festival source isolation check")').waitFor();
+   await q.reload({waitUntil:'domcontentloaded'});
+   await q.locator('.month-section').waitFor();
+   const restored=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')).items.some(i=>i.title==='festival source isolation check'));
+   if(!restored)throw Error('Personal appointment was affected by disabled festival source');
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[data-open-panel=festivals]').click();
+   if(await source.isChecked())throw Error('Disabled Amun source was not persisted after reload');
+   await source.check();
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   return {onlySource:'amun-theban',monthDayList:true,disabledHidesFestivals:true,
+           personalAppointmentsUnaffected:true,persisted:true};
+  });
+
   await ctx.close();
  }
  await b.close();
