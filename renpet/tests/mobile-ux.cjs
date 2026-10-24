@@ -77,7 +77,7 @@ async function run(){
 
   await step(name+' schedule empty action',async()=>{await p.locator('[data-primary-view="list"]').click();await screenshot(p,name+'-empty-schedule');return {empty:await p.locator('.schedule-empty').count(),newButton:await p.locator('.schedule-empty [data-new]').count()};});
   await step(name+' event save / advanced / delete',async()=>{
-   await p.locator('.schedule-empty [data-new]').click();
+   await p.locator('header [data-new]').click();
    await p.locator('#event-editor').waitFor();
    const details=p.locator('details.advanced-fields');
    const closed=!(await details.getAttribute('open'));
