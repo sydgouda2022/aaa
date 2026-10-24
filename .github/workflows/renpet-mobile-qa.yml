@@ -26,6 +26,9 @@ jobs:
           test "$(wc -c <renpet/web/assets/fonts/Cairo-VF.ttf)" -gt 100000
           python renpet/tools/make_numerals.py
           python renpet/tools/build_keyboard_signs.py
+          curl -fLsS --retry 3 --max-time 120 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-Earlier_Egyptian_original-v18-premium/resolve/main/train.jsonl?download=true' -o /tmp/renpet-tla-v18.jsonl
+          test "$(wc -c </tmp/renpet-tla-v18.jsonl)" -gt 5000000
+          python renpet/tools/build_egyptian_words.py /tmp/renpet-tla-v18.jsonl
           if ! command -v google-chrome >/dev/null; then /tmp/renpet-pw/node_modules/.bin/playwright install chromium; fi
       - name: Start Renpet for interaction tests
         run: |
