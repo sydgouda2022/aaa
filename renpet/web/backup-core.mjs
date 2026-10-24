@@ -7,11 +7,18 @@ const MAX_BYTES = 5 * 1024 * 1024;
 
 function validateEntry(value, key) {
   if (typeof value !== 'string' || value.length > MAX_BYTES) throw new Error('Invalid backup entry: ' + key);
+  // Keyboard preferences store a raw string. Older backup files JSON-quoted it.
+  if (key === 'renpet.keyboard.coptic-dialect.v1') {
+    let dialect = value;
+    if (value.startsWith('"')) {
+      try { dialect = JSON.parse(value); } catch { throw new Error('Corrupt dialect backup'); }
+    }
+    if (!['all','sahidic','bohairic'].includes(dialect)) throw new Error('Invalid Coptic dialect backup');
+    return dialect;
+  }
   let decoded;
   try { decoded = JSON.parse(value); } catch { throw new Error('Corrupt backup entry: ' + key); }
-  if (key === 'renpet.keyboard.coptic-dialect.v1') {
-    if (!['all','sahidic','bohairic'].includes(decoded)) throw new Error('Invalid Coptic dialect backup');
-  } else if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) throw new Error('Invalid backup data: ' + key);
+  if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) throw new Error('Invalid backup data: ' + key);
   return value;
 }
 export function createBackup(storage, now = new Date()) {
@@ -47,7 +54,7 @@ export function restoreBackup(storage, backup) {
   for (const key of keys) validateEntry(entries[key], key);
   const before = new Map(STORAGE_KEYS.map(key => [key, storage.getItem(key)]));
   try {
-    for (const key of keys) storage.setItem(key, entries[key]);
+    for (const key of keys) storage.setItem(key, validateEntry(entries[key], key));
   } catch (error) {
     for (const [key, value] of before) {
       try { if (value === null) storage.removeItem(key); else storage.setItem(key, value); } catch {}
