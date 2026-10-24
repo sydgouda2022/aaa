@@ -150,7 +150,7 @@ export function initKeyboard(getLanguage){
  });
  document.addEventListener('pointerdown',e=>{
   if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target)){
-   if(!e.target.closest('.sheet,.search-panel'))hide();
+   hide();
   }
  });
  document.addEventListener('keydown',e=>{
