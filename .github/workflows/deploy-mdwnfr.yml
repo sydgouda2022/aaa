@@ -55,6 +55,15 @@ jobs:
           python mdwnfr/overrides/patch_keyboard.py mdwnfr
           python -m py_compile mdwnfr/core/mdwnfr/lexicon.py
           node --check mdwnfr/web/app.js
+      - name: Apply MdwNfr composer and brand update
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check Pillow
+          python mdwnfr/overrides/patch_ui_046.py mdwnfr
+          node --check mdwnfr/web/app.js
+          node --check mdwnfr/web/sw.js
+          python -m py_compile mdwnfr/overrides/patch_ui_046.py
       - name: Attach independent verified lexicon installer
         shell: bash
         run: |
