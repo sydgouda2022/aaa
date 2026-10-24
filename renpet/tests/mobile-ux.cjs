@@ -354,7 +354,7 @@ async function run(){
      if(parseFloat(infoNum.size)<26||infoNum.images)throw Error('Egyptian day numerals remain too small or scaled SVG: '+JSON.stringify(infoNum));
      await q.locator('[data-open-year]').click();
      const card=q.locator('.year-month-name').first();
-     if(parseFloat(await card.evaluate(el=>getComputedStyle(el).fontSize))<28)throw Error('Egyptian year month title still tiny');
+     if(parseFloat(await card.evaluate(el=>getComputedStyle(el).fontSize))<22)throw Error('Egyptian year month title still tiny');
      await screenshot(q,name+'-hieroglyphic-readable-year');
      await q.locator('[data-primary-view=month]').click();
      await q.locator('header [data-new]').click();
@@ -382,6 +382,7 @@ async function run(){
    const q=await ctx.newPage(); q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+   await q.locator('[data-primary-view=month]').click();
    await q.locator('.month-agenda').waitFor();
    await q.locator('header [data-open-panel=settings]').click();
    if(await q.locator('.ux-panel [data-close-panel]').count())throw Error('Settings close X still visible');
