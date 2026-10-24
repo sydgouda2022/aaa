@@ -156,11 +156,17 @@ export function initKeyboard(getLanguage){
    active=e.target;void load(keyboardLanguage());draw();
   }
  });
- document.addEventListener('pointerdown',e=>{
-  if(e.target.closest('[data-time-open]'))return; // Delay hiding until click; prevents iPhone layout shifts before time picker opens.
- if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target)){
-   hide();
-  }
+ // Changing the viewport on pointerdown can move the Save button before
+ // iOS dispatches click/submit, silently losing taps. Dismiss only after click.
+ document.addEventListener('click',e=>{
+  // The Add/Edit click creates and focuses a new editor before this event
+  // bubbles to document. Never immediately hide that newly opened keyboard.
+  if(e.target.closest('[data-new],[data-edit],[data-hour]'))return;
+  // Key input immediately rebuilds keyboard.innerHTML. The original key
+  // may already be detached by the time click reaches document; the event's
+  // composed path still reliably identifies it as an inside-keyboard tap.
+  const keyboardTap=e.composedPath?.().includes(keyboard)||keyboard.contains(e.target);
+  if(!keyboard.hidden&&!keyboardTap&&e.target!==active&&!eligible(e.target))hide();
  });
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!keyboard.hidden)hide();

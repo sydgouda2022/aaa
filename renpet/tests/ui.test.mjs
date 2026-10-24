@@ -15,7 +15,7 @@ function click(n,value=''){const b={disabled:false,dataset:{[n.slice(5).replace(
 function change(n,value,checked){for(const f of handlers.change||[])f({target:{name:n,value,checked,hasAttribute:()=>false,closest:()=>null}});}
 assert.ok(has('class="app-shell"')&&has('month-agenda'),'One calendar with month and selected-day agenda');
 assert.equal((root.innerHTML.match(/class="ux-bottom"/g)||[]).length,1,'One navigation');
-assert.ok(has('data-primary-view="today"')&&has('data-primary-view="month"')&&has('data-primary-view="list"'),'Exactly 3 bottom actions');
+assert.ok(has('data-primary-view="today"')&&has('data-primary-view="list"')&&!has('data-primary-view="month"'),'Two useful bottom actions, no redundant Month tab');
 assert.ok(!has('data-primary-view="year"')&&!has('data-more')&&!has('data-menu'),'Old redundant navigation removed');
 assert.ok(has('data-open-year'),'Year accessible through heading');
 assert.ok(has('data-week="7"'),'Arabic defaults to seven-day grid');
@@ -33,12 +33,10 @@ assert.ok(has('month-agenda'),'Today returns to selected-day agenda rather than 
 click('data-primary-view','list');
 assert.ok(has('schedule-empty'),'No appointments: helpful Schedule empty state');
 assert.ok(has('data-new'),'Empty Schedule has new-event action');
-click('data-primary-view','month');
+click('data-primary-view','today');
 const d=dayNumber('2026-10-17');
 click('data-date',d);
-assert.ok(has('month-agenda'));
-click('data-date',d);
-assert.ok(has('timeline-hour'),'Second tap opens Day');
+assert.ok(has('timeline-hour'),'Single tap opens selected Day');
 click('data-back');
 assert.ok(has('month-agenda'),'Day back returns to Month');
 click('data-open-panel','settings');
@@ -68,4 +66,4 @@ const css=await readFile(new URL('../web/ui.css',import.meta.url),'utf8');
 for(const c of ['.month-agenda','.year-season','.advanced-fields','.ux-panel','.schedule-empty','RenpetEgyptian'])assert.ok(css.includes(c),'Present styles: '+c);
 for(const dead of ['.more-sheet','.mini-grid','.ux-language','.festival-list'])assert.ok(!css.includes(dead),'Remove unused CSS: '+dead);
 assert.ok(!has('Renpet:'),'No runtime errors');
-console.log('Renpet 3 single-purpose UX smoke tests passed');
+console.log('Renpet direct Month/Year/Day navigation smoke tests passed');
