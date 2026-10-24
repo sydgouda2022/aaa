@@ -59,6 +59,7 @@ jobs:
           PY
           python -m compileall -q mdwnfr/core/mdwnfr
           python mdwnfr/qa/test_keyboard.py -v
+          python mdwnfr/qa/test_quadrat_flow.py -v
           node --check mdwnfr/web/app.js
           node --check mdwnfr/web/worker.js
           node --check mdwnfr/web/storage.js
