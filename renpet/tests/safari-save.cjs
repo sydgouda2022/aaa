@@ -72,6 +72,65 @@ async function run(){
 
    }catch(e){issues.push({width,lang,error:String(e.stack||e).slice(0,900)});await snap(lang+'-failed').catch(()=>{});}
   }
+
+  // Reproduce the exact screenshot: an appointment for 26 Baba 6282
+  // (5 Nov 2026) in a calendar hidden by a previous app iteration.
+  const specific=await ctx.newPage();
+  specific.setDefaultTimeout(6500);
+  specific.on('dialog',d=>d.accept());
+  await specific.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await specific.locator('.month-section').waitFor();
+  await specific.evaluate(()=>{
+    const key='renpet.scheduler.v1';
+    const current=JSON.parse(localStorage.getItem(key)||'null')||{version:1,calendars:[
+      {id:'personal',name:{ar:'شخصي'},color:'#187568',visible:true},
+      {id:'work',name:{ar:'العمل'},color:'#C8A24A',visible:true}
+    ],items:[]};
+    for(const c of current.calendars)c.visible=false;
+    localStorage.setItem(key,JSON.stringify(current));
+  });
+  await specific.reload();
+  await specific.locator('header [data-new]').click();
+  const form=specific.locator('#event-editor');
+  await form.locator('[name=title]').fill('ميعاد السعادة');
+  await form.locator('[name=egyYear]').selectOption('6282');
+  await form.locator('[name=egyMonth]').selectOption('2');
+  await form.locator('[name=egyDay]').selectOption('26');
+  await form.locator('.save-button').click();
+  await specific.locator('.save-confirmation').waitFor();
+  await specific.locator('.timeline-event:has-text("ميعاد السعادة")').waitFor();
+  const restored=await specific.evaluate(()=>{
+    const s=JSON.parse(localStorage.getItem('renpet.scheduler.v1'));
+    const e=s.items.find(x=>x.title==='ميعاد السعادة');
+    return {calendarVisible:s.calendars.find(c=>c.id===e?.calendarId)?.visible,
+      startDay:e?.startDay,day:document.querySelector('.day-heading')?.textContent,
+      visible:!!document.querySelector('.timeline-event[data-edit="'+e?.id+'"]')};
+  });
+  report('screen-reproduction',JSON.stringify(restored));
+  if(!restored.calendarVisible||!restored.visible)throw Error('Nov 5 event is stored but hidden: '+JSON.stringify(restored));
+  await specific.locator('[data-primary-view=list]').click();
+  await specific.locator('.event-row:has-text("ميعاد السعادة")').waitFor();
+  await specific.reload();
+  await specific.locator('.month-section').waitFor();
+  await specific.locator('[data-primary-view=list]').click();
+  await specific.locator('.event-row:has-text("ميعاد السعادة")').waitFor();
+  await specific.screenshot({path:path.join(dir,'webkit-'+width+'-nov5-recovered.png'),fullPage:true});
+
+  // Recover an appointment saved *before* the fix into another hidden
+  // calendar, without requiring the user to create a replacement.
+  await specific.evaluate(()=>{
+    const key='renpet.scheduler.v1',s=JSON.parse(localStorage.getItem(key));
+    const personal=s.calendars.find(c=>c.id==='personal');if(personal)personal.visible=false;
+    localStorage.setItem(key,JSON.stringify(s));
+  });
+  await specific.reload();
+  await specific.locator('[data-primary-view=list]').click();
+  await specific.locator('[data-show-all-calendars]').waitFor();
+  await specific.locator('[data-show-all-calendars]').click();
+  await specific.locator('.event-row:has-text("ميعاد السعادة")').waitFor();
+  report('recovery-old-hidden','show-all reveals saved legacy appointment');
+  await specific.close();
+
   await ctx.close();
  }
  }finally{await browser.close();}
