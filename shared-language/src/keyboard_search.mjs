@@ -28,7 +28,9 @@ export function prepareKeyboardIndex(language,pack){
    const legacy=Array.isArray(item),text=legacy?item[0]:item.signs;
    if(typeof text!=='string'||!text)throw Error('Invalid Late Egyptian Unicode spelling');
    rows.push({text,key:keyboardKey(text,language),id:legacy?'egy:'+text:(item.ref||'egy:'+text),
-    source:'LATE',dialects:0,frequency:Math.max(0,Number(legacy?item[1]:item.attestations)||0),
+    source:!legacy&&item.source==='RAMSES-WORD-MODEL-2023'?'RAMSES-CORPUS':'LATE',
+    lexicalIdentityVerified:legacy||item.lexical_identity_verified!==false,
+    dialects:0,frequency:Math.max(0,Number(legacy?item[1]:item.attestations)||0),
     lemma:legacy?item[2]:item.lemma,sourceRef:legacy?item[3]:(item.ref||null)});
   }
  }
@@ -63,11 +65,13 @@ export function predictKeyboard(index,raw,{dialect='all',learned={},previous='',
   if(!permitted(row,language,dialect))return;
   const learnedN=count(learned,language+':'+row.text);
   const contextN=previous?count(learned,'ctx:'+language+':'+previous+':'+row.text):0;
-  const score=(personal?0:Math.log1p(row.frequency)*8)+Math.log1p(learnedN)*45+
+  const sourceWeight=row.source==='RAMSES-CORPUS'?-12:0;
+  const score=(personal?0:Math.log1p(row.frequency)*8)+sourceWeight+Math.log1p(learnedN)*45+
       Math.log1p(contextN)*30-(Array.from(row.text).length*0.05)+
       (language==='cop'&&row.dialects===3?3:0);
   const candidate={text:row.text,raw:false,personal,attested:!personal,
    dialects:row.dialects,frequency:row.frequency,lemma:row.lemma??null,
+   lexicalIdentityVerified:personal?false:row.lexicalIdentityVerified!==false,
    source:personal?'PERSONAL':row.source,lexicon_ref:personal?null:(row.sourceRef||row.id),
    score};
   const old=found.get(candidate.text);

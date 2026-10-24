@@ -101,9 +101,9 @@ function current(){
 function predictBar(lang){
  const raw=current().raw;
  const options=suggestions(raw,lang,catalog[lang],personal,4,{dialect:copticDialect,previous:contextPrevious()});
- if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?(catalog.cop?.lexiconError?'Coptic · connect to install':catalog.cop?.lexiconReady?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'Coptic · loading'):catalog.egy?.lexiconError?'Late Egyptian · connect to install':catalog.egy?.lexiconReady?'Late Egyptian · development lexicon':'Late Egyptian · loading')+' </span></div>';
+ if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?(catalog.cop?.lexiconError?'Coptic · connect to install':catalog.cop?.lexiconReady?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'Coptic · loading'):catalog.egy?.lexiconError?'Late Egyptian · connect to install':catalog.egy?.lexiconReady?'Late Egyptian · corpus lexicon':'Late Egyptian · loading')+' </span></div>';
  return '<div class="kb-suggestions" role="listbox" aria-label="Prediction candidates">'+options.map((o,i)=>{
-  const dialects=o.raw?'✓':o.personal?'★':o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='LATE'?'LE':o.source==='COP'?'Coptic':'';
+  const dialects=o.raw?'✓':o.personal?'★':o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='RAMSES-CORPUS'?'RTC':o.source==='LATE'?'LE':o.source==='COP'?'Coptic':'';
   return '<button type="button" role="option" data-kb-pick="'+i+'" aria-selected="'+(i===0)+'"><span>'+escape(o.text)+'</span><small>'+dialects+'</small></button>';
  }).join('')+'</div>';
 }

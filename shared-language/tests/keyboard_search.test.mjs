@@ -44,6 +44,19 @@ test('personal learning and document context reorder but never label inventions 
  const user=r.find(x=>x.text==='𓄿𓅃');
  assert.ok(user&&user.personal&&!user.attested&&user.lexicon_ref===null);
 });
+test('Ramses corpus-derived spellings are visibly distinguished from lemmatized records',()=>{
+ const idx=prepareKeyboardIndex('egy',{entries:[
+   {ref:'tla19:1',signs:'𓄿𓂝',attestations:4,lemma:'tla19:12',source:'TLA-LE19'},
+   {ref:'ramses:2',signs:'𓄿𓈖',attestations:20,lemma:'ramses-unlinked:2',
+    source:'RAMSES-WORD-MODEL-2023',lexical_identity_verified:false}
+ ]});
+ const matches=predictKeyboard(idx,'𓄿',{limit:4});
+ const tl=matches.find(x=>x.text==='𓄿𓂝');
+ const rm=matches.find(x=>x.text==='𓄿𓈖');
+ assert.ok(tl&&tl.source==='LATE'&&tl.lexicalIdentityVerified);
+ assert.ok(rm&&rm.source==='RAMSES-CORPUS'&&!rm.lexicalIdentityVerified);
+ assert.equal(matches[0].text,'𓄿');
+});
 test('indexed prefix span works with thousands of attested forms',()=>{
  const rows=Array.from({length:25000},(_,i)=>['ⲡ'+(i+'').padStart(5,'0'),1]);
  rows.push(['ⲁⲛ',1],['ⲁⲩⲱ',2]);
