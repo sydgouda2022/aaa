@@ -280,6 +280,12 @@ root.addEventListener('click',ev=>{
  }
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
+ // Timeline events are accessible divs, not buttons. Open them directly.
+ const timelineEvent=ev.target.closest('.timeline-event[data-edit]');
+ if(timelineEvent){
+  state.dialog={id:timelineEvent.dataset.edit};
+  render();return;
+ }
  const b=ev.target.closest('button');if(!b||b.disabled)return;
  if(b.hasAttribute('data-time-open')){
   closeKeyboard();
