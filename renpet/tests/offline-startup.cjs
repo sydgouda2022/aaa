@@ -23,38 +23,40 @@ async function scenario(engine,name) {
     // Wait for the entire SW installation, not just registration.
     await p.waitForFunction(()=>navigator.serviceWorker?.controller &&
       navigator.serviceWorker.controller.state==='activated',null,{timeout:100000});
+    const release=await p.evaluate(async()=>(await (await fetch('./data.json')).json()).version);
+    const moduleUrl=await p.evaluate(()=>document.querySelector('script[type="module"]')?.getAttribute('src'));
     const cacheNames=await p.evaluate(()=>caches.keys());
-    if(!cacheNames.some(s=>s.startsWith('renpet-6.6.0-')))throw Error('6.5 service worker did not precache all assets');
+    if(!moduleUrl||!cacheNames.some(s=>s.startsWith('renpet-'+release+'-')))throw Error('Service worker release missing: '+release);
     // Linux Playwright's WebKit offline mode rejects SW-served fetches
     // and its network route emulation blocks navigation in Web Inspector.
     // Verify real CacheStorage availability even while offline, but reserve
     // full offline navigation assertions for Chromium and device testing.
     if(name==='webkit'){
      await ctx.setOffline(true);
-     const direct=await p.evaluate(async()=>{
-      const uri=new URL('./app.js?v=6.4.0',location.href).href;
+     const direct=await p.evaluate(async(moduleUrl)=>{
+      const uri=new URL(moduleUrl,location.href).href;
       const found=await caches.match(uri,{ignoreSearch:true});
       return {cached:!!found,content:found?(await found.text()).slice(0,60):''};
-     });
+     },moduleUrl);
      if(!direct.cached||!direct.content.includes('import '))throw Error('WebKit offline CacheStorage missing app JS: '+JSON.stringify(direct));
      if(await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'))!=='test-value')throw Error('WebKit offline cache test lost data');
      results.push({engine:name,width,offlineCache:true,moduleStored:true,dataPreserved:true,offlineNavigation:'not supported by Playwright Web Inspector'});
      continue;
     }
     await ctx.setOffline(true);
-    const asset=await p.evaluate(async()=>{
+    const asset=await p.evaluate(async(moduleUrl)=>{
      const cacheKeys=await caches.keys();
      const fullUrl=new URL('./app.js',location.href).href;
      const cached=await caches.match(fullUrl);
-     const matchWithVersion=await caches.match(fullUrl+'?v=6.4.0',{ignoreSearch:true});
+     const matchWithVersion=await caches.match(new URL(moduleUrl,location.href).href,{ignoreSearch:true});
      try{
-      const response=await fetch('./app.js?v=6.4.0');
+      const response=await fetch(moduleUrl);
       return {ok:response.ok,type:response.headers.get('content-type'),text:(await response.text()).slice(0,65),
        cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys};
      }catch(error){
       return {ok:false,error:String(error),cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys};
      }
-    });
+    },moduleUrl);
     if(!asset.ok||!asset.text?.includes('import '))throw Error('Offline query-string module failed: '+JSON.stringify(asset));
     await p.reload({waitUntil:'domcontentloaded'});
     await p.locator('.month-section').waitFor({timeout:24000});
@@ -74,13 +76,13 @@ async function scenario(engine,name) {
   try {
    await p.goto(ROOT);await p.locator('.month-section').waitFor();
    await p.evaluate(()=>localStorage.setItem('renpet.startup-preserve','not-deleted'));
-   await p.route('**/app.js?v=6.6.0',route=>route.abort('failed'));
+   await p.route('**/app.js?v=*',route=>route.abort('failed'));
    await p.reload({waitUntil:'domcontentloaded'});
    await p.locator('.renpet-startup-failed').waitFor({timeout:14000});
    const text=await p.locator('.renpet-startup-failed').innerText();
    if(!text.includes('Retry'))throw Error('No retry button for failed modules');
    await p.screenshot({path:path.join(dir,'recovery-'+name+'.png'),fullPage:true});
-   await p.unroute('**/app.js?v=6.6.0');
+   await p.unroute('**/app.js?v=*');
    await p.locator('[data-retry]').click();
    await p.locator('.month-section').waitFor();
    if(await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'))!=='not-deleted')throw Error('Retry deleted local data');
