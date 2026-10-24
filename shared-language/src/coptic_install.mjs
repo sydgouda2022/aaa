@@ -5,7 +5,7 @@
 export const DB_NAME='coptic-lexicon-install-v1';
 export const MANIFEST_URL='/coptic-lexicon/manifest.json';
 export const PAYLOAD_URL='/coptic-lexicon/lexicon.json';
-const FORMAT='egyptian-lexicon-install-v1';
+const FORMAT='coptic-lexicon-install-v1';
 let inFlight=null;
 const hex=buffer=>Array.from(new Uint8Array(buffer),b=>b.toString(16).padStart(2,'0')).join('');
 const hash=async bytes=>hex(await crypto.subtle.digest('SHA-256',bytes));
