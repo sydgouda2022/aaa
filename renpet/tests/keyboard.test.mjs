@@ -62,5 +62,6 @@ assert.ok(sahidic.slice(1).every(x=>x.dialects&1),'Sahidic mode never suggests B
 const bohairic=suggestions('ⲡ','cop',coptic,{},12,{dialect:'bohairic'});
 assert.ok(bohairic.slice(1).every(x=>x.dialects&2),'Bohairic mode never suggests Sahidic-only or unknown-dialect words');
 const egyptianSource=suggestions([...late.entries[0].signs][0],'egy',late,{},6);
-assert.ok(egyptianSource.slice(1).every(x=>x.lexicon_ref&&x.source==='LATE'),'Source-backed hieroglyphic suggestions retain stable lexicon reference IDs');
+assert.ok(egyptianSource.slice(1).every(x=>x.lexicon_ref&&['LATE','RAMSES-CORPUS'].includes(x.source)),'Source-backed hieroglyphic suggestions retain stable lexicon reference IDs');
+assert.ok(egyptianSource.slice(1).every(x=>x.source!=='RAMSES-CORPUS'||x.lexicalIdentityVerified===false),'Unlinked Ramses suggestions must not claim a verified lemma');
 console.log('Renpet keyboard catalog and bilingual prediction tests passed');
