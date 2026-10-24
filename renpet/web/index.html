@@ -6,8 +6,67 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Renpet">
 <title>Renpet</title><link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icon-180.png"><link rel="icon" href="assets/icon-192.png">
-<link rel="stylesheet" href="ui.css?v=6.4.0"><link rel="stylesheet" href="backup.css?v=6.4.0"><link rel="stylesheet" href="keyboard.css?v=6.4.0"><link rel="stylesheet" href="time-editor.css?v=6.4.0">
-<script type="module" src="app.js?v=6.4.0"></script>
+<link rel="stylesheet" href="ui.css?v=6.5.0"><link rel="stylesheet" href="backup.css?v=6.5.0"><link rel="stylesheet" href="keyboard.css?v=6.5.0"><link rel="stylesheet" href="time-editor.css?v=6.5.0">
+<style>
+/* Boot CSS is inline deliberately: render a useful recovery page even if
+   an external stylesheet or the JavaScript module graph cannot load. */
+#app>.loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;
+ font:26px/1.3 system-ui,sans-serif;color:#176c59;background:#f9faf6}
+.renpet-startup-failed{box-sizing:border-box;min-height:100%;padding:36px 24px 70px;
+ background:#f9faf6;color:#202a25;display:flex;flex-direction:column;
+ align-items:center;justify-content:center;text-align:center;font:16px/1.6 system-ui,sans-serif}
+.renpet-startup-failed h1{color:#96372e;margin:10px 0 6px;font-size:25px}
+.renpet-startup-failed p{max-width:340px;color:#52645b}
+.renpet-startup-failed button{border:0;border-radius:12px;min-height:48px;min-width:215px;
+ background:#176c59;color:white;font:bold 17px system-ui;padding:12px;margin:7px}
+.renpet-startup-failed button.secondary{background:#f1e9e6;color:#96372e;border:1px solid #d6b6ae}
+</style>
+<script>
+(function () {
+ let ready = false;
+ let timer = null;
+ function fail(reason) {
+  if (ready) return;
+  const el = document.getElementById('app');
+  if (!el) return;
+  if (el.querySelector('.app-shell')) { ready = true; return; }
+  el.innerHTML = '<div class="renpet-startup-failed" role="alert">'+
+   '<div style="font-size:44px;color:#176c59" aria-hidden="true">𓆳</div>'+
+   '<h1>تعذّر تشغيل رنبت</h1>'+
+   '<p>لم يكتمل تحميل التقويم. مواعيدك المحفوظة لم تُحذف.</p>'+
+   '<p>Calendar could not finish starting. Your saved appointments have not been deleted.</p>'+
+   '<button type="button" data-retry>إعادة المحاولة · Retry</button>'+
+   (navigator.onLine?'<button type="button" class="secondary" data-repair>إصلاح التحديث · Repair update</button>':'')+
+   '</div>';
+  el.querySelector('[data-retry]').addEventListener('click', function(){location.reload();});
+  const repair = el.querySelector('[data-repair]');
+  if (repair) repair.addEventListener('click', async function () {
+   repair.disabled = true;
+   try {
+    if (navigator.serviceWorker) {
+     const registrations = await navigator.serviceWorker.getRegistrations();
+     await Promise.all(registrations.map(registration => registration.unregister()));
+    }
+   } catch (error) { console.warn('Renpet boot repair',error); }
+   // Unregisters only the app shell service worker, not localStorage or data.
+   location.reload();
+  });
+  console.error('Renpet startup incomplete:', reason);
+ }
+ window.RenpetBoot = {
+  ready: function () { ready = true; clearTimeout(timer); },
+  fail: fail
+ };
+ window.addEventListener('error', function (event) {
+  // A broken module import leaves the HTML loading placeholder unchanged.
+  if (!ready && event.target && event.target.tagName === 'SCRIPT') {
+   setTimeout(function () { fail('module script unavailable'); }, 0);
+  }
+ }, true);
+ timer = setTimeout(function () { fail('startup deadline exceeded'); }, 9000);
+})();
+</script>
+<script type="module" src="app.js?v=6.5.0"></script>
 </head>
 <body><div id="app"><p class="loading">𓆳𓏏𓏤</p></div><noscript>رنبت يحتاج إلى JavaScript · Ⲣⲉⲛⲡⲉⲧ · 𓆳𓏏𓏤</noscript></body>
 </html>
