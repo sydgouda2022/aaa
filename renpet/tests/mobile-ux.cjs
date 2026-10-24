@@ -188,6 +188,10 @@ async function run(){
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await q.locator('.month-agenda').waitFor();
+   // Other tests in this browser context may have selected Coptic/Egyptian.
+   await q.locator('[data-open-panel=settings]').click();
+   await q.locator('select[name=language]').selectOption('ar');
+   await q.locator('[data-close-panel]').click();
    await q.locator('header [data-new]').click();
    const form=q.locator('#event-editor');
    await form.waitFor();
