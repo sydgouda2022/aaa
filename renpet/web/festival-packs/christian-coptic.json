@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "sourceId": "christian-coptic",
-  "scope": "Partial evidence-backed list; unverified dates intentionally omitted",
+  "scope": "Selected Orthodox Pascha-related feasts are calculated; other observances still partial. Gregorian civic leave-day changes are not generated.",
   "events": [
     {
       "id": "coptic-christmas",
@@ -11,11 +11,44 @@
       "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/"
     },
     {
-      "id": "coptic-easter-2026",
-      "ar": "عيد القيامة — ٢٠٢٦",
-      "date": "2026-04-12",
-      "calendarRule": "dated",
-      "sourceUrl": "https://www.timeanddate.com/holidays/egypt/2026"
+      "id": "coptic-palm-sunday",
+      "ar": "أحد الشعانين (الأقباط)",
+      "calendarRule": "orthodox-easter",
+      "offsetDays": -7,
+      "sourceUrl": "https://www.copticchurch.net/calendar/feasts/2028",
+      "description_ar": "يتحدد التاريخ بحساب الفصح الأرثوذكسي على أساس التقويم اليولياني، ولا يعني اعتماد يوم عطلة رسمية في مصر أو ثباته ميلادياً. مصدر المراجعة: تقويم الكنيسة القبطية الأرثوذكسية."
+    },
+    {
+      "id": "coptic-good-friday",
+      "ar": "الجمعة العظيمة (الأقباط)",
+      "calendarRule": "orthodox-easter",
+      "offsetDays": -2,
+      "sourceUrl": "https://www.copticchurch.net/calendar/feasts/2028",
+      "description_ar": "يتحدد التاريخ بحساب الفصح الأرثوذكسي على أساس التقويم اليولياني، ولا يعني اعتماد يوم عطلة رسمية في مصر أو ثباته ميلادياً. مصدر المراجعة: تقويم الكنيسة القبطية الأرثوذكسية."
+    },
+    {
+      "id": "coptic-easter",
+      "ar": "عيد القيامة المجيد (الأقباط)",
+      "calendarRule": "orthodox-easter",
+      "offsetDays": 0,
+      "sourceUrl": "https://www.copticchurch.net/calendar/feasts/2028",
+      "description_ar": "يتحدد التاريخ بحساب الفصح الأرثوذكسي على أساس التقويم اليولياني، ولا يعني اعتماد يوم عطلة رسمية في مصر أو ثباته ميلادياً. مصدر المراجعة: تقويم الكنيسة القبطية الأرثوذكسية."
+    },
+    {
+      "id": "coptic-ascension",
+      "ar": "عيد الصعود (الأقباط)",
+      "calendarRule": "orthodox-easter",
+      "offsetDays": 39,
+      "sourceUrl": "https://www.copticchurch.net/calendar/feasts/2028",
+      "description_ar": "يتحدد التاريخ بحساب الفصح الأرثوذكسي على أساس التقويم اليولياني، ولا يعني اعتماد يوم عطلة رسمية في مصر أو ثباته ميلادياً. مصدر المراجعة: تقويم الكنيسة القبطية الأرثوذكسية."
+    },
+    {
+      "id": "coptic-pentecost",
+      "ar": "عيد العنصرة (الأقباط)",
+      "calendarRule": "orthodox-easter",
+      "offsetDays": 49,
+      "sourceUrl": "https://www.copticchurch.net/calendar/feasts/2028",
+      "description_ar": "يتحدد التاريخ بحساب الفصح الأرثوذكسي على أساس التقويم اليولياني، ولا يعني اعتماد يوم عطلة رسمية في مصر أو ثباته ميلادياً. مصدر المراجعة: تقويم الكنيسة القبطية الأرثوذكسية."
     }
   ]
 }

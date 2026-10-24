@@ -33,7 +33,7 @@
         "egy": "المناسبات الوطنية المصرية"
       },
       "description": {
-        "ar": "تواريخ المناسبات، وليس بالضرورة أيام الإجازة المنقولة",
+        "ar": "ذكرى المناسبات الوطنية؛ شم النسيم يتبع القيامة، دون التنبؤ بنقل أيام الإجازة.",
         "cop": "Egyptian civic observances (not shifted leave)",
         "egy": "Egyptian civic observances"
       },
@@ -54,9 +54,9 @@
         "egy": "الأعياد المسيحية"
       },
       "description": {
-        "ar": "الميلاد سنوي، والقيامة مؤرخة لعام ٢٠٢٦ فقط",
-        "cop": "Christmas annually; Easter date verified for 2026",
-        "egy": "Christian dates, partial 2026"
+        "ar": "عيد القيامة والشعانين والجمعة العظيمة والصعود والعنصرة بحساب كنسي؛ قائمة بقية الأعياد جزئية.",
+        "cop": "Orthodox computus for Easter feasts; remaining catalog partial",
+        "egy": "Easter-related computus · partial"
       },
       "calendarRule": "gregorian-annual",
       "data": {

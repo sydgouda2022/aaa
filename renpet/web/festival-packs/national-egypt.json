@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "sourceId": "national-egypt",
-  "scope": "Partial evidence-backed list; unverified dates intentionally omitted",
+  "scope": "Fixed national observances plus computed Sham El Nessim day; shifted government leave-days excluded.",
   "events": [
     {
       "id": "revolution-police-day",
@@ -52,11 +52,12 @@
       "dateMeaning": "anniversary, not shifted public leave day"
     },
     {
-      "id": "sham-el-nessim-2026",
-      "ar": "شم النسيم — ٢٠٢٦",
-      "date": "2026-04-13",
-      "calendarRule": "dated",
-      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/"
+      "id": "sham-el-nessim",
+      "ar": "شم النسيم",
+      "calendarRule": "orthodox-easter",
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "offsetDays": 1,
+      "description_ar": "شم النسيم هو الاثنين التالي للقيامة القبطية. يحسب يوم الاحتفال؛ لا يتنبأ بأي تغيير لاحق في الإجازة الرسمية."
     }
   ]
 }

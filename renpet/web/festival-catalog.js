@@ -2,6 +2,7 @@
 // Source catalogs are separate from user-owned calendar appointments.
 // Future catalogs require only a manifest entry + static JSON pack.
 import {festivalHits,dayNumber,isoDate,DAY} from './calendar.js';
+import {orthodoxEasterDay} from './festival-dates.mjs';
 
 export const AMUN_SOURCE='amun-theban';
 const fallback=[{
@@ -20,7 +21,7 @@ const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9-]{1,63}$/.test(id);
 const validEventId=id=>typeof id==='string'&&id.length<=180&&/^[a-z0-9@._-]+$/i.test(id);
 const validPack=path=>typeof path==='string'&&/^\.\/festival-packs\/[a-z0-9-]+\.json$/.test(path);
 const validSource=s=>s&&validId(s.id)&&s.status==='available'&&
- ['egyptian-fixed','gregorian-fixed','gregorian-annual','dated'].includes(s.calendarRule)&&
+ ['egyptian-fixed','gregorian-fixed','gregorian-annual','dated','orthodox-easter'].includes(s.calendarRule)&&
  (s.data?.type==='embedded'&&s.data.key==='festivals'||
   s.data?.type==='file'&&validPack(s.data.path));
 
@@ -54,8 +55,9 @@ export async function loadFestivalCatalog(data,fetcher=fetch){
   const normalized=events.filter(x=>{
    if(!x||!validEventId(x.id)||typeof x.ar!=='string'||!x.ar.trim())return false;
    const rule=x.calendarRule||source.calendarRule;
-   if(!['egyptian-fixed','gregorian-fixed','gregorian-annual','dated'].includes(rule))return false;
+   if(!['egyptian-fixed','gregorian-fixed','gregorian-annual','dated','orthodox-easter'].includes(rule))return false;
    if(rule==='dated')return dateCode(x.date);
+   if(rule==='orthodox-easter')return Number.isInteger(x.offsetDays??0)&&Math.abs(x.offsetDays??0)<=100;
    if(!Number.isInteger(x.month)||!Number.isInteger(x.day)||x.day<1)return false;
    if(rule==='egyptian-fixed')return x.month>=1&&x.month<=13&&x.day<=(x.month===13?6:30);
    return x.month>=1&&x.month<=12&&dateCode('2000-'+String(x.month).padStart(2,'0')+'-'+String(x.day).padStart(2,'0'));
@@ -88,6 +90,9 @@ function hitGregorian(day,event,rule){
  if(rule==='dated'){
   if(!dateCode(event.date))return null;
   starts=[dayNumber(event.date)];
+ }else if(rule==='orthodox-easter'){
+  const year=new Date(day*DAY).getUTCFullYear();
+  starts=[year-1,year,year+1].filter(y=>y>=1900&&y<=2200).map(y=>orthodoxEasterDay(y)+(event.offsetDays||0));
  }else{
   const date=new Date(day*DAY);
   for(const year of [date.getUTCFullYear()-1,date.getUTCFullYear()]){
