@@ -2,6 +2,8 @@
 # Single canonical Renpet release builder for CI and local reproducible builds.
 # Run with: bash renpet/tools/build_release.sh (from repository root).
 set -euo pipefail
+# Regenerate every installable icon from one flat Khepri SVG.
+python renpet/tools/build_app_icons.py
 mkdir -p renpet/web/assets/fonts
 curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
 curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/OFL.txt' -o renpet/web/assets/fonts/OFL-NotoEgyptian.txt
