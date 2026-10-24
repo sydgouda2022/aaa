@@ -160,3 +160,6 @@ body[data-language=egy] .date-fields select[name=endEgyDay]{font-size:27px!impor
 .festival-detail-sheet .festival-evidence{white-space:pre-line;line-height:1.8;font-size:15px}
 .festival-sources-links{display:flex;flex-wrap:wrap;gap:9px}
 .festival-sources-links a{color:#176c59;text-decoration:underline;min-height:40px;padding:8px 0}
+
+/* Quick add from the selected month agenda */
+.agenda-add-action{min-height:44px;padding:9px 14px;border-radius:11px;border:1px solid #176c59;background:transparent;color:#176c59;font:700 14px system-ui;cursor:pointer;margin-top:9px}
