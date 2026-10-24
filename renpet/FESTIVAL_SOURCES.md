@@ -1,40 +1,29 @@
-# Festival source catalogs — Renpet
+# Festival source registry — Renpet
 
-Renpet separates **festival sources** (read-only public lists) from **personal appointments** (device-local, editable, optionally recurring). No festival source can delete or suppress a user's appointments, birthdays, reminders, backups or calendar collections.
+Renpet's festival sources are **independent, multi-select read-only overlays**. User appointments, birthdays, reminders, backups and personal calendar collections never share a festival data store. Festival choices persist in `renpet.settings.v1.festivalSources`. The old `festivals` boolean migrates to Amun-only or none.
 
-## Available catalog in 6.6
+## Available lists (additional lists opt-in)
 
-Only **amun-theban** is selectable. Its existing 13 Egyptian-year dated festivals are loaded from the already-reviewed \`web/data.json\` festival array. Dates and descriptions are unchanged; the movable lunar Beautiful Festival of the Valley is not silently assigned a fixed day.
+| Source ID | Type | Currently evidenced content | Date rule |
+| --- | --- | --- | --- |
+| `amun-theban` | Ancient Egyptian | The previously curated 13 Theban Amun festivals | Egyptian fixed |
+| `national-egypt` | Egyptian civic | Six fixed anniversary dates; 2026 Sham El-Nessim | Gregorian annual + 2026 dated |
+| `christian-coptic` | Christian | Christmas annually; 2026 Easter | Gregorian annual + 2026 dated |
+| `muslim-egypt` | Islamic | Eid al-Fitr, Eid al-Adha and the observed Mawlid holiday in 2026 | Individually dated 2026 |
 
-## Add a festival source later
+**These are partial lists, not comprehensive catalogs** of the traditions. Other theological lists such as Esna and Isis require independent source research before publication. No ancient lunar festival will be given an invented fixed date. The user may enable any combination of available lists. Adding a source does not alter existing appointments.
 
-1. Add a source descriptor to \`web/festival-sources.json\` with a distinct stable ID and \`status: "available"\`, localized \`name\`, \`category\`, \`calendarRule\` and a data pack:
-   \`\`\`json
-   {"id":"example-source","status":"available","category":"national",
-    "name":{"ar":"مثال","cop":"Example","egy":"Example"},
-    "calendarRule":"gregorian-annual",
-    "data":{"type":"file","path":"./festival-packs/example-source.json"}}
-   \`\`\`
-   This is a **schema example, not an actual festival**.
-2. Create \`web/festival-packs/example-source.json\`:
-   \`\`\`json
-   {"schema":1,"sourceId":"example-source","events":[
-     {"id":"example","ar":"Example","month":12,"day":25,"duration":1}
-   ]}
-   \`\`\`
-3. Include accurate dates, source provenance, confidence and rules in each event record. Publish only after research approval. PWA service-worker generation automatically precaches all files under \`web\`.
-4. No new Settings UI or extra calendar renderers are necessary. Sources appear as independent checkboxes and can be enabled together.
+All published modern entries include a provenance URL. Annual observance/anniversary dates are **not** automatically moved to the weekday of the associated public holiday. The 2026-specific religious dates are not repeated in 2027 or later years unless authoritative dates for those years are explicitly added.
 
-\`calendarRule\` values supported by the engine:
-- \`egyptian-fixed\`: \`month\`, \`day\`, and optional \`duration\`, based on Renpet's Alexandrian Egyptian year. Historical Egypt-specific festivals.
-- \`gregorian-annual\`: annual fixed civil \`month\`, \`day\`, \`duration\` in the Gregorian calendar (national or selected modern traditions).
-- \`dated\`: an **explicit researched Gregorian ISO date** \`date:"YYYY-MM-DD"\` and optional \`duration\`. This is suitable for a published instance of a movable/lunar festival; the engine **does not invent astronomical, ecclesiastical or Islamic dates**. Supply dated entries for each occurrence and year.
-- \`gregorian-fixed\`: retained alias of the fixed Gregorian month/day rule.
+## Add a documented list
 
-Each resolved event carries a stable \`sourceId\`, so a multi-selection merges events without losing attribution. Source colors can be added later without changing date logic.
+1. Create a new descriptor in `web/festival-sources.json`, including `id`, `status:available`, `category`, localized `name`, `calendarRule`, and `data:{type:file,path:'./festival-packs/your-id.json'}`.
+2. Create the referenced JSON pack with `schema:1`, matching `sourceId`, and `events` array. Every event requires stable ASCII lowercase `id`, Arabic `ar` label, optional duration and an attested date.
+3. Each source has a default date rule; events can override it via `calendarRule`. Supported rules: `egyptian-fixed` (Alexandrian month/day), `gregorian-annual` / `gregorian-fixed` (Gregorian month/day), and `dated` (exact `YYYY-MM-DD`; **no automatic recurrence**).
+4. Keep provenance, historical confidence, and meanings in the data. Do not confuse religious festival dates with public vacation schedules. PWA builds precache all validated source packs under `web`.
 
-## Settings migration / user data
+## Migration, safety and tests
 
-The saved setting still resides at \`renpet.settings.v1\` for backward compatibility; the old \`festivals:true\` migrates to \`festivalSources:["amun-theban"]\`, and \`festivals:false\` migrates to an empty list. Only explicitly selected sources show overlays. Other calendar preferences, saved appointments and recurring birthdays remain intact.
+Only Amun is enabled by default for existing users. Each new list is opt-in. An unavailable optional pack is skipped without deleting the existing registry, Amun data or personal scheduler records. Saving the festival preference changes only the overlay selection.
 
-Historical festival data and user-created calendar events never share a storage collection. Future user-owned festivals can be built on existing recurring appointments or a dedicated personal-source adapter **without changing the global source picker**.
+The 6.7 UI uses one horizontal week band per seven or ten dates, with separators but no individual boxes. At iPad/web widths of 768 CSS pixels or more, the same app state appears in a navigation-rail and two-pane layout. Tests should cover separate/combined sources, 2026-only dated items, preserved appointments, 7/10-day bands and phone/tablet viewport limits.
