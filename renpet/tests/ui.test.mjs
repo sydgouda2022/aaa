@@ -31,7 +31,7 @@ assert.ok([5,6].includes((root.innerHTML.match(/class="date /g)||[]).length),'Ep
 click('data-primary-view','today');
 assert.ok(has('month-agenda'),'Today returns to selected-day agenda rather than switching to Day');
 click('data-primary-view','list');
-assert.ok(has('schedule-empty'),'No appointments: helpful Schedule empty state');
+assert.ok(has('class="list-page"'),'List view displays the selected festival sources and user appointments');
 assert.ok(has('data-new'),'Empty Schedule has new-event action');
 click('data-primary-view','today');
 const d=dayNumber('2026-10-17');
@@ -42,7 +42,21 @@ assert.ok(has('month-agenda'),'Day back returns to Month');
 click('data-open-panel','settings');
 assert.ok(has('preferences-page')&&has('class="app-shell"'),'Settings opens as compact overlay');
 assert.ok(has('data-open-panel="calendars"')&&has('data-backup'),'Advanced features nested in Settings');
-assert.ok(!has('data-open-panel="festivals"'),'Extra festival page removed');
+assert.ok(has('data-open-panel="festivals"'),'Festival source selector is available within Settings');
+click('data-open-panel','festivals');
+assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun is the only selectable source');
+assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,1,'Only Amun is available');
+for(const handler of handlers.change||[])handler({target:{
+ name:'',checked:false,dataset:{festivalSourceId:'amun-theban'},
+ hasAttribute:key=>key==='data-festival-source-id',closest:()=>null
+}});
+assert.deepEqual(JSON.parse(memory.get('renpet.settings.v1')).festivalSources,[],'Festival source choice persists');
+for(const handler of handlers.change||[])handler({target:{
+ name:'',checked:true,dataset:{festivalSourceId:'amun-theban'},
+ hasAttribute:key=>key==='data-festival-source-id',closest:()=>null
+}});
+assert.deepEqual(JSON.parse(memory.get('renpet.settings.v1')).festivalSources,['amun-theban'],'Multiple-source setting can be reenabled');
+click('data-open-panel','settings');
 change('language','cop');
 assert.equal(document.body.dataset.language,'cop');
 assert.ok(has('renpet-decade')&&has('data-week="10"'),'Coptic ten-day months');
