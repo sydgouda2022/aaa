@@ -49,6 +49,8 @@ edit('web/sw.js',sw)
 edit('web/style.css',lambda s:s+'\n/* Single approved square icon. */\n.library-logo,.editor-app-icon{border:0!important;box-shadow:none!important;background:transparent!important;object-fit:cover}\n[hidden]{display:none!important}\n')
 edit('web/manifest.webmanifest',lambda s:once(once(s,'/icons/icon-192.png','/icons/brand-v046-192.png'),'/icons/icon-512.png','/icons/brand-v046-512.png'))
 # Older tests hardcoded the now-retired logo/cache; update the checks, not their coverage.
-edit('tests/test_panel_shell.py',lambda s:once(s,"'/icons/app_icon.svg'","'/icons/brand-v046-192.png'"))
-edit('tests/test_offline_publication.py',lambda s:once(s,'"caches.match(\'/index.html\')"','"active.match(\'/index.html\')"'))
+if (root/'tests/test_panel_shell.py').is_file():
+ edit('tests/test_panel_shell.py',lambda s:once(s,"'/icons/app_icon.svg'","'/icons/brand-v046-192.png'"))
+if (root/'tests/test_offline_publication.py').is_file():
+ edit('tests/test_offline_publication.py',lambda s:once(s,'"caches.match(\'/index.html\')"','"active.match(\'/index.html\')"'))
 print('Applied MdwNfr v046 user-interface/brand update; dictionary unchanged.')
