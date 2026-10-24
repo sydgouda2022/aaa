@@ -1,6 +1,6 @@
 import {DAY,dayNumber,toEgyptian,toGregorian,monthGrid,festivalHits,nativeNumber} from './calendar.js';
 import {LOCALES} from './locales.js';
-import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,hiddenItemsForDay,ensureSavedItemVisible,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
+import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,hiddenItemsForDay,ensureSavedItemVisible,revealSavedCalendars,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
 import {openBackup} from './backup.js';
 import {initKeyboard,syncKeyboard,closeKeyboard} from './keyboard.js';
 import {timeEditorFields,openTimeEditor,updateTimeChoice,closeTimeEditor} from './time-editor.js';
@@ -335,7 +335,7 @@ root.addEventListener('click',ev=>{
   closeTimeEditor(root.querySelector('#event-editor'),false,lang());return;
  }
  const show=ev.target.closest('[data-show-all-calendars]');
- if(show){const sched=loadScheduler();for(const cal of sched.calendars)cal.visible=true;
+ if(show){const sched=loadScheduler();revealSavedCalendars(sched);
   saveScheduler(sched);render();return;}
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
