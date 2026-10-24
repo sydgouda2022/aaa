@@ -57,7 +57,7 @@ def main():
         assert im[0][0]==BLUE and im[-1][-1]==BLUE,'No white corners: '+name
         # The disk and beetle remain distinct gold figures.
         assert im[round(dimension*.2)][dimension//2]==GOLD,'Missing solar disk: '+name
-        assert im[round(dimension*.7)][dimension//2]==GOLD,'Missing beetle: '+name
+        assert im[round(dimension*.7)][round(dimension*.44)]==GOLD,'Missing beetle: '+name
         gold=sum(1 for row in im for r,g,b in row if r>180 and 105<g<215 and b<100)
         assert gold>dimension*dimension*.07,('Unrecognizable icon',name,gold)
         if 'maskable' in name:
