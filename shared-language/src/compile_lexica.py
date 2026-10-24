@@ -132,7 +132,7 @@ def persist_json(path, payload):
     Path(path).write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
 
 
-def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None):
+def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None,ramses_path=None):
     """Produce one stage-filtered SQLite master and identical browser spellings.
 
     AES never enters by historical date alone. The source file must match its
@@ -149,12 +149,22 @@ def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None):
     if aes_path:
         from aes_late_adapter import curated_aes_rows
         aes_counts,aes_evidence,aes_stats,sha_aes=curated_aes_rows(aes_path,aes_whitelist)
+    ramses_counts,ramses_refs,ramses_stats={}, {}, {}
+    sha_ramses=None
+    if ramses_path:
+        from ramses_unicode import audit_ramses
+        ramses_counts,ramses_refs,ramses_stats=audit_ramses(ramses_path)
+        sha_ramses=ramses_stats['source_sha256']
     db=db_connect(out/'lexicon.sqlite3')
     db.execute('INSERT INTO metadata VALUES (?,?)',('language','egy'))
     db.execute('INSERT INTO metadata VALUES (?,?)',('stage','Late Egyptian'))
     db.execute('INSERT INTO metadata VALUES (?,?)',('tla_sha256',sha_tla))
     if sha_aed:db.execute('INSERT INTO metadata VALUES (?,?)',('aed_sha256',sha_aed))
     if sha_aes:db.execute('INSERT INTO metadata VALUES (?,?)',('aes_curated_sha256',sha_aes))
+    if sha_ramses:db.execute('INSERT INTO metadata VALUES (?,?)',('ramses_model_sha256',sha_ramses))
+    db.execute('''CREATE TABLE IF NOT EXISTS corpus_form (
+      native_form TEXT PRIMARY KEY, original_encodings_json TEXT NOT NULL,
+      frequency INTEGER NOT NULL, source_sha256 TEXT NOT NULL)''')
     entries=[]
     known={}
     for (lemma,form),frequency in sorted(counts.items()):
@@ -194,6 +204,31 @@ def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None):
             eid=hashlib.sha256((record_id+'|AES|'+reference).encode()).hexdigest()[:24]
             db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',
                        (eid,record_id,'AES-LATE-CURATED',reference,sha_aes))
+    # Ramses model documents word-level SIGN SEQUENCES, but not lemma identities
+    # or individual witness IDs. Never attach its evidence to a TLA lemma just
+    # because a written surface matches: homography is extremely common.
+    old_surfaces={entry['signs'] for entry in entries}
+    ramses_new=0
+    for form,frequency in sorted(ramses_counts.items()):
+        original_mdcs=ramses_refs[form]
+        db.execute('INSERT INTO corpus_form VALUES (?,?,?,?)',
+                   (form,json.dumps(original_mdcs,ensure_ascii=False,separators=(',',':')),frequency,sha_ramses))
+        if form in old_surfaces:continue
+        digest_form=hashlib.sha256(form.encode()).hexdigest()[:20]
+        lexical_id='ramses-unlinked:'+digest_form
+        record_id='ramses:'+digest_form
+        db.execute('INSERT INTO lemma VALUES (?,?,?,?)',(lexical_id,'','',''))
+        db.execute('INSERT INTO spelling(id,lemma_id,native_form,frequency) VALUES (?,?,?,?)',
+                   (record_id,lexical_id,form,frequency))
+        for encoding in original_mdcs:
+            ref='model:mdc:'+encoding
+            eid=hashlib.sha256((record_id+'|'+ref).encode()).hexdigest()[:24]
+            db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',
+                       (eid,record_id,'RAMSES-WORD-MODEL-2023',ref,sha_ramses))
+        entries.append({'ref':record_id,'signs':form,'lemma':lexical_id,
+                        'source':'RAMSES-WORD-MODEL-2023','primary':True,
+                        'attestations':frequency,'lexical_identity_verified':False})
+        ramses_new+=1
     db.commit()
     assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
     sql_count=db.execute('SELECT COUNT(*) FROM spelling').fetchone()[0]
@@ -201,25 +236,35 @@ def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None):
     missing=db.execute('SELECT COUNT(*) FROM spelling s WHERE NOT EXISTS(SELECT 1 FROM attestation a WHERE a.spelling_id=s.id)').fetchone()[0]
     assert missing==0,'Every written form must retain an attestation'
     match_count=db.execute("SELECT COUNT(*) FROM lemma WHERE headword != ''").fetchone()[0]
+    distinct_verified_lemmas=len({e['lemma'] for e in entries if not e['lemma'].startswith('ramses-unlinked:')})
+    native_surfaces=len({e['signs'] for e in entries})
     db.close()
     sources={'TLA-LE19':sha_tla,'AED-TEI':sha_aed}
     if sha_aes:sources['AES-LATE-CURATED']=sha_aes
+    if sha_ramses:sources['RAMSES-WORD-MODEL-2023']=sha_ramses
     payload={'format':'mdwnfr-predict-v1',
         'metadata':{'name':'Late Egyptian Attested Unicode Lexicon','complete':False,
-                    'stage':'Late Egyptian', 'lexemes':len({x['lemma'] for x in entries}),
+                    'stage':'Late Egyptian', 'lexemes':distinct_verified_lemmas,
                     'spelling_records':len(entries),
-                    'source_corpus':'TLA Late Egyptian v19; AED crosswalk'+('; individually approved AES Late Egyptian manuscripts' if sha_aes else ''),
+                    'source_corpus':'TLA Late Egyptian v19; AED crosswalk'+('; individually approved AES Late Egyptian manuscripts' if sha_aes else '')+('; Ramses 2023 word model with unidentified lemmata' if sha_ramses else ''),
                     'tla_sha256':sha_tla,'aed_sha256':sha_aed,'aes_sha256':sha_aes,
                     'aes_additional_spelling_records':added,
+                    'ramses_unlinked_spelling_records':ramses_new,
+                    'ramses_model_sha256':sha_ramses,
+                    'unique_native_surfaces':native_surfaces,
                     'aed_matched_lemmas':match_count,
                     'evidence_status':'source-filtered-not-exhaustive'},'entries':entries}
     persist_json(out/'lexicon.json',payload)
     report={'language':'egy','stage':'Late Egyptian','unique_spellings':len(entries),
-            'distinct_lemmas':len({x['lemma'] for x in entries}),
+            'distinct_lemmas':distinct_verified_lemmas,
+            'unique_native_surfaces':native_surfaces,'ramses_new_spelling_records':ramses_new,
+            'ramses_duplicate_existing_surfaces':len(ramses_counts)-ramses_new,
+            'ramses_corpus_word_model_records':len(ramses_counts),
+            'ramses_conversion_audit':ramses_stats,
             'aed_dictionary_entries':len(aed),'aed_matched_lemmas':match_count,
             'aes_new_lemma_spelling_records':added,'aes_audit':aes_stats,**stats,
             'sources':sources,
-            'claim':'Downloaded Late Egyptian edition and individually curated AES documents processed; not all historical Late Egyptian'}
+            'claim':'Verified TLA and curated AES spellings plus unlinked Ramses word-model sign sequences; corpus-level Ramses evidence is not per-witness lemma attestation'}
     persist_json(out/'coverage.json',report)
     return report
 
@@ -359,10 +404,10 @@ def build_coptic(tei_path,forms_path,popular_path,out):
 def main():
     p=argparse.ArgumentParser()
     sub=p.add_subparsers(dest='language',required=True)
-    e=sub.add_parser('egyptian');e.add_argument('--tla',type=Path,required=True);e.add_argument('--aed',type=Path,required=True);e.add_argument('--out',type=Path,required=True);e.add_argument('--aes',type=Path);e.add_argument('--aes-whitelist',type=Path)
+    e=sub.add_parser('egyptian');e.add_argument('--tla',type=Path,required=True);e.add_argument('--aed',type=Path,required=True);e.add_argument('--out',type=Path,required=True);e.add_argument('--aes',type=Path);e.add_argument('--aes-whitelist',type=Path);e.add_argument('--ramses',type=Path)
     c=sub.add_parser('coptic');c.add_argument('--tei',type=Path,required=True);c.add_argument('--forms',type=Path,required=True);c.add_argument('--popular',type=Path,required=True);c.add_argument('--out',type=Path,required=True)
     args=p.parse_args()
-    if args.language=='egyptian': report=build_egyptian(args.tla,args.aed,args.out,args.aes,args.aes_whitelist)
+    if args.language=='egyptian': report=build_egyptian(args.tla,args.aed,args.out,args.aes,args.aes_whitelist,args.ramses)
     else:report=build_coptic(args.tei,args.forms,args.popular,args.out)
     print(json.dumps(report,ensure_ascii=False,sort_keys=True))
 
