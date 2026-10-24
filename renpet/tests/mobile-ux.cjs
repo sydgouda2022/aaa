@@ -360,8 +360,11 @@ async function run(){
      const agenda=await q.locator('.month-agenda').evaluate(el=>({top:el.getBoundingClientRect().top,visible:el.getBoundingClientRect().top<innerHeight-80}));
      if(!agenda.visible||agenda.top>670)throw Error('Selected-day agenda still below fold: '+JSON.stringify({grid,agenda}));
      const num=q.locator('.decade-days .date .day-number').first();
-     const infoNum=await num.evaluate(el=>({size:getComputedStyle(el).fontSize,lines:getComputedStyle(el).lineHeight,images:el.querySelectorAll('img').length}));
-     if(parseFloat(infoNum.size)<26||infoNum.images)throw Error('Egyptian day numerals remain too small or scaled SVG: '+JSON.stringify(infoNum));
+     const infoNum=await num.evaluate(el=>({size:getComputedStyle(el).fontSize,
+       images:el.querySelectorAll('img').length,strokes:el.querySelectorAll('.egy-date-ones>span').length,
+       clustered:!!el.querySelector('.egy-day-ink'),overflow:el.scrollWidth>el.clientWidth+2}));
+     if(!infoNum.clustered||!infoNum.strokes||infoNum.images||infoNum.overflow)
+      throw Error('Egyptian day signs failed compact grouping: '+JSON.stringify(infoNum));
      await q.locator('[data-open-year]').click();
      const card=q.locator('.year-month-name').first();
      if(parseFloat(await card.evaluate(el=>getComputedStyle(el).fontSize))<22)throw Error('Egyptian year month title still tiny');
@@ -576,7 +579,9 @@ async function run(){
   });
   const ar=await inspect();
   if(ar.shell!=='grid'||ar.month!=='grid')throw Error('Large screen still renders phone-only stack: '+JSON.stringify(ar));
-  if(ar.rail.right>ar.calendar.left+2||ar.calendar.right>ar.agenda.left+2)throw Error('Large view overlaps: '+JSON.stringify(ar));
+  const overlap=(a,b)=>a.left<b.right-2&&b.left<a.right-2;
+  if(overlap(ar.rail,ar.calendar)||overlap(ar.rail,ar.agenda)||overlap(ar.calendar,ar.agenda))
+   throw Error('Large view panes overlap: '+JSON.stringify(ar));
   if(ar.scrollWidth>ar.viewport+2)throw Error('Large GUI horizontally clips: '+JSON.stringify(ar));
   await screenshot(q,'ipad-arabic-split-month');
   await q.locator('header [data-open-panel=settings]').click();
