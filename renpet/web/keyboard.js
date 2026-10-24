@@ -1,4 +1,5 @@
 import {COPTIC_LETTERS,COP_NUMBERS,EGY_NUMBERS,wordRange,suggestions,deleteGrapheme} from './keyboard-core.js';
+import {ensureLexicon} from './lexicon-install.mjs';
 
 const STORAGE='renpet.keyboard.personal.v1';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,18 +18,28 @@ function remember(text){
  const k=lang+':'+text;personal[k]=(personal[k]||0)+1;persist();
 }
 async function load(lang){
- if(catalog[lang])return;
+ if(catalog[lang]&&(lang!=='egy'||catalog.egy.lexiconReady))return;
  const endpoint=lang==='cop'?'coptic.json':'signs.json';
  try{
   const res=await fetch('./assets/dictionaries/'+endpoint);
   if(!res.ok)throw new Error(res.status);
   catalog[lang]=await res.json();
   if(lang==='egy'){
-   // Keep MDWNFR-style phonogram key pages independent of the attested
-   // TLA Earlier Egyptian word corpus. Future Late Egyptian packs can be
-   // added without touching the keyboard layout.
-   const words=await fetch('./assets/dictionaries/egyptian-wordforms.json');
-   if(words.ok){const pack=await words.json();catalog.egy.rows=pack.rows||[];catalog.egy.source=pack.language_stage;}
+   // Real first-run installer shared with MdwNfr; no Earlier Egyptian corpus.
+   // Broken/missing local packs are repaired from the versioned release.
+   try{
+    const installed=await ensureLexicon();
+    catalog.egy.rows=installed.payload.entries.map(e=>[e.signs,e.attestations||1,e.lemma||e.ref]);
+    catalog.egy.source=installed.manifest.release;
+    catalog.egy.complete=installed.complete;
+    catalog.egy.lexiconReady=true;
+    catalog.egy.lexiconError=null;
+   }catch(err){
+    catalog.egy.rows=[];
+    catalog.egy.lexiconReady=false;
+    catalog.egy.lexiconError=String(err?.message||err);
+    console.warn('Late Egyptian lexicon unavailable:',err);
+   }
   }else{
    const popular=await fetch('./assets/dictionaries/coptic-popular.json');
    if(popular.ok){
@@ -64,9 +75,9 @@ function current(){
 function predictBar(lang){
  const raw=current().raw;
  const options=suggestions(raw,lang,catalog[lang],personal,4);
- if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'𓏭 𓄿 𓆣')+' </span></div>';
+ if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':catalog.egy?.lexiconError?'Late Egyptian · connect to install':catalog.egy?.lexiconReady?'Late Egyptian · development lexicon':'Late Egyptian · loading')+' </span></div>';
  return '<div class="kb-suggestions" role="listbox" aria-label="Prediction candidates">'+options.map((o,i)=>{
-  const dialects=o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='TLA18'?'TLA':o.personal?'★':o.frequency?'CDO':'';
+  const dialects=o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='LATE'?(catalog.egy?.complete?'TLA':'DEV'):o.personal?'★':o.frequency?'CDO':'';
   return '<button type="button" role="option" data-kb-pick="'+i+'" aria-selected="'+(i===0)+'"><span>'+escape(o.text)+'</span><small>'+(o.raw?'✓':dialects)+'</small></button>';
  }).join('')+'</div>';
 }
@@ -179,3 +190,6 @@ export function syncKeyboard(){
  if(keyboardLanguage()==='ar'){hide();return;}
  if(active?.isConnected)draw();else hide();
 }
+
+// Startup preflight runs after calendar rendering: calendar use never waits for the dictionary.
+export async function primeEgyptianLexicon(){await load('egy');return catalog.egy?.lexiconReady===true;}

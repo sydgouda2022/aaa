@@ -28,7 +28,7 @@ export function suggestions(raw,language,lexicon,learned={},limit=4){
  }else if(language==='egy'){
   for(const [text,frequency,lemma] of lexicon?.rows||[]){
    if(text!==raw&&text.startsWith(raw))
-    candidates.push({text,dialects:0,frequency:frequency||0,lemma,source:'TLA18'});
+    candidates.push({text,dialects:0,frequency:frequency||0,lemma,source:'LATE'});
   }
  }
  for(const [key,count] of Object.entries(learned)){

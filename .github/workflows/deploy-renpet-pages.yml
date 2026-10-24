@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - 'renpet/**'
+      - 'shared-language/src/lexicon_install.mjs'
+      - 'shared-language/src/publish_release.py'
+      - 'shared-language/releases/dev-late-egyptian/**'
       - '.github/workflows/deploy-renpet-pages.yml'
   pull_request:
     branches: [main]
@@ -40,15 +43,15 @@ jobs:
           test "$(wc -c <renpet/web/assets/fonts/Cairo-VF.ttf)" -gt 100000
           python renpet/tools/make_numerals.py
           python renpet/tools/build_keyboard_signs.py
-          curl -fLsS --retry 3 --max-time 120 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-Earlier_Egyptian_original-v18-premium/resolve/main/train.jsonl?download=true' -o /tmp/renpet-tla-v18.jsonl
-          test "$(wc -c </tmp/renpet-tla-v18.jsonl)" -gt 5000000
-          python renpet/tools/build_egyptian_words.py /tmp/renpet-tla-v18.jsonl
+          cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
+          python shared-language/src/publish_release.py --catalog shared-language/releases/dev-late-egyptian/lexicon.json --out renpet/web/lexicon
           python renpet/tools/build_csp.py
           python renpet/tools/build_service_worker.py
       - name: Validate single renderer and data
         run: |
           set -euo pipefail
           node --check renpet/web/app.js
+          node --check renpet/web/lexicon-install.mjs
           node --check renpet/web/keyboard.js
           node --check renpet/web/time-editor.js
           node --check renpet/web/keyboard-core.js
@@ -63,12 +66,14 @@ jobs:
           python renpet/tests/test_service_worker_source.py
           node renpet/tests/ui.test.mjs
           node renpet/tests/keyboard.test.mjs
+          node --test shared-language/tests/lexicon_install.test.mjs
           node renpet/tests/time-editor.test.mjs
           node renpet/tests/clock.test.mjs
           test -s renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
           test -s renpet/web/assets/dictionaries/signs.json
           test -s renpet/web/assets/dictionaries/coptic.json
-          test -s renpet/web/assets/dictionaries/egyptian-wordforms.json
+          test -s renpet/web/lexicon/lexicon.json
+          test -s renpet/web/lexicon/manifest.json
           test -s renpet/web/assets/dictionaries/coptic-popular.json
           node renpet/tests/scheduler.test.mjs
           node renpet/tests/backup.test.mjs
