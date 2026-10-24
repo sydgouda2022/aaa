@@ -47,6 +47,33 @@ export function upsertItem(state,item){
  const i=state.items.findIndex(v=>v.id===item.id);if(i>=0)state.items[i]=item;else state.items.push(item);return item;
 }
 export function removeItem(state,id){state.items=state.items.filter(v=>v.id!==id);}
+// Ensure that a newly saved event can actually appear on the calendar.
+// A previously hidden or removed calendar must not accept an event that
+// immediately disappears from Day, Month, and List views.
+export function ensureSavedItemVisible(state,item){
+ let calendar=state.calendars.find(c=>c.id===item.calendarId);
+ if(!calendar){
+  calendar=state.calendars.find(c=>c.id==='personal')||state.calendars[0];
+  if(!calendar){calendar=copy(DEFAULT_CALENDARS[0]);state.calendars.push(calendar);}
+  item.calendarId=calendar.id;
+ }
+ calendar.visible=true;
+ return item;
+}
+// Show saved appointments from historical app versions whose calendar was
+// hidden or later deleted. Preserve appointment records and identifiers.
+export function revealSavedCalendars(state){
+ if(!state.calendars.length)state.calendars.push(copy(DEFAULT_CALENDARS[0]));
+ const fallback=state.calendars.find(c=>c.id==='personal')||state.calendars[0];
+ const ids=new Set(state.calendars.map(c=>c.id));
+ for(const cal of state.calendars)cal.visible=true;
+ for(const item of state.items)if(!ids.has(item.calendarId))item.calendarId=fallback.id;
+ return state;
+}
+export function hiddenItemsForDay(state,day,years){
+ const visible=visibleCalendars(state);
+ return state.items.filter(item=>!visible.has(item.calendarId)&&occursOn(item,day,years));
+}
 export function calendarFor(state,id){return state.calendars.find(c=>c.id===id)||state.calendars[0];}
 export function visibleCalendars(state){return new Set(state.calendars.filter(c=>c.visible!==false).map(c=>c.id));}
 export function createCalendar(state,name,color='#187568'){

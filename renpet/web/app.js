@@ -1,6 +1,6 @@
 import {DAY,dayNumber,toEgyptian,toGregorian,monthGrid,festivalHits,nativeNumber} from './calendar.js';
 import {LOCALES} from './locales.js';
-import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
+import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,hiddenItemsForDay,ensureSavedItemVisible,revealSavedCalendars,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
 import {openBackup} from './backup.js';
 import {initKeyboard,syncKeyboard,closeKeyboard} from './keyboard.js';
 import {timeEditorFields,openTimeEditor,updateTimeChoice,closeTimeEditor} from './time-editor.js';
@@ -44,10 +44,18 @@ function eventRow(i,day=state.focus){
  const clock=i.allDay?safe(T().allDay):timeHtml(i.startMinutes,lang());
  return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+clock+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
 }
+// Existing appointments in hidden calendars are never silently represented
+// as "no events". Offer one action to show them all without losing data.
+function hiddenCalendarNotice(day){
+ const hidden=hiddenItemsForDay(schedule,day,data.years);
+ if(!hidden.length)return '';
+ const prefix=lang()==='ar'?'مواعيد محفوظة في تقاويم مخفية':lang()==='cop'?'Ⲛⲓⲉⲣⲅⲟⲛ':'𓏞';
+ return '<div class="hidden-calendar-notice" role="status"><span>'+safe(prefix)+' · '+safe(N(hidden.length))+'</span><button type="button" data-show-all-calendars>'+safe(T().manage)+'</button></div>';
+}
 function agenda(d){
  const a=items(d),festivals=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
  const festivalCards=festivals.map(f=>'<div class="festival-in-agenda"><span aria-hidden="true">✦</span><div><strong>'+safe(f.ar)+'</strong><small>'+safe(f.duration>1?N(f.duration)+' '+T().day:T().festivals)+'</small></div></div>').join('');
- return '<section class="agenda"><div class="agenda-heading"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<span class="subtle">'+safe(greg(d,{weekday:'short',day:'numeric',month:'short'}))+'</span>':'')+'</div>'+festivalCards+(a.length?a.map(i=>eventRow(i,d)).join(''):festivals.length?'':'<div class="agenda-empty"><p>'+safe(T().noEvents)+'</p></div>')+'</section>';
+ return '<section class="agenda"><div class="agenda-heading"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<span class="subtle">'+safe(greg(d,{weekday:'short',day:'numeric',month:'short'}))+'</span>':'')+'</div>'+hiddenCalendarNotice(d)+festivalCards+(a.length?a.map(i=>eventRow(i,d)).join(''):festivals.length?'':hiddenItemsForDay(schedule,d,data.years).length?'':'<div class="agenda-empty"><p>'+safe(T().noEvents)+'</p></div>')+'</section>';
 }
 function dateButton(c){
  if(!c)return '<span class="blank" aria-hidden="true"></span>';
@@ -127,17 +135,24 @@ function dayView(){
   return '<div class="timeline-event" role="button" tabindex="0" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(27,(end-start)/60*64-3)+'px;left:calc('+width*pos.col+'% + 1px);width:calc('+width+'% - 3px)" data-edit="'+safe(i.id)+'"><span class="event-drag" aria-label="Move event"><strong>'+safe(i.title)+'</strong><small>'+timeHtml(start,lang())+' – '+timeHtml(end,lang())+'</small></span><span class="event-resize" aria-label="Resize event"></span></div>';
  }).join('');
  const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeHtml(h*60,lang())+'</span><button class="timeline-slot" data-hour="'+h+'" aria-label="'+safe(T().add)+' '+safe(timeText(h*60,lang()))+'"></button></div>').join('');
- return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div>'+(state.focus===today()?nowLineMarkup():'')+'</div></div>';
+ return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+hiddenCalendarNotice(state.focus)+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div>'+(state.focus===today()?nowLineMarkup():'')+'</div></div>';
 }
 
 function listView(){
  const groups=[];
  for(let d=state.focus;d<=Math.min(max(),state.focus+59);d++)if(items(d).length)groups.push(agenda(d));
- return '<div class="list-page">'+(groups.join('')||'<div class="schedule-empty"><div class="empty-art" aria-hidden="true">▤</div><h2>'+safe(T().noUpcoming)+'</h2><p>'+safe(T().noEvents)+'</p><button class="primary" data-new>'+safe(T().addFirst)+'</button></div>')+'</div>';
+ const hiddenStart=state.focus,hiddenEnd=Math.min(max(),state.focus+59);
+ const hiddenDays=[];
+ if(!groups.length){
+  for(let d=hiddenStart;d<=hiddenEnd;d++)if(hiddenItemsForDay(schedule,d,data.years).length){hiddenDays.push(d);break;}
+ }
+ return '<div class="list-page">'+(groups.length ? groups.join('') : hiddenDays.length
+  ?hiddenCalendarNotice(hiddenDays[0])
+  :'<div class="schedule-empty"><div class="empty-art" aria-hidden="true">▤</div><h2>'+safe(T().noUpcoming)+'</h2><p>'+safe(T().noEvents)+'</p><button class="primary" data-new>'+safe(T().addFirst)+'</button></div>')+'</div>';
 }
 
 function settingsView(){
- return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 6.2.0</p></section>';
+ return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 6.3.0</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -277,6 +292,7 @@ function submitEvent(form){
  const vals={kind:f.get('kind'),title,startDay,endDay:startDay,startMinutes,endMinutes,allDay:f.has('allDay'),location:f.get('location'),notes:f.get('notes'),calendarId:f.get('calendarId'),repeat:f.get('repeat'),alert:f.get('alert')};
  const sched=loadScheduler(),existing=state.dialog?.id?sched.items.find(i=>i.id===state.dialog.id):null;
  const item=existing?{...existing,...vals,updatedAt:new Date().toISOString()}:createItem(vals);
+ ensureSavedItemVisible(sched,item);
  upsertItem(sched,item);
  if(!saveScheduler(sched)){
   showEditorError(form,lang()==='ar'?'تعذر حفظ الموعد على هذا الجهاز':lang()==='cop'?'Ⲥⲱⲛϩ: Ⲡⲁⲛⲥ':'𓏞: !');return;
@@ -284,7 +300,7 @@ function submitEvent(form){
  // Read-after-write verification prevents false success on storage failures,
  // Safari private/ephemeral storage, or malformed preexisting data.
  const saved=loadScheduler();
- if(!saved.items.some(v=>v.id===item.id&&v.title===item.title)){
+ if(!saved.items.some(v=>v.id===item.id&&v.title===item.title) || !itemsForDay(saved,startDay,data.years).some(v=>v.id===item.id)){
   showEditorError(form,lang()==='ar'?'لم يتم تأكيد تخزين الموعد':lang()==='cop'?'Ⲥⲱⲛϩ: !':'𓏞: !');return;
  }
  closeKeyboard();state.dialog=null;state.focus=clamp(startDay);
@@ -318,6 +334,9 @@ root.addEventListener('click',ev=>{
  if(openPicker&&!openPicker.contains(ev.target)&&!ev.target.closest('[data-time-open]')){
   closeTimeEditor(root.querySelector('#event-editor'),false,lang());return;
  }
+ const show=ev.target.closest('[data-show-all-calendars]');
+ if(show){const sched=loadScheduler();revealSavedCalendars(sched);
+  saveScheduler(sched);render();return;}
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
  // Timeline events are accessible divs, not buttons. Open them directly.
