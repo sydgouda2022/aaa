@@ -1,5 +1,6 @@
 import {COPTIC_LETTERS,COP_NUMBERS,EGY_NUMBERS,wordRange,suggestions,deleteGrapheme} from './keyboard-core.js';
 import {ensureLexicon} from './lexicon-install.mjs';
+import {ensureCopticLexicon} from './coptic-install.mjs';
 
 const STORAGE='renpet.keyboard.personal.v1';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,38 +19,47 @@ function remember(text){
  const k=lang+':'+text;personal[k]=(personal[k]||0)+1;persist();
 }
 async function load(lang){
- if(catalog[lang]&&(lang!=='egy'||catalog.egy.lexiconReady))return;
- const endpoint=lang==='cop'?'coptic.json':'signs.json';
- try{
-  const res=await fetch('./assets/dictionaries/'+endpoint);
-  if(!res.ok)throw new Error(res.status);
-  catalog[lang]=await res.json();
-  if(lang==='egy'){
-   // Real first-run installer shared with MdwNfr; no Earlier Egyptian corpus.
-   // Broken/missing local packs are repaired from the versioned release.
+ if(catalog[lang]?.lexiconReady)return;
+ if(lang==='cop'){
+  // Shared first-run installer. This releases Scriptorium/KELLIA-written forms
+  // with original Sahidic/Bohairic masks; unknown dialect stays unassigned.
+  try{
+   const installed=await ensureCopticLexicon();
+   catalog.cop={
+    rows:installed.payload.rows,
+    popularity:installed.payload.popularity,
+    lexiconReady:true,complete:installed.complete,
+    lexiconError:null,release:installed.manifest.release
+   };
+  }catch(err){
+   catalog.cop={rows:[],popularity:{},lexiconReady:false,lexiconError:String(err?.message||err)};
+   console.warn('Coptic lexicon unavailable:',err);
+  }
+ }else if(lang==='egy'){
+  if(!catalog.egy?.pages){
    try{
-    const installed=await ensureLexicon();
-    catalog.egy.rows=installed.payload.entries.map(e=>[e.signs,e.attestations||1,e.lemma||e.ref]);
-    catalog.egy.source=installed.manifest.release;
-    catalog.egy.complete=installed.complete;
-    catalog.egy.lexiconReady=true;
-    catalog.egy.lexiconError=null;
+    const res=await fetch('./assets/dictionaries/signs.json');
+    if(!res.ok)throw Error('Hieroglyphic signs unavailable: '+res.status);
+    catalog.egy=await res.json();
    }catch(err){
-    catalog.egy.rows=[];
-    catalog.egy.lexiconReady=false;
-    catalog.egy.lexiconError=String(err?.message||err);
-    console.warn('Late Egyptian lexicon unavailable:',err);
-   }
-  }else{
-   const popular=await fetch('./assets/dictionaries/coptic-popular.json');
-   if(popular.ok){
-    const pack=await popular.json();
-    catalog.cop.popularity=Object.fromEntries(pack.rows||[]);
-    const known=new Set(catalog.cop.rows.map(r=>r[0]));
-    for(const [word] of pack.rows||[])if(!known.has(word)){catalog.cop.rows.push([word,0]);known.add(word);}
+    console.warn('Hieroglyphic keyboard signs unavailable:',err);
+    catalog.egy={rows:[],pages:{uni:[],bi:[],tri:[]}};
    }
   }
- }catch(err){console.warn('Renpet dictionary unavailable offline:',endpoint,err);catalog[lang]=catalog[lang]||{rows:[],pages:{uni:[],bi:[],tri:[]}};}
+  try{
+   const installed=await ensureLexicon();
+   catalog.egy.rows=installed.payload.entries.map(e=>[e.signs,e.attestations||1,e.lemma||e.ref]);
+   catalog.egy.source=installed.manifest.release;
+   catalog.egy.complete=installed.complete;
+   catalog.egy.lexiconReady=true;
+   catalog.egy.lexiconError=null;
+  }catch(err){
+   catalog.egy.rows=[];
+   catalog.egy.lexiconReady=false;
+   catalog.egy.lexiconError=String(err?.message||err);
+   console.warn('Late Egyptian lexicon unavailable:',err);
+  }
+ }
  if(active&&keyboardLanguage()===lang)draw();
 }
 function pageButtons(lang){
@@ -75,7 +85,7 @@ function current(){
 function predictBar(lang){
  const raw=current().raw;
  const options=suggestions(raw,lang,catalog[lang],personal,4);
- if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':catalog.egy?.lexiconError?'Late Egyptian · connect to install':catalog.egy?.lexiconReady?'Late Egyptian · development lexicon':'Late Egyptian · loading')+' </span></div>';
+ if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?(catalog.cop?.lexiconError?'Coptic · connect to install':catalog.cop?.lexiconReady?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'Coptic · loading'):catalog.egy?.lexiconError?'Late Egyptian · connect to install':catalog.egy?.lexiconReady?'Late Egyptian · development lexicon':'Late Egyptian · loading')+' </span></div>';
  return '<div class="kb-suggestions" role="listbox" aria-label="Prediction candidates">'+options.map((o,i)=>{
   const dialects=o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='LATE'?(catalog.egy?.complete?'TLA':'DEV'):o.personal?'★':o.frequency?'CDO':'';
   return '<button type="button" role="option" data-kb-pick="'+i+'" aria-selected="'+(i===0)+'"><span>'+escape(o.text)+'</span><small>'+(o.raw?'✓':dialects)+'</small></button>';
@@ -193,3 +203,6 @@ export function syncKeyboard(){
 
 // Startup preflight runs after calendar rendering: calendar use never waits for the dictionary.
 export async function primeEgyptianLexicon(){await load('egy');return catalog.egy?.lexiconReady===true;}
+
+// Coptic and hieroglyphic installation are independent and do not block the calendar.
+export async function primeCopticLexicon(){await load('cop');return catalog.cop?.lexiconReady===true;}

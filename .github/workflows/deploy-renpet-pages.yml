@@ -5,6 +5,8 @@ on:
     paths:
       - 'renpet/**'
       - 'shared-language/src/lexicon_install.mjs'
+      - 'shared-language/src/coptic_install.mjs'
+      - 'shared-language/src/publish_coptic_release.py'
       - 'shared-language/src/publish_release.py'
       - 'shared-language/releases/dev-late-egyptian/**'
       - '.github/workflows/deploy-renpet-pages.yml'
@@ -44,6 +46,8 @@ jobs:
           python renpet/tools/make_numerals.py
           python renpet/tools/build_keyboard_signs.py
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
+          cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
+          python shared-language/src/publish_coptic_release.py --coptic renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
           python shared-language/src/publish_release.py --catalog shared-language/releases/dev-late-egyptian/lexicon.json --out renpet/web/lexicon
           python renpet/tools/build_csp.py
           python renpet/tools/build_service_worker.py
@@ -52,6 +56,9 @@ jobs:
           set -euo pipefail
           node --check renpet/web/app.js
           node --check renpet/web/lexicon-install.mjs
+          node --check renpet/web/coptic-install.mjs
+          test -s renpet/web/coptic-lexicon/lexicon.json
+          test -s renpet/web/coptic-lexicon/manifest.json
           node --check renpet/web/keyboard.js
           node --check renpet/web/time-editor.js
           node --check renpet/web/keyboard-core.js
@@ -66,7 +73,7 @@ jobs:
           python renpet/tests/test_service_worker_source.py
           node renpet/tests/ui.test.mjs
           node renpet/tests/keyboard.test.mjs
-          node --test shared-language/tests/lexicon_install.test.mjs
+          node --test shared-language/tests/lexicon_install.test.mjs shared-language/tests/coptic_install.test.mjs
           node renpet/tests/time-editor.test.mjs
           node renpet/tests/clock.test.mjs
           test -s renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf

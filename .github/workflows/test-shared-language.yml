@@ -24,6 +24,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
+      - name: Validate Coptic first-run install, corruption repair and rollback
+        run: node --test shared-language/tests/coptic_install.test.mjs
+      - name: Validate Coptic deterministic source-pack publishing
+        run: |
+          python shared-language/src/publish_coptic_release.py --coptic renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out /tmp/coptic-offline-release
+          python -c "import json; from pathlib import Path; m=json.loads(Path('/tmp/coptic-offline-release/manifest.json').read_text());p=json.loads(Path('/tmp/coptic-offline-release/lexicon.json').read_text());assert m['spelling_records']==len(p['rows']) and m['language']=='cop' and not m['complete']"
       - name: Validate recovery and integrity handling with real release bytes
         run: node --test shared-language/tests/lexicon_install.test.mjs
       - name: Check deterministic Late Egyptian release publication

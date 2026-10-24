@@ -47,4 +47,17 @@ for(const [form] of pop.rows)if(!existing.has(form)){augmented.rows.push([form,0
 const copticCommon=suggestions('ⲛ','cop',augmented,{},4);
 assert.equal(copticCommon[0].text,'ⲛ');
 assert.ok(copticCommon.length>=3,'Normalized frequency-backed Coptic completion works');
+const copticRelease=JSON.parse(await readFile(new URL('../web/coptic-lexicon/manifest.json',import.meta.url),'utf8'));
+const copticPack=JSON.parse(await readFile(new URL('../web/coptic-lexicon/lexicon.json',import.meta.url),'utf8'));
+assert.equal(copticRelease.language,'cop','Dedicated verified Coptic release');
+assert.equal(copticRelease.format,'coptic-lexicon-install-v1');
+assert.equal(copticRelease.spelling_records,copticPack.rows.length);
+assert.ok(copticPack.rows.length>=10000,'Full existing source-backed Coptic input inventory is preserved');
+assert.ok(copticPack.rows.some(row=>row[1]===1));
+assert.ok(copticPack.rows.some(row=>row[1]===2));
+assert.ok(copticPack.rows.some(row=>row[1]===3));
+assert.ok(copticPack.rows.some(row=>row[1]===0),'KELLIA additions without dialect evidence remain unassigned');
+const copticPackSuggestions=suggestions('ⲛ','cop',copticPack,{},4);
+assert.equal(copticPackSuggestions[0].text,'ⲛ','Coptic raw candidate stays first');
+assert.ok(copticPackSuggestions.length>=3,'Coptic installer release supports prediction');
 console.log('Renpet keyboard catalog and bilingual prediction tests passed');

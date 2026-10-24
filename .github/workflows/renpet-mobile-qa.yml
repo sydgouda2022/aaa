@@ -27,6 +27,8 @@ jobs:
           python renpet/tools/make_numerals.py
           python renpet/tools/build_keyboard_signs.py
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
+          cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
+          python shared-language/src/publish_coptic_release.py --coptic renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
           python shared-language/src/publish_release.py --catalog shared-language/releases/dev-late-egyptian/lexicon.json --out renpet/web/lexicon
           python renpet/tools/build_csp.py
           python renpet/tools/build_service_worker.py

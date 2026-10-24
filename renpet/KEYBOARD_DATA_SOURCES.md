@@ -48,3 +48,15 @@ Reproduction: `python renpet/tools/build_egyptian_words.py train.jsonl`. CI down
 
 ## Arabic interface font
 Cairo variable font is bundled in `assets/fonts/Cairo-VF.ttf` during the verified build from https://github.com/google/fonts/tree/main/ofl/cairo under SIL Open Font License 1.1; licensing notice is included as `OFL-Cairo.txt`. Arabic calendar UI and inputs use Cairo. The operating system's keyboard UI remains controlled by iOS.
+
+## Verified local Coptic lexicon installation (Renpet)
+
+Renpet now publishes a dedicated `/coptic-lexicon/` release constructed deterministically from
+its pinned Coptic SCRIPTORIUM Sahidic/Bohairic forms and KELLIA frequency supplement.
+The original source JSON is a build input; the UI prediction engine loads only the verified
+Coptic release installed to its independent `coptic-lexicon-install-v1` IndexedDB store.
+The release is SHA-256 checked on startup and on downloads, with corruption recovery,
+rollback and offline PWA-cache repair. This does not change any appointments, documents or
+keyboard-personalization keys. No unattested dialect assignment is fabricated for a
+KELLIA-only word. Current coverage is not described as a complete Coptic dictionary.
+MdwNfr remains hieroglyphic-only and does not ship or use the Coptic installer.
