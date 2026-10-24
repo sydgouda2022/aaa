@@ -17,7 +17,10 @@ function syncResponsiveLayout(){
  if(typeof window==='undefined')return; // Node's DOM smoke fixture.
  const width=window.innerWidth,height=window.innerHeight;
  const active=document.activeElement;
- const editing=Boolean(active?.matches?.('input:not([type=checkbox]):not([type=radio]),textarea,[contenteditable="true"]'));
+ // Only touch-capable input can expose an on-screen keyboard. A desktop
+ // window resized vertically while typing must still follow the breakpoints.
+ const softKeyboardPossible=window.matchMedia?.('(any-pointer: coarse)').matches??false;
+ const editing=softKeyboardPossible&&Boolean(active?.matches?.('input:not([type=checkbox]):not([type=radio]),textarea,[contenteditable="true"]'));
  if(isKeyboardDrivenResize(lastStableLayoutViewport,width,height,editing))return;
  document.documentElement.dataset.renpetLayout=layoutForViewport(width,height);
  lastStableLayoutViewport={width,height};
