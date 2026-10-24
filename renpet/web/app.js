@@ -2,6 +2,7 @@ import {DAY,dayNumber,toEgyptian,toGregorian,monthGrid,festivalHits,nativeNumber
 import {LOCALES} from './locales.js';
 import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
 import {openBackup} from './backup.js';
+import {inputClock,timeText,timeHtml,localMinutes,nowLineTop} from './clock.js';
 
 // Single owner of #app. No observers, shadow views, patched DOM or legacy year board.
 const root=document.querySelector('#app'), SETTINGS='renpet.settings.v1', VIEWS='renpet.view.v4';
@@ -14,6 +15,7 @@ ar:{day:'يوم',month:'شهر',list:'قائمة',today:'اليوم',calendars:'
 };
 let schedule=loadScheduler();
 let previousRenderKey=null;
+let currentTimeTicker=null;
 let data=null,prefs={language:'ar',gregorian:true,festivals:true,weeks:{}},state={view:'month',focus:today(),panel:null,search:false,query:'',dialog:null};
 try{const x=JSON.parse(localStorage.getItem(SETTINGS)||'null');if(x){if(LOCALES[x.language])prefs.language=x.language;if(typeof x.gregorian==='boolean')prefs.gregorian=x.gregorian;if(typeof x.festivals==='boolean')prefs.festivals=x.festivals;if(x.weeks&&typeof x.weeks==='object')prefs.weeks=x.weeks;}}catch{}
 try{const x=JSON.parse(localStorage.getItem(VIEWS)||'null');if(['year','day','month','list'].includes(x?.view))state.view=x.view;}catch{}
@@ -35,8 +37,8 @@ const items=d=>itemsForDay(schedule,d,data.years);
 const icon=name=>{const p={back:'<path d="m15 5-7 7 7 7"/>',search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',plus:'<path d="M12 4v16M4 12h16"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',settings:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',star:'<path d="m12 2 3 7 7 .5-5.5 5 1.5 7L12 18l-6 3.5 1.5-7L2 9.5 9 9Z"/>',check:'<path d="m4 12 5 5L20 6"/>'};return '<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p[name]+'</svg>';};
 function eventRow(i,day=state.focus){
  const cal=schedule.calendars.find(c=>c.id===i.calendarId),color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
- const clock=i.allDay?T().allDay:String(Math.floor(i.startMinutes/60)).padStart(2,'0')+':'+String(i.startMinutes%60).padStart(2,'0');
- return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+safe(clock)+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
+ const clock=i.allDay?safe(T().allDay):timeHtml(i.startMinutes,lang());
+ return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+clock+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
 }
 function agenda(d){
  const a=items(d),festivals=prefs.festivals?festivalHits(d,data.years,data.festivals):[];
@@ -111,10 +113,10 @@ function dayView(){
   const cal=schedule.calendars.find(c=>c.id===i.calendarId);
   const color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
   const pos=layout.get(i.id)||{col:0,cols:1},width=100/pos.cols;
-  return '<div class="timeline-event" role="button" tabindex="0" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(27,(end-start)/60*64-3)+'px;left:calc('+width*pos.col+'% + 1px);width:calc('+width+'% - 3px)" data-edit="'+safe(i.id)+'"><span class="event-drag" aria-label="Move event"><strong>'+safe(i.title)+'</strong><small>'+timeString(start)+' – '+timeString(end)+'</small></span><span class="event-resize" aria-label="Resize event"></span></div>';
+  return '<div class="timeline-event" role="button" tabindex="0" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(27,(end-start)/60*64-3)+'px;left:calc('+width*pos.col+'% + 1px);width:calc('+width+'% - 3px)" data-edit="'+safe(i.id)+'"><span class="event-drag" aria-label="Move event"><strong>'+safe(i.title)+'</strong><small>'+timeHtml(start,lang())+' – '+timeHtml(end,lang())+'</small></span><span class="event-resize" aria-label="Resize event"></span></div>';
  }).join('');
- const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeString(h*60)+'</span><button class="timeline-slot" data-hour="'+h+'" aria-label="'+safe(T().add)+' '+timeString(h*60)+'"></button></div>').join('');
- return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div></div></div>';
+ const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeHtml(h*60,lang())+'</span><button class="timeline-slot" data-hour="'+h+'" aria-label="'+safe(T().add)+' '+safe(timeText(h*60,lang()))+'"></button></div>').join('');
+ return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div>'+(state.focus===today()?nowLineMarkup():'')+'</div></div>';
 }
 
 function listView(){
@@ -124,7 +126,7 @@ function listView(){
 }
 
 function settingsView(){
- return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 3.0.0</p></section>';
+ return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 3.1.0</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -149,11 +151,34 @@ function toolbar(){
 
 function searchResults(){return searchItems(schedule,state.query).slice(0,60).map(i=>'<button data-result="'+i.startDay+'"><strong>'+safe(i.title)+'</strong><small>'+safe(greg(i.startDay))+'</small></button>').join('')||'<p class="empty">'+safe(T().noEvents)+'</p>';}
 function dateFields(d){const e=egy(d);return '<div class="date-fields"><input name="egyYear" type="number" min="'+data.years[0].year+'" max="'+data.years.at(-1).year+'" value="'+e.year+'" required><select name="egyMonth">'+Array.from({length:13},(_,i)=>'<option value="'+(i+1)+'" '+(e.month===i+1?'selected':'')+'>'+safe(monthName(i+1))+'</option>').join('')+'</select><select name="egyDay">'+Array.from({length:monthDays(e)},(_,i)=>'<option value="'+(i+1)+'" '+(e.day===i+1?'selected':'')+'>'+N(i+1)+'</option>').join('')+'</select></div><small class="date-preview">'+safe(greg(d,{day:'numeric',month:'long',year:'numeric'}))+'</small>';}
-const timeString=n=>String(Math.floor((n||0)/60)).padStart(2,'0')+':'+String((n||0)%60).padStart(2,'0');
+function nowLineMarkup(date=new Date()){
+ const minute=Math.floor(localMinutes(date));
+ return '<div class="timeline-now" data-now-line style="top:'+nowLineTop(date)+'px" role="img" aria-label="'+safe(timeText(minute,lang()))+'"><span class="timeline-now-clock" data-now-clock>'+timeHtml(minute,lang())+'</span><span class="timeline-now-rule" aria-hidden="true"></span></div>';
+}
+function syncCurrentTimeLine(){
+ const line=root.querySelector('[data-now-line]');
+ if(!line)return;
+ if(state.view!=='day'||state.focus!==today()){line.remove();if(currentTimeTicker!==null){clearInterval(currentTimeTicker);currentTimeTicker=null;}return;}
+ const now=new Date(),minute=Math.floor(localMinutes(now));
+ line.style.top=nowLineTop(now)+'px';
+ const label=line.querySelector('[data-now-clock]');
+ if(label&&line.dataset.minute!==String(minute)){
+  label.innerHTML=timeHtml(minute,lang());
+  line.setAttribute('aria-label',timeText(minute,lang()));
+  line.dataset.minute=String(minute);
+ }
+}
+function maintainCurrentTimeLine(){
+ if(currentTimeTicker!==null){clearInterval(currentTimeTicker);currentTimeTicker=null;}
+ if(state.view==='day'&&state.focus===today()){
+  syncCurrentTimeLine();
+  currentTimeTicker=setInterval(syncCurrentTimeLine,10000);
+ }
+}
 function editor(){
  const item=state.dialog?.id?schedule.items.find(i=>i.id===state.dialog.id):null,d=item?.startDay??state.focus,kind=item?.kind||state.dialog?.kind||'event';
  const sched=schedule;
- return '<div class="sheet-overlay"><form id="event-editor" class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><button type="button" data-close>'+safe(T().cancel)+'</button><strong>'+safe(item?T().event:T().add)+'</strong><button class="save-button" type="submit">'+safe(T().save)+'</button></div><div class="sheet-body"><div class="kind-toggle"><label><input type="radio" name="kind" value="event" '+(kind==='event'?'checked':'')+'>'+safe(T().event)+'</label><label><input type="radio" name="kind" value="reminder" '+(kind==='reminder'?'checked':'')+'>'+safe(T().reminder)+'</label></div><label>'+safe(T().title)+'<input name="title" required maxlength="200" value="'+safe(item?.title||'')+'"></label><label>'+safe(T().date)+dateFields(d)+'</label><label class="check-row">'+safe(T().allDay)+'<input type="checkbox" name="allDay" '+(item?.allDay?'checked':'')+'></label><div class="time-fields"><label>'+safe(T().start)+'<input type="time" name="start" value="'+timeString(item?.startMinutes??((state.dialog?.hour??9)*60))+'"></label><label>'+safe(T().end)+'<input type="time" name="end" value="'+timeString(item?.endMinutes??((state.dialog?.hour??9)*60+60))+'"></label></div><details class="advanced-fields" '+(item&&(item.location||item.notes||item.repeat!=='none'||item.alert!=='none'||item.calendarId!==sched.calendars[0].id)?'open':'')+'><summary>'+safe(T().moreOptions)+'</summary><label>'+safe(T().location)+'<input name="location" maxlength="300" value="'+safe(item?.location||'')+'"></label><label>'+safe(T().notes)+'<textarea name="notes" rows="3">'+safe(item?.notes||'')+'</textarea></label><label>'+safe(T().calendars)+'<select name="calendarId">'+sched.calendars.map(c=>'<option value="'+safe(c.id)+'" '+(c.id===(item?.calendarId||sched.calendars[0].id)?'selected':'')+'>'+safe(calName(c))+'</option>').join('')+'</select></label><label>'+safe(T().repeat)+'<select name="repeat">'+[['none',T().none],['daily',T().daily],['weekly',T().weekly],['egy10',T().decan],['egyMonthly',T().monthly],['egyYearly',T().yearly]].map(([v,n])=>'<option value="'+v+'" '+((item?.repeat||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label><label>'+safe(T().alert)+'<select name="alert">'+[['none',T().none],['atTime','0'],['5min','5'],['15min','15'],['1hour','60'],['1day','1440']].map(([v,n])=>'<option value="'+v+'" '+((item?.alert||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label></details>'+(item?'<button type="button" class="delete" data-delete="'+safe(item.id)+'">'+safe(T().delete)+'</button>':'')+'</div></form></div>';
+ return '<div class="sheet-overlay"><form id="event-editor" class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><button type="button" data-close>'+safe(T().cancel)+'</button><strong>'+safe(item?T().event:T().add)+'</strong><button class="save-button" type="submit">'+safe(T().save)+'</button></div><div class="sheet-body"><div class="kind-toggle"><label><input type="radio" name="kind" value="event" '+(kind==='event'?'checked':'')+'>'+safe(T().event)+'</label><label><input type="radio" name="kind" value="reminder" '+(kind==='reminder'?'checked':'')+'>'+safe(T().reminder)+'</label></div><label>'+safe(T().title)+'<input name="title" required maxlength="200" value="'+safe(item?.title||'')+'"></label><label>'+safe(T().date)+dateFields(d)+'</label><label class="check-row">'+safe(T().allDay)+'<input type="checkbox" name="allDay" '+(item?.allDay?'checked':'')+'></label><div class="time-fields"><label>'+safe(T().start)+'<input type="time" name="start" value="'+inputClock(item?.startMinutes??((state.dialog?.hour??9)*60))+'"></label><label>'+safe(T().end)+'<input type="time" name="end" value="'+inputClock(item?.endMinutes??((state.dialog?.hour??9)*60+60))+'"></label></div><details class="advanced-fields" '+(item&&(item.location||item.notes||item.repeat!=='none'||item.alert!=='none'||item.calendarId!==sched.calendars[0].id)?'open':'')+'><summary>'+safe(T().moreOptions)+'</summary><label>'+safe(T().location)+'<input name="location" maxlength="300" value="'+safe(item?.location||'')+'"></label><label>'+safe(T().notes)+'<textarea name="notes" rows="3">'+safe(item?.notes||'')+'</textarea></label><label>'+safe(T().calendars)+'<select name="calendarId">'+sched.calendars.map(c=>'<option value="'+safe(c.id)+'" '+(c.id===(item?.calendarId||sched.calendars[0].id)?'selected':'')+'>'+safe(calName(c))+'</option>').join('')+'</select></label><label>'+safe(T().repeat)+'<select name="repeat">'+[['none',T().none],['daily',T().daily],['weekly',T().weekly],['egy10',T().decan],['egyMonthly',T().monthly],['egyYearly',T().yearly]].map(([v,n])=>'<option value="'+v+'" '+((item?.repeat||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label><label>'+safe(T().alert)+'<select name="alert">'+[['none',T().none],['atTime','0'],['5min','5'],['15min','15'],['1hour','60'],['1day','1440']].map(([v,n])=>'<option value="'+v+'" '+((item?.alert||'none')===v?'selected':'')+'>'+safe(n)+'</option>').join('')+'</select></label></details>'+(item?'<button type="button" class="delete" data-delete="'+safe(item.id)+'">'+safe(T().delete)+'</button>':'')+'</div></form></div>';
 }
 
 function panelContent(){
@@ -177,7 +202,12 @@ function render(){
  root.innerHTML='<div class="app-shell">'+toolbar()+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'+panelContent()+(state.dialog?editor():'');
  const main=root.querySelector('#main-content');
  if(main&&keepScroll)main.scrollTop=keepScroll;
+ if(main&&viewKey!==previousRenderKey&&state.view==='day'&&state.focus===today()){
+  const marker=root.querySelector('[data-now-line]');
+  if(marker){const relativeY=marker.getBoundingClientRect().top-main.getBoundingClientRect().top;main.scrollTop+=Math.max(0,relativeY-main.clientHeight*.35);}
+ }
  previousRenderKey=viewKey;
+ maintainCurrentTimeLine();
 }
 
 function navigate(step){
@@ -295,7 +325,7 @@ root.addEventListener('pointermove',ev=>{
  drag.next={start,end};
  drag.block.style.top=(start/60*64)+'px';
  drag.block.style.height=Math.max(27,(end-start)/60*64-3)+'px';
- const label=drag.block.querySelector('small');if(label)label.textContent=timeString(start)+' – '+timeString(end);
+ const label=drag.block.querySelector('small');if(label)label.innerHTML=timeHtml(start,lang())+' – '+timeHtml(end,lang());
 });
 function finishDrag(ev,cancel=false){
  const drag=activeDrag;if(!drag)return;
@@ -310,6 +340,7 @@ function finishDrag(ev,cancel=false){
 root.addEventListener('pointerup',ev=>finishDrag(ev));
 root.addEventListener('pointercancel',ev=>finishDrag(ev,true));
 root.addEventListener('click',ev=>{if(Date.now()<suppressEditUntil&&ev.target.closest('[data-edit]')){ev.stopImmediatePropagation();ev.preventDefault();}},true);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncCurrentTimeLine();});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(state.dialog)state.dialog=null;else if(state.panel)state.panel=null;else if(state.search)state.search=false;render();}});
 let gesture=null;
 root.addEventListener('touchstart',ev=>{

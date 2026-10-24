@@ -1,4 +1,4 @@
-name: Deploy Renpet 3.0.0 to Cloudflare
+name: Deploy Renpet 3.1.0 to Cloudflare
 on:
   push:
     branches: [main]
@@ -42,7 +42,7 @@ jobs:
           root=Path('renpet/web')
           files=['./'+p.relative_to(root).as_posix() for p in sorted(root.rglob('*')) if p.is_file() and p.name not in {'sw.js','_headers'}]
           stamp=hashlib.sha256(b''.join((p.encode()+hashlib.sha256((root/p.removeprefix('./')).read_bytes()).digest()) for p in files)).hexdigest()[:12]
-          sw="""const CACHE='renpet-3.0.0-__STAMP__';
+          sw="""const CACHE='renpet-3.1.0-__STAMP__';
           const ASSETS=__ASSETS__;
           self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
           self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('renpet-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
@@ -58,12 +58,13 @@ jobs:
           });
           """.replace('__STAMP__',stamp).replace('__ASSETS__',json.dumps(files,separators=(',',':')))
           (root/'sw.js').write_text(sw,encoding='utf-8')
-          print('Built Renpet 3.0.0 from tracked sources; offline assets:',len(files))
+          print('Built Renpet 3.1.0 from tracked sources; offline assets:',len(files))
           PY
       - name: Validate single renderer and data
         run: |
           set -euo pipefail
           node --check renpet/web/app.js
+          node --check renpet/web/clock.js
           node --check renpet/web/calendar.js
           node --check renpet/web/locales.js
           node --check renpet/web/scheduler.js
@@ -72,22 +73,23 @@ jobs:
           node --check renpet/web/ics-core.mjs
           node --check renpet/web/sw.js
           node renpet/tests/ui.test.mjs
+          node renpet/tests/clock.test.mjs
           test -s renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
           node renpet/tests/scheduler.test.mjs
           node renpet/tests/backup.test.mjs
           node renpet/tests/ics.test.mjs
-          test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 333
+          test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 362
           test "$(grep -o 'type="module"' renpet/web/index.html | wc -l)" -eq 1
           ! grep -q 'views.js\|style.css\|scheduler.css' renpet/web/index.html
           ! grep -q 'MutationObserver\|year-grid\|year-tile' renpet/web/app.js
           grep -q 'Single owner of #app' renpet/web/app.js
           grep -q 'openBackup' renpet/web/backup.js
-          grep -q 'ui.css?v=3.0.0' renpet/web/index.html
+          grep -q 'ui.css?v=3.1.0' renpet/web/index.html
           python - <<'PY'
           import json
           from pathlib import Path
           d=json.loads(Path('renpet/web/data.json').read_text())
-          assert d['version']=='3.0.0'
+          assert d['version']=='3.1.0'
           assert d['min_date']=='1900-01-01' and d['max_date']=='2200-12-31'
           assert len(d['years'])>300 and len(d['festivals'])>0
           print('Calendar data and version validated')
@@ -114,17 +116,17 @@ jobs:
           set -euo pipefail
           BASE="https://renpet.sydgouda.workers.dev"
           for i in 1 2 3 4 5 6 7 8; do
-            if curl -fsSL --max-time 20 "$BASE/?v=3.0.0" -o /tmp/renpet-index \
+            if curl -fsSL --max-time 20 "$BASE/?v=3.1.0" -o /tmp/renpet-index \
               && curl -fsSL --max-time 20 "$BASE/data.json" -o /tmp/renpet-data \
-              && curl -fsSL --max-time 20 "$BASE/app.js?v=3.0.0" -o /tmp/renpet-app \
-              && curl -fsSL --max-time 20 "$BASE/ui.css?v=3.0.0" -o /tmp/renpet-css \
+              && curl -fsSL --max-time 20 "$BASE/app.js?v=3.1.0" -o /tmp/renpet-app \
+              && curl -fsSL --max-time 20 "$BASE/ui.css?v=3.1.0" -o /tmp/renpet-css \
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
-              && grep -q '"version":"3.0.0"' /tmp/renpet-data \
-              && grep -q 'ui.css?v=3.0.0' /tmp/renpet-index \
+              && grep -q '"version":"3.1.0"' /tmp/renpet-data \
+              && grep -q 'ui.css?v=3.1.0' /tmp/renpet-index \
               && grep -q 'Single owner of #app' /tmp/renpet-app \
               && grep -q 'month-section' /tmp/renpet-css \
               && grep -q 'itemsForDay' /tmp/renpet-scheduler; then
-              echo "Renpet 3.0.0 single-renderer build is live"
+              echo "Renpet 3.1.0 single-renderer build is live"
               exit 0
             fi
             sleep 6
