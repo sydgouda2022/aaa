@@ -609,7 +609,7 @@ async function run(){
     focus:document.querySelector('.date.chosen')?.dataset.date,
     sameDOM:globalThis.__responsiveMonthNode===document.querySelector('.app-shell'),
     cal:rect('.month-section'),agenda:rect('.month-agenda'),rail:rect('.ux-bottom'),
-    scrollWidth:document.documentElement.scrollWidth,innerWidth};
+    scrollWidth:document.documentElement.scrollWidth,innerWidth,innerHeight,clientHeight:document.documentElement.clientHeight};
   });
   const cases=[[390,844,'phone'],[844,390,'phone'],[699,900,'phone'],
    [700,559,'phone'],[700,560,'tablet-stacked'],[744,1133,'tablet-stacked'],
@@ -617,6 +617,8 @@ async function run(){
    [1024,768,'tablet-split'],[1440,900,'tablet-split'],[1200,500,'phone']];
   for(const [width,height,expected] of cases){
    await q.setViewportSize({width,height});
+   // Browser resize events can land a frame after Playwright resolves the size.
+   await q.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
    const m=await measure();
    if(m.layout!==expected||m.shell!==(expected==='phone'?'flex':'grid')||m.month!==(expected==='tablet-split'?'grid':'flex'))
     throw Error('Incorrect '+width+'x'+height+' responsive GUI '+JSON.stringify(m));
@@ -636,12 +638,15 @@ async function run(){
   await title.fill('Responsive draft preservation');
   await title.focus();
   await q.setViewportSize({width:1024,height:400});
+  await q.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
   if(await q.evaluate(()=>document.documentElement.dataset.renpetLayout)!=='tablet-split')
    throw Error('Keyboard-like height shrink incorrectly switched GUI');
   await q.setViewportSize({width:744,height:1133});
+  await q.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
   if(await q.evaluate(()=>document.documentElement.dataset.renpetLayout)!=='tablet-stacked')
    throw Error('Actual viewport width change did not switch to stacked');
   await q.setViewportSize({width:844,height:390});
+  await q.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
   if(await q.evaluate(()=>document.documentElement.dataset.renpetLayout)!=='phone')
    throw Error('Short landscape did not use phone GUI');
   if(await title.inputValue()!=='Responsive draft preservation')
