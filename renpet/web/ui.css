@@ -404,3 +404,43 @@ body[data-language=ar] .year-month-name{font-family:CairoRenpet,system-ui,sans-s
 /* Renpet 6.3 — reveal old appointments saved into hidden calendar layers. */
 .hidden-calendar-notice{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:12px 12px 16px;padding:12px 14px;background:var(--rubric-soft);border:1px solid var(--rubric);border-radius:13px;color:var(--rubric);font-weight:650;line-height:1.5}
 .hidden-calendar-notice button{min-height:42px;padding:8px 14px;color:white;background:var(--green);border:0;border-radius:11px;font-weight:750}
+
+
+/* Renpet 6.4 — quick deletion is available directly in Month/Day/List, while
+   Day timeline events expose a large, touchable lower resize grip. */
+.event-row-shell{display:flex;align-items:center;gap:7px;min-width:0;width:100%}
+.event-row-shell .event-row{flex:1 1 auto;width:auto;min-width:0;margin:6px 0}
+.event-row-shell .event-copy{min-width:0}
+.event-delete-action{
+ display:grid;place-items:center;flex:none;width:44px;height:44px;min-width:44px;
+ background:var(--rubric-soft);border:1px solid color-mix(in srgb,var(--rubric) 25%,white);
+ border-radius:12px;color:var(--rubric);cursor:pointer;touch-action:manipulation;
+}
+.event-delete-action:focus-visible,.event-resize:focus-visible{outline:3px solid var(--green);outline-offset:-2px}
+.timeline-event{overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.timeline-event .event-drag{
+ min-height:0;flex:1;cursor:grab;touch-action:none;
+ padding:5px 38px 1px 7px;
+}
+.timeline-event .event-drag strong{font-size:13px;min-height:13px}
+.timeline-event .event-resize{
+ position:relative;z-index:3;flex:0 0 26px;display:grid;place-items:center;
+ box-sizing:border-box;height:26px;min-height:26px;max-height:26px;
+ width:100%;padding:0;border:0;border-top:1px solid color-mix(in srgb,var(--event) 45%,white);
+ border-radius:0 0 9px 9px;background:color-mix(in srgb,var(--event) 18%,white);
+ color:var(--event);cursor:ns-resize;touch-action:none;user-select:none;
+}
+.timeline-event .event-resize span{
+ display:block;width:29px;height:5px;border-top:2px solid currentColor;
+ border-bottom:2px solid currentColor;border-radius:1px;
+}
+.timeline-event .event-delete-timeline{
+ position:absolute;z-index:4;top:1px;inset-inline-end:1px;
+ width:31px;height:31px;min-width:31px;border:0;border-radius:9px;
+ background:rgba(255,255,255,.88);color:var(--rubric);
+}
+.timeline-event .event-delete-timeline svg{width:17px;height:17px}
+@media(max-width:390px){
+ .timeline-event .event-drag{padding-inline-end:33px}
+ .timeline-event .event-delete-timeline{width:30px;height:30px;min-width:30px}
+}
