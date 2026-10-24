@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'shared-language/tests/test_compile_lexica.py'
       - 'shared-language/src/compile_lexica.py'
       - 'shared-language/src/publish_compiled_coptic.py'
       - '.github/workflows/validate-corpora.yml'
