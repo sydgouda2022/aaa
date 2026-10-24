@@ -86,3 +86,35 @@ remain separately tagged and must not be silently promoted. This registry is
 for all future writing apps; no change is made to MdwNfr's existing pinned
 four-source lexicon or current PWA until replacement data has passed the
 independent checksum, provenance, overlap, publication and compatibility gates.
+
+## 2026-10-24 — Single-use source corpora, one Late Egyptian runtime database
+
+This requirement **supersedes** wording elsewhere that could imply the apps
+query TLA/Ramsès/AED/AES/ORAEC/Lesko at runtime or independently ingest them.
+Each external source is a build-time evidence input. Import only after the source
+can legitimately be accessed and normalized. Review known cross-source lemma
+identities; merge spelling rows by reviewed lemma + exact Unicode surface +
+morphology, but preserve every actual attestation reference in a distinct
+`evidence` table. Do not count AES/AED/ORAEC as three independent witnesses for
+an identical inherited underlying text. Keep homographs with different senses
+separate.
+
+The **one lexical authority** is the device-local master `lexicon.sqlite3`
+produced from those normalized inputs. Produce a deterministic, versioned
+prediction index from that master for browser clients; both Renpet and MdwNfr
+consume the same indexed release. This derived index is not a second dictionary
+or a reason to ship original source corpora. The same lexical data must be
+available offline. Renpet has ordinary inline Unicode presentation; MdwNfr owns
+its historically informed quadrat compositor.
+
+Local private research build and distributing corpus-derived data publicly are
+different policies. GitHub and Cloudflare are currently public platforms: no
+assumption that 'noncommercial' means those endpoints may expose restricted
+bulk content. Verification of lawful acquisition and publication permissions
+remains a narrowly scoped deployment check, not a reason to avoid a personal
+local lexicon build.
+
+`src/build_master.py` and `src/export_runtime.py` implement the initial working
+SQLite and release-index contracts on synthetic test fixtures. Completion is
+not achieved until licensed/authorized source adapters populate the actual
+Late Egyptian master and both application integrations pass end-to-end tests.

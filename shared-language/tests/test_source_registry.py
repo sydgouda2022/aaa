@@ -13,6 +13,13 @@ class SourceRegistryTests(unittest.TestCase):
     def test_all_source_editions_present_and_prioritized(self):
         self.assertEqual([s['id'] for s in self.registry['sources']],
                          ['TLA-C20','TLA-LE19','RAMSES','AED','AES','ORAEC','LESKO-2ED'])
+    def test_external_data_are_build_only(self):
+        self.assertFalse(self.registry["runtime_external_sources"])
+        self.assertEqual(self.registry["runtime_database"], "lexicon.sqlite3")
+        for source in self.registry["sources"]:
+            self.assertEqual(source["usage"], "build_time_only")
+            self.assertFalse(source["runtime_dependency"])
+
     def test_four_source_families_and_shared_lineage(self):
         self.assertEqual(validate_registry(self.registry)['source_families'],4)
         ss={x['id']:x for x in self.registry['sources']}

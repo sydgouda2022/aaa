@@ -37,3 +37,14 @@ dataset. If permission is later obtained, review and update the gate explicitly.
 - AES: https://github.com/simondschweitzer/aes
 - ORAEC: https://github.com/oraec/corpus_raw_data
 - Lesko 2nd ed. catalog: https://search.worldcat.org/title/A-dictionary-of-Late-Egyptian/oclc/706029298
+
+## Source use boundary
+
+**All seven editions are build-time evidence inputs only.** The applications
+never call their servers, parse their original files, or ship source PDFs/corpora.
+Build one canonical Late Egyptian `lexicon.sqlite3` with spelling and lemma
+records; attach source references/lineage for auditing. Cross-source word identity
+is not inferred from matching glyphs alone. Renpet and MdwNfr receive generated
+indexes from the same SQLite release, never parallel hand-curated dictionaries.
+A private local build may use legitimately obtained source materials without
+turning those materials into a public downloadable app asset.

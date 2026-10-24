@@ -70,3 +70,44 @@ of specifically open/licensed raw releases; Ramsès needs a verified bulk export
 and permission; Lesko remains a bibliographic reference only unless a separate
 license is secured. This is the first integration gate, not a comprehensive
 Late Egyptian dictionary release. No Coptic modifications were made.
+
+## Canonical single-database design (2026-10-24 decision)
+
+**External source corpora never ship with or serve the apps.** They are consulted
+in a repeatable *offline build stage* that produces the one canonical Late Egyptian
+`lexicon.sqlite3`. `src/build_master.py` builds this database from normalized,
+attested records and their reviewed cross-source lemma mappings. It preserves
+referential provenance inside the database and deduplicates exact spelling/forms
+only when semantic lemma equivalence has been verified. Two identical written
+strings do not automatically have the same meaning. AED/AES/ORAEC shared lineage
+is tracked to avoid false independent-corpus counts.
+
+`src/export_runtime.py` derives a compact native-Unicode prediction index from
+that SQLite master, using the *same release* in both Renpet and MdwNfr. The
+browser adapter may read that index as JSON (Safari cannot natively open SQLite
+without a reader); this is a generated view of the same database, not another
+linguistic authority. Native Python can query the master directly. No runtime
+fetch to TLA, Ramsès, AED, AES, ORAEC or Lesko is ever required.
+
+**Private, build-only use and public distribution are different decisions.** A
+personal, noncommercial project lowers distribution needs but does not erase
+copyright, website access rules, or permission requirements. The local builder
+accepts legitimately obtained research input and records its provenance; the
+separate `--distribution public` export refuses restricted inputs until reviewed.
+The current GitHub repository and Cloudflare PWA are public, so full restricted
+lexical datasets must not be pushed there as part of a private workflow.
+
+Example after source-specific adapters have produced verified normalized records:
+
+```bash
+python shared-language/src/build_master.py \
+  --records /private/late-egyptian-normalized.jsonl \
+  --manifest /private/source-manifest.json \
+  --out /private/lexicon.sqlite3
+python shared-language/src/export_runtime.py \
+  --db /private/lexicon.sqlite3 \
+  --out /private/egyptian-late-runtime.json \
+  --distribution local
+```
+
+No full historical corpora have yet been imported by these contract tests.

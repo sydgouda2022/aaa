@@ -13,12 +13,14 @@ from pathlib import Path
 
 DEFAULT = Path(__file__).resolve().parents[1] / "sources/late_egyptian_registry.json"
 RIGHTS = {"selected_open_data_only", "cc_by_sa_4", "permission_required", "per_file_cc_by_sa_or_cc0", "copyright_restricted"}
-REQUIRED = ("id", "family", "label", "priority", "kind", "role", "version", "url", "rights", "availability", "ingestion", "publishable", "independence_group", "stage_policy")
+REQUIRED = ("id", "family", "label", "priority", "kind", "role", "version", "url", "rights", "availability", "ingestion", "publishable", "independence_group", "stage_policy", "usage", "runtime_dependency")
 
 
 def validate_registry(registry: dict) -> dict:
     if registry.get("schema") != 1 or registry.get("language") != "egy" or registry.get("stage") != "Late Egyptian":
         raise ValueError("Registry must be a v1 Late Egyptian source registry")
+    if registry.get("runtime_external_sources") is not False or registry.get("runtime_database") != "lexicon.sqlite3":
+        raise ValueError("Apps must use only the canonical local lexicon release")
     sources = registry.get("sources")
     if not isinstance(sources, list) or not sources:
         raise ValueError("Registry must contain source editions")
@@ -30,6 +32,8 @@ def validate_registry(registry: dict) -> dict:
         if source["id"] in names or source["priority"] in priorities:
             raise ValueError("Duplicate source ID or priority")
         names.add(source["id"]); priorities.add(source["priority"])
+        if source["usage"] != "build_time_only" or source["runtime_dependency"] is not False:
+            raise ValueError("External corpora must be build-time only")
         if source["rights"] not in RIGHTS:
             raise ValueError("Unknown source rights category")
         if type(source["publishable"]) is not bool:

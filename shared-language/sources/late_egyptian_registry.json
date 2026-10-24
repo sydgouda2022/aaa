@@ -3,7 +3,7 @@
   "scope": "Late Egyptian hieroglyphic lexical evidence",
   "language": "egy",
   "stage": "Late Egyptian",
-  "publication_policy": "explicit_corpus_rights_pinned_hashes_late_egyptian_evidence_only",
+  "publication_policy": "private_master_build_first_public_derivative_distribution_requires_rights_check",
   "sources": [
     {
       "id": "TLA-C20",
@@ -21,7 +21,9 @@
       "publishable": false,
       "independence_group": "TLA-BTS",
       "stage_policy": "filter_record_evidence_to_late_egyptian",
-      "notes": "The full online Corpus 20 is not an unrestricted bulk dataset. Ingest only explicitly published/permissioned raw sets; record text-level licenses."
+      "notes": "The full online Corpus 20 is not an unrestricted bulk dataset. Ingest only explicitly published/permissioned raw sets; record text-level licenses.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     },
     {
       "id": "TLA-LE19",
@@ -39,7 +41,9 @@
       "publishable": true,
       "independence_group": "TLA-BTS",
       "stage_policy": "late_egyptian_explicit",
-      "notes": "Strictly filtered subset; not equal to all TLA Late Egyptian data. Preserve sentence IDs and corpus version."
+      "notes": "Strictly filtered subset; not equal to all TLA Late Egyptian data. Preserve sentence IDs and corpus version.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     },
     {
       "id": "RAMSES",
@@ -57,7 +61,9 @@
       "publishable": false,
       "independence_group": "RAMSES",
       "stage_policy": "late_egyptian_explicit",
-      "notes": "2015 historical project counts do not establish current public machine-readable availability. Do not scrape or distribute restricted records."
+      "notes": "2015 historical project counts do not establish current public machine-readable availability. Do not scrape or distribute restricted records.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     },
     {
       "id": "AED",
@@ -75,7 +81,9 @@
       "publishable": true,
       "independence_group": "BBAW-2018-EXTRACT",
       "stage_policy": "filter_record_evidence_to_late_egyptian",
-      "notes": "Broader Egyptian lexicon. Its lexical family overlaps AES, AED-TEI, ORAEC; counts cannot be added as independent attestations."
+      "notes": "Broader Egyptian lexicon. Its lexical family overlaps AES, AED-TEI, ORAEC; counts cannot be added as independent attestations.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     },
     {
       "id": "AES",
@@ -93,7 +101,9 @@
       "publishable": true,
       "independence_group": "BBAW-2018-EXTRACT",
       "stage_policy": "filter_record_evidence_to_late_egyptian",
-      "notes": "Sentence corpus can contain hieroglyphic encoding only when complete. Preserve original text, word and lemma IDs."
+      "notes": "Sentence corpus can contain hieroglyphic encoding only when complete. Preserve original text, word and lemma IDs.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     },
     {
       "id": "ORAEC",
@@ -111,7 +121,9 @@
       "publishable": true,
       "independence_group": "BBAW-2018-EXTRACT",
       "stage_policy": "filter_record_evidence_to_late_egyptian",
-      "notes": "Source licenses vary by file. Original text evidence largely derives from AED/AES; crosslinks alone are not novel attestations."
+      "notes": "Source licenses vary by file. Original text evidence largely derives from AED/AES; crosslinks alone are not novel attestations.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     },
     {
       "id": "LESKO-2ED",
@@ -129,7 +141,9 @@
       "publishable": false,
       "independence_group": "LESKO",
       "stage_policy": "late_egyptian_explicit",
-      "notes": "No bulk incorporation or redistribution without permission. Bibliographic reference and individual scholarly comparison only."
+      "notes": "No bulk incorporation or redistribution without permission. Bibliographic reference and individual scholarly comparison only.",
+      "usage": "build_time_only",
+      "runtime_dependency": false
     }
   ],
   "lineage_policy": {
@@ -144,6 +158,12 @@
     "late_egyptian_stage_evidence_verified",
     "source_identity_and_attestation_provenance_preserved",
     "lineage_overlap_reconciled",
-    "not_a_transliteration_only_prediction"
-  ]
+    "not_a_transliteration_only_prediction",
+    "no_runtime_queries_to_original_sources",
+    "same_canonical_lexicon_release_for_renpet_and_mdwnfr",
+    "cross_source_lemma_crosswalk_required_for_semantic_merge"
+  ],
+  "pipeline": "build_time_external_sources_to_canonical_sqlite_to_versioned_app_snapshot",
+  "runtime_external_sources": false,
+  "runtime_database": "lexicon.sqlite3"
 }
