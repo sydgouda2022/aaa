@@ -3,7 +3,7 @@
 This developer packaging helper is deliberately NOT executed on every IDE launch.
 It downloads to temporary files, checks the critical file formats, and publishes
 only a complete manifest. A partial network failure never produces an apparently
-ready offline PWA. Running `main.py` is still the only normal app launch method.
+ready offline PWA. The Cloudflare build vendors the complete pinned runtime; no alternative CDN is supported.
 """
 from __future__ import annotations
 import hashlib

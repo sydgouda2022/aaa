@@ -12,13 +12,10 @@ DEST=ROOT/'dist'
 if DEST.exists():rmtree(DEST)
 copytree(ROOT/'web',DEST,ignore=ignore_patterns('__pycache__','*.pyc','.DS_Store'))
 copytree(ROOT/'core',DEST/'core',ignore=ignore_patterns('__pycache__','*.pyc','.DS_Store'))
-# Avoid requesting a nonexistent local font on devices without one. The font
-# can be installed locally by the owner with tools/prepare_font.py.
-if not (DEST/'assets/fonts/hieroglyphs.woff2').is_file():
-    sheet=DEST/'style.css'
-    stylesheet=sheet.read_text(encoding='utf-8')
-    stylesheet=stylesheet.replace("@font-face{font-family:'MdwNfr Hieroglyphs';src:url('/assets/fonts/hieroglyphs.woff2') format('woff2');font-display:swap;}", '')
-    sheet.write_text(stylesheet,encoding='utf-8')
+# The runtime is always self-hosted. A release without the licensed font is invalid.
+font=ROOT/'web/assets/fonts/hieroglyphs.woff2'
+if not font.is_file() or font.stat().st_size<1000 or font.read_bytes()[:4]!=b'wOF2':
+    raise ValueError('Missing verified local hieroglyphic font')
 
 artwork_catalog = json.loads((ROOT/'core/mdwnfr/data/artwork_catalog.json').read_text(encoding='utf-8'))
 if artwork_catalog['count'] != len(artwork_catalog['artworks']):
@@ -57,7 +54,7 @@ copy2(ROOT/'core/mdwnfr/data/artwork_catalog.json', DEST/'artwork/catalog.json')
 catalog=DEST/'core/mdwnfr/data/lexicon.json'
 raw=catalog.read_bytes()
 from catalog_integrity import validate_release_catalog
-data=validate_release_catalog(raw,ROOT/'core/mdwnfr/data/lexicon.json.receipt.json')
+data=validate_release_catalog(raw)
 manifest={'format':'mdwnfr-catalog-integrity-v1',
           'sha256':hashlib.sha256(raw).hexdigest(),
           'bytes':len(raw),'spelling_records':len(data['entries']),

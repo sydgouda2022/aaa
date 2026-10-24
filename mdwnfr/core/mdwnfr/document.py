@@ -61,7 +61,7 @@ class RevisionConflict(DocumentError):
 
 @lru_cache(maxsize=1)
 def artwork_catalog() -> dict:
-    """Immutable packaged legacy *asset* inventory; no v4 code is imported."""
+    """Installed clip-art catalogue used directly by this engine."""
     path = Path(__file__).parent / 'data' / 'artwork_catalog.json'
     data = json.loads(path.read_text(encoding='utf-8'))
     if data.get('format') != 'mdwnfr-artwork-v1' or data.get('count') != len(data.get('artworks', [])):
