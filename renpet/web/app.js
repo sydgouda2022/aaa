@@ -259,7 +259,11 @@ function submitEvent(form){
 
 root.addEventListener('click',ev=>{
  if(ev.target.closest('[data-dismiss-panel]')){state.panel=null;render();return;}
- if(ev.target.classList?.contains('sheet-overlay')){closeKeyboard();state.dialog=null;render();return;}
+ if(ev.target.classList?.contains('sheet-overlay')){
+  const picker=root.querySelector('.time-picker-host:not([hidden])');
+  if(picker){closeTimeEditor(root.querySelector('#event-editor'),false,lang());return;}
+  closeKeyboard();state.dialog=null;render();return;
+ }
  // Time picker is an overlay within the event form. Touching its backdrop
  // cancels the picker and never accidentally commits a hidden selection.
  const openPicker=root.querySelector('.time-picker-host:not([hidden])');
