@@ -76,6 +76,9 @@ jobs:
           assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
           db.close()
           PY
+          # Keep SQLite in the canonical corpus build artifact, but ship only
+          # the browser runtime JSON projection (Cloudflare 25-MiB asset cap).
+          rm mdwnfr/web/lexicon/lexicon.sqlite3
           node --test shared-language/tests/lexicon_install.test.mjs
       - name: Install redistributable Egyptian font
         shell: bash
@@ -124,7 +127,7 @@ jobs:
           node --check dist/lexicon-install.mjs
           test -s dist/lexicon/manifest.json
           test -s dist/lexicon/lexicon.json
-          test -s dist/lexicon/lexicon.sqlite3
+          ! test -e dist/lexicon/lexicon.sqlite3
           node --check dist/storage.js
           node --check dist/sw.js
           node tools/test_recovery_storage.mjs

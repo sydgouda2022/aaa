@@ -83,6 +83,10 @@ jobs:
               assert conn.execute('pragma integrity_check').fetchone()[0]=='ok'
               conn.close()
           PY
+          # The authoritative SQLite master is validated/uploaded as a CI artifact.
+          # Browser PWAs install the verified JSON projection, not raw 32-MiB SQLite.
+          # Cloudflare limits individual static files to 25 MiB.
+          rm renpet/web/lexicon/lexicon.sqlite3
           python renpet/tools/build_csp.py
           python renpet/tools/build_service_worker.py
       - name: Validate single renderer and data
@@ -118,7 +122,7 @@ jobs:
           test -s renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
           test -s renpet/web/assets/dictionaries/signs.json
           ! test -e renpet/web/assets/dictionaries/coptic.json
-          test -s renpet/web/lexicon/lexicon.sqlite3
+          ! test -e renpet/web/lexicon/lexicon.sqlite3
           test -s renpet/web/coptic-lexicon/lexicon.sqlite3
           test -s renpet/web/lexicon/lexicon.json
           test -s renpet/web/lexicon/manifest.json
@@ -182,7 +186,7 @@ jobs:
               && grep -q 'itemsForDay' /tmp/renpet-scheduler \
               && grep -q 'amun-theban' /tmp/renpet-festival-sources \
               && grep -q 'festivalHitsForDay' /tmp/renpet-festival-code \
-              && python -c "import json; assert json.load(open('/tmp/renpet-egy-lexicon'))['spelling_records']>=6000; assert json.load(open('/tmp/renpet-cop-lexicon'))['spelling_records']>=20000"; then
+              && python -c "import json; assert json.load(open('/tmp/renpet-egy-lexicon'))['spelling_records']>=40000; assert json.load(open('/tmp/renpet-cop-lexicon'))['spelling_records']>=20000"; then
               echo "Renpet 6.6.0 single-renderer build is live"
               exit 0
             fi
