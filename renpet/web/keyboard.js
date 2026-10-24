@@ -157,7 +157,8 @@ export function initKeyboard(getLanguage){
   }
  });
  document.addEventListener('pointerdown',e=>{
-  if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target)){
+  if(e.target.closest('[data-time-open]'))return; // Delay hiding until click; prevents iPhone layout shifts before time picker opens.
+ if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target)){
    hide();
   }
  });
