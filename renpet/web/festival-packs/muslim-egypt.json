@@ -7,20 +7,32 @@
       "id": "eid-al-fitr-2026",
       "ar": "عيد الفطر — ٢٠٢٦",
       "date": "2026-03-20",
-      "sourceUrl": "https://www.timeanddate.com/holidays/egypt/2026"
+      "sourceUrl": "https://www.timeanddate.com/holidays/egypt/2026",
+      "cop": "Ⲡϣⲁⲓ ⲛ̀Ⲁⲗ-Ⲫⲓⲧⲣ 2026",
+      "egy": "𓎛𓃀𓎱 𓇳𓏺 𓈉𓏤",
+      "description_cop": "Ⲡⲓϣⲁⲓ ⲛ̀Ⲁⲗ-Ⲫⲓⲧⲣ ⲛ̀ⲧⲉ 2026. Ⲡⲓⲉϩⲟⲟⲩ ⲁⲩⲥϧⲁⲓ ⲙ̀ⲙⲟϥ ⲙ̀ⲡⲓⲣⲟⲙⲡⲓ ⲙ̀ⲙⲁⲩⲁⲧϥ. Ⲡⲓⲉϩⲟⲟⲩ ⲛ̀ⲡⲓⲓⲥⲗⲁⲙ ⲉⲣⲉⲣⲟⲩⲙⲉⲧⲛⲁⲩ ⲛ̀ⲃⲉⲣⲓ.",
+      "description_egy": "𓎛𓃀𓎱 𓆳𓏺 𓈉𓏤 · 𓏞"
     },
     {
       "id": "eid-al-adha-2026",
       "ar": "عيد الأضحى — ٢٠٢٦",
       "date": "2026-05-27",
-      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/"
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "cop": "Ⲡϣⲁⲓ ⲛ̀Ⲁⲗ-Ⲁⲇϩⲁ 2026",
+      "egy": "𓎛𓃀𓎱 𓇳𓏺 𓉐𓏤",
+      "description_cop": "Ⲡϣⲁⲓ ⲛ̀Ⲁⲗ-Ⲁⲇϩⲁ ⲛ̀ⲧⲉ 2026. Ⲡⲓⲉϩⲟⲟⲩ ⲙ̀ⲙⲁⲩⲁⲧϥ ⲡⲉ ⲙ̀ⲡⲓⲣⲟⲙⲡⲓ ⲛ̀ⲧⲉ ⲡⲓⲅⲣⲏⲅⲟⲣⲓⲁⲛⲟⲥ.",
+      "description_egy": "𓎛𓃀𓎱 𓆳𓏺 𓉐𓏤 · 𓏞"
     },
     {
       "id": "mawlid-official-2026",
       "ar": "المولد النبوي — العطلة الرسمية ٢٠٢٦",
       "date": "2026-08-27",
       "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
-      "dateMeaning": "Egyptian official observed holiday, not astronomical date"
+      "dateMeaning": "Egyptian official observed holiday, not astronomical date",
+      "cop": "Ⲡⲓϫⲓⲛⲙⲓⲥⲓ ⲛ̀ⲡⲓⲡⲣⲟⲫⲏⲧⲏⲥ 2026",
+      "egy": "𓎛𓃀𓎱 𓅓𓋴𓏏 𓆳𓏺",
+      "description_cop": "Ⲡⲓⲙⲉⲩⲓ ⲙ̀ⲡⲓϫⲓⲛⲙⲓⲥⲓ ⲛ̀ⲡⲓⲡⲣⲟⲫⲏⲧⲏⲥ. Ⲡⲓⲉϩⲟⲟⲩ ⲙ̀ⲡⲓⲙⲉⲣⲓ ⲛ̀Ⲭⲏⲙⲓ ⲛ̀ⲧⲉ 2026 ⲙ̀ⲙⲁⲩⲁⲧϥ, ⲟⲩⲭⲓ ⲛ̀ⲟⲩⲉϣ ⲛ̀ⲣⲟⲙⲡⲓ ⲛⲓⲃⲉⲛ.",
+      "description_egy": "𓎛𓃀𓎱 𓅓𓋴𓏏 · 𓆳𓏺"
     }
   ]
 }
