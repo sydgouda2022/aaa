@@ -24,7 +24,7 @@ async function scenario(engine,name) {
     await p.waitForFunction(()=>navigator.serviceWorker?.controller &&
       navigator.serviceWorker.controller.state==='activated',null,{timeout:100000});
     const cacheNames=await p.evaluate(()=>caches.keys());
-    if(!cacheNames.some(s=>s.startsWith('renpet-6.5.0-')))throw Error('6.5 service worker did not precache all assets');
+    if(!cacheNames.some(s=>s.startsWith('renpet-6.6.0-')))throw Error('6.5 service worker did not precache all assets');
     // Linux Playwright's WebKit offline mode rejects SW-served fetches
     // and its network route emulation blocks navigation in Web Inspector.
     // Verify real CacheStorage availability even while offline, but reserve
@@ -74,13 +74,13 @@ async function scenario(engine,name) {
   try {
    await p.goto(ROOT);await p.locator('.month-section').waitFor();
    await p.evaluate(()=>localStorage.setItem('renpet.startup-preserve','not-deleted'));
-   await p.route('**/app.js?v=6.5.0',route=>route.abort('failed'));
+   await p.route('**/app.js?v=6.6.0',route=>route.abort('failed'));
    await p.reload({waitUntil:'domcontentloaded'});
    await p.locator('.renpet-startup-failed').waitFor({timeout:14000});
    const text=await p.locator('.renpet-startup-failed').innerText();
    if(!text.includes('Retry'))throw Error('No retry button for failed modules');
    await p.screenshot({path:path.join(dir,'recovery-'+name+'.png'),fullPage:true});
-   await p.unroute('**/app.js?v=6.5.0');
+   await p.unroute('**/app.js?v=6.6.0');
    await p.locator('[data-retry]').click();
    await p.locator('.month-section').waitFor();
    if(await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'))!=='not-deleted')throw Error('Retry deleted local data');
