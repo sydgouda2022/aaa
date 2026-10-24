@@ -285,6 +285,94 @@ async function run(){
    return results;
   });
 
+
+  await step(name+' shared red rubric and readable hieroglyphic controls',async()=>{
+   const q=await ctx.newPage();
+   q.on('dialog',d=>d.accept());
+   await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+   await q.locator('.month-agenda').waitFor();
+   await q.evaluate(()=>document.fonts.ready);
+   const palette={},rubric='rgb(150, 55, 46)',screens=[];
+   for(const language of ['ar','cop','egy']){
+    await q.locator('[data-open-panel=settings]').click();
+    await q.locator('select[name=language]').selectOption(language);
+    await q.locator('[data-close-panel]').click();
+    const month=q.locator('.month-section');
+    await month.waitFor();
+    await screenshot(q,name+'-'+language+'-red-labels-month');
+    const monthLabel=q.locator('.decade-label').first();
+    if(language!=='ar'&&await monthLabel.count()){
+      const labelColor=await monthLabel.evaluate(el=>getComputedStyle(el).color);
+      if(labelColor!==rubric)throw Error(language+' decade label not rubric red: '+labelColor);
+    }
+    await q.locator('header [data-new]').click();
+    await q.locator('#event-editor').waitFor();
+    const done=q.locator('.renpet-keyboard:not([hidden]) [data-kb-done]');
+    if(await done.count())await done.click();
+    await q.locator('#event-editor select[name=egyYear]').scrollIntoViewIfNeeded();
+    const info=await q.evaluate(()=>{
+     const form=document.querySelector('#event-editor');
+     const el=form.querySelector('select[name=egyYear]');
+     const date=form.querySelector('.date-fields');
+     const label=form.querySelector('.sheet-body>label');
+     const time=form.querySelector('.local-time-label');
+     const css=selector=>{const x=document.querySelector(selector);if(!x)return null;const c=getComputedStyle(x);return {font:c.fontSize,color:c.color,height:Math.round(x.getBoundingClientRect().height)};};
+     const st=getComputedStyle(el);
+     const canvas=document.createElement('canvas'),ct=canvas.getContext('2d');
+     ct.font=st.font;
+     return {
+      label:css('#event-editor .sheet-body>label'),
+      timeLabel:css('#event-editor .local-time-label'),
+      year:css('#event-editor select[name=egyYear]'),
+      yearWidth:Math.round(el.getBoundingClientRect().width),
+      dateWidth:Math.round(date.getBoundingClientRect().width),
+      yearText:el.selectedOptions[0].textContent,
+      yearTextWidth:Math.round(ct.measureText(el.selectedOptions[0].textContent).width),
+      dateGridColumns:getComputedStyle(date).gridTemplateColumns,
+      selectedTime:css('.local-time-value'),
+      formWidth:Math.round(form.getBoundingClientRect().width),
+      viewportWidth:innerWidth
+     };
+    });
+    if(info.label.color!==rubric||info.timeLabel.color!==rubric)throw Error(language+' labels lack shared red ink: '+JSON.stringify(info));
+    if(info.formWidth>info.viewportWidth+2)throw Error(language+' form overflows viewport');
+    if(language==='egy'){
+      if(parseFloat(info.label.font)<22||parseFloat(info.timeLabel.font)<22)throw Error('Egyptian form labels still microscopic: '+JSON.stringify(info));
+      if(parseFloat(info.year.font)<18||info.year.height<58)throw Error('Egyptian long year still shrunk: '+JSON.stringify(info));
+      if(info.yearWidth<info.dateWidth*.90)throw Error('Egyptian year not allocated full line: '+JSON.stringify(info));
+    }
+    await screenshot(q,name+'-'+language+'-red-labels-editor');
+    palette[language]=info;
+    await q.locator('#event-editor [data-close]').click();
+    if(language==='egy'){
+     const num=q.locator('.decade-days .date .day-number').first();
+     const infoNum=await num.evaluate(el=>({size:getComputedStyle(el).fontSize,lines:getComputedStyle(el).lineHeight,images:el.querySelectorAll('img').length}));
+     if(parseFloat(infoNum.size)<26||infoNum.images)throw Error('Egyptian day numerals remain too small or scaled SVG: '+JSON.stringify(infoNum));
+     await q.locator('[data-open-year]').click();
+     const card=q.locator('.year-month-name').first();
+     if(parseFloat(await card.evaluate(el=>getComputedStyle(el).fontSize))<28)throw Error('Egyptian year month title still tiny');
+     await screenshot(q,name+'-hieroglyphic-readable-year');
+     await q.locator('[data-primary-view=month]').click();
+     await q.locator('header [data-new]').click();
+     await q.locator('input[name=title]').focus();
+     await q.locator('.renpet-keyboard:not([hidden])').waitFor();
+     const glyphs=await q.evaluate(()=>{
+      const key=document.querySelector('.kb-hiero .kb-sign'),grid=document.querySelector('.kb-hiero'),name=document.querySelector('.kb-name');
+      return {signFont:getComputedStyle(key).fontSize,nameColor:getComputedStyle(name).color,
+       columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+       keyWidth:Math.round(key.getBoundingClientRect().width)};
+     });
+     if(parseFloat(glyphs.signFont)<35||glyphs.nameColor!==rubric||glyphs.columns!==6)throw Error('Hieroglyphic keyboard unreadable: '+JSON.stringify(glyphs));
+     await screenshot(q,name+'-hieroglyphic-rubric-keyboard');
+     await q.locator('[data-kb-done]').click();
+     await q.locator('#event-editor [data-close]').click();
+     palette.keyboard=glyphs;
+    }
+   }
+   await q.close();
+   return {sharedPalette:rubric,palette};
+  });
+
   await ctx.close();
  }
  await b.close();
