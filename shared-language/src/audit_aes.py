@@ -14,6 +14,7 @@ def encoded(s):
 def audit(paths):
     full=collections.Counter()
     examples=collections.defaultdict(list)
+    invalid_examples=collections.defaultdict(list)
     group_rows={}
     unique=set()
     for path in paths:
@@ -44,7 +45,14 @@ def audit(paths):
                         'sentence':sid,'lemma':token.get('lemmaID'),'writing':text,
                         'date':date,'token_id':token.get('_id')
                     })
-                else:tally[(date,'invalid_unicode')]+=1
+                else:
+                    tally[(date,'invalid_unicode')]+=1
+                    if len(invalid_examples[key])<3:invalid_examples[key].append({
+                        'sentence':sid,'lemma':token.get('lemmaID'),
+                        'field_repr':repr(text[:120]),
+                        'unicode_points':[hex(ord(c)) for c in text[:32]],
+                        'hiero':str(token.get('hiero',''))[:80]
+                    })
         print('AES_FILE',json.dumps({'filename':path.name,'sha256':h,'bytes':len(raw),
             'sentences':len(x),'date_counts':[{'date':k[0],'kind':k[1],'n':n} for k,n in tally.most_common(50)]
         },ensure_ascii=False),flush=True)
@@ -55,7 +63,7 @@ def audit(paths):
         print('AES_STAGE',json.dumps({'corpus':group,'date':date,
            'sentences':full[((group,date),'sentences')],
            'unicode_word_tokens':full[((group,date),'valid')],
-           'example':examples[(group,date)]
+           'example':examples[(group,date)],'invalid_examples':invalid_examples[(group,date)]
         },ensure_ascii=False),flush=True)
 
 if __name__=='__main__':
