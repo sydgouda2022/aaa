@@ -182,6 +182,72 @@ async function run(){
    return {copticKeys:ckeys,copticPredictions:suggestions,bothDialectLabels:labels,uniliterals,biliterals,triliterals,numerals:numeric};
   });
 
+
+  await step(name+' localized Arabic, Coptic and hieroglyphic event time controls',async()=>{
+   const q=await ctx.newPage();
+   q.on('dialog',d=>d.accept());
+   await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+   await q.locator('.month-agenda').waitFor();
+   await q.locator('header [data-new]').click();
+   const form=q.locator('#event-editor');
+   await form.waitFor();
+   if(await form.locator('input[type=time]').count())throw Error('iOS native English time inputs still exist');
+   if(!((await form.locator('[data-time-open=start]').innerText()).includes('٠٩:٠٠')))throw Error('Arabic start is not Arabic-Indic');
+   await screenshot(q,name+'-arabic-event-time');
+   await form.locator('[data-time-open=start]').click();
+   await q.locator('.time-picker-host:not([hidden])').waitFor();
+   await q.locator('[data-time-hour="14"]').click();
+   await q.locator('[data-time-minute="37"]').click();
+   await screenshot(q,name+'-arabic-time-picker');
+   await q.locator('[data-time-confirm]').click();
+   if((await form.locator('input[name=start]').inputValue())!=='14:37')throw Error('Localized picker did not write hidden canonical time');
+   if(!((await form.locator('[data-time-open=start]').innerText()).includes('١٤:٣٧')))throw Error('Arabic clock display did not update');
+   await form.locator('[data-time-open=end]').click();
+   await q.locator('[data-time-hour="15"]').click();
+   await q.locator('[data-time-minute="08"]').click();
+   await q.locator('[data-time-confirm]').click();
+   await form.locator('input[name=title]').fill('RENPET LOCAL TIME QA');
+   await form.locator('[type=submit]').click();
+   await q.locator('.event-row:has-text("RENPET LOCAL TIME QA")').waitFor();
+   await q.locator('.event-row:has-text("RENPET LOCAL TIME QA")').click();
+   if((await q.locator('#event-editor input[name=start]').inputValue())!=='14:37')throw Error('Saved start time not roundtripped');
+   if((await q.locator('#event-editor input[name=end]').inputValue())!=='15:08')throw Error('Saved end time not roundtripped');
+   await q.locator('#event-editor [data-delete]').click();
+   for(const lang of ['cop','egy']){
+    await q.locator('[data-open-panel=settings]').click();
+    await q.locator('select[name=language]').selectOption(lang);
+    await q.locator('[data-close-panel]').click();
+    await q.locator('header [data-new]').click();
+    const start=q.locator('#event-editor [data-time-open=start]');
+    const end=q.locator('#event-editor [data-time-open=end]');
+    if(await q.locator('#event-editor input[type=time]').count())throw Error(lang+' retains native HTML time');
+    if(lang==='cop'){
+     const a=await start.innerText(),b=await end.innerText();
+     if(/[0-9]/.test(a+b)||a.includes('AM')||b.includes('AM'))throw Error('Coptic time still shows English: '+a+' / '+b);
+     if(!a.includes('○'))throw Error('Coptic zero not localized');
+    }else{
+     if((await q.locator('.local-time-fields .clock-glyph').count())<2)throw Error('Egyptian time signs absent');
+    }
+    await screenshot(q,name+'-'+lang+'-event-time');
+    await start.click();
+    await q.locator('.time-picker-host:not([hidden])').waitFor();
+    await q.locator('[data-time-hour="10"]').click();
+    await q.locator('[data-time-minute="59"]').click();
+    if(lang==='egy'){
+     const glyph=q.locator('.time-picker-preview img[src$="/59.svg"]');
+     await glyph.waitFor();
+     const valid=await glyph.evaluate(img=>img.complete&&img.naturalWidth>0);
+     if(!valid)throw Error('Hieroglyphic minute 59 glyph failed');
+    }
+    await screenshot(q,name+'-'+lang+'-time-selector');
+    await q.locator('[data-time-confirm]').click();
+    if((await q.locator('#event-editor input[name=start]').inputValue())!=='10:59')throw Error(lang+' hidden time changed incorrectly');
+    await q.locator('#event-editor [data-close]').click();
+   }
+   await q.close();
+   return {languageSystems:['ar','cop','egy'],start:'14:37',end:'15:08',savedAndRestored:true};
+  });
+
   await ctx.close();
  }
  await b.close();
