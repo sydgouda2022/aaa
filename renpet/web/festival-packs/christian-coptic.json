@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "sourceId": "christian-coptic",
+  "scope": "Partial evidence-backed list; unverified dates intentionally omitted",
+  "events": [
+    {
+      "id": "coptic-christmas",
+      "ar": "عيد الميلاد المجيد",
+      "month": 1,
+      "day": 7,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/"
+    },
+    {
+      "id": "coptic-easter-2026",
+      "ar": "عيد القيامة — ٢٠٢٦",
+      "date": "2026-04-12",
+      "calendarRule": "dated",
+      "sourceUrl": "https://www.timeanddate.com/holidays/egypt/2026"
+    }
+  ]
+}

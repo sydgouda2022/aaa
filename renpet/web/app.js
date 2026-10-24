@@ -67,6 +67,15 @@ function agenda(d){
  const festivalCards=festivalMarkup(festivals);
  return '<section class="agenda"><div class="agenda-heading"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<span class="subtle">'+safe(greg(d,{weekday:'short',day:'numeric',month:'short'}))+'</span>':'')+'</div>'+hiddenCalendarNotice(d)+festivalCards+(a.length?a.map(i=>eventRow(i,d)).join(''):festivals.length?'':hiddenItemsForDay(schedule,d,data.years).length?'':'<div class="agenda-empty"><p>'+safe(T().noEvents)+'</p></div>')+'</section>';
 }
+// A compact, genuine hieroglyphic date group: ten-signs above units arranged
+// in at most three columns, never a wrapped string or Latin replacement.
+function monthNumber(n){
+ if(lang()!=='egy')return numHtml(n);
+ const tens=Math.floor(n/10),units=n%10;
+ return '<span class="egy-day-ink" aria-hidden="true">'+
+  (tens?'<span class="egy-date-tens">'+ '𓎆'.repeat(tens)+'</span>':'')+
+  (units?'<span class="egy-date-ones">'+Array.from({length:units},()=>'<span>𓏺</span>').join('')+'</span>':'')+'</span>';
+}
 function dateButton(c){
  if(!c)return '<span class="blank" aria-hidden="true"></span>';
  const d=c.gregorian,ev=items(d),hits=festivalsOn(d);
@@ -74,24 +83,23 @@ function dateButton(c){
   const col=schedule.calendars.find(x=>x.id===i.calendarId)?.color||'#176C59';
   return '<i style="background:'+( /^#[0-9a-f]{6}$/i.test(col)?col:'#176C59')+'"></i>';
  }).join('');
- return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+numHtml(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(hits.some(f=>f.start===d)?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
+ return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+monthNumber(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(hits.some(f=>f.start===d)?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
 }
 function monthSection(e){
  const w=week(),start=monthStart(e),length=monthDays(e);
  const secondary=prefs.gregorian?'<p class="subtle date-range">'+safe(greg(start,{day:'numeric',month:'short'}))+' – '+safe(greg(start+length-1,{day:'numeric',month:'short'}))+'</p>':'';
  if(w===10){
-  // Use a shared five-column responsive grid for each real Egyptian decade.
-  // The epagomenal period contains only five or six days, never thirty.
-  const groups=Array.from({length:Math.ceil(length/10)},(_,i)=>{
+  const bands=Array.from({length:Math.ceil(length/10)},(_,i)=>{
    const offset=i*10,size=Math.min(10,length-offset);
    const dates=Array.from({length:size},(_,k)=>dateButton({day:offset+k+1,gregorian:start+offset+k})).join('');
-   return '<div class="renpet-decade"><div class="decade-label">'+(e.month===13?safe(LOCALES[lang()].epagomenal):safe(N(i+1))+' / '+safe(N(10)))+'</div><div class="decade-days">'+dates+'</div></div>';
+   return '<div class="week-band renpet-decade" data-band="'+(i+1)+'"><div class="decade-days" style="--cols:10">'+dates+'</div></div>';
   }).join('');
-  return '<section class="month-section ten-day" data-week="10">'+secondary+'<div class="decades">'+groups+'</div></section>';
+  return '<section class="month-section ten-day" data-week="10">'+secondary+'<div class="decades week-bands">'+bands+'</div></section>';
  }
  const cells=monthGrid(e.year,e.month,7,data.years);
  const headers=Array.from({length:7},(_,i)=>LOCALES[lang()].shortWeekdays?.[i]||N(i+1));
- return '<section class="month-section seven-day" data-week="7">'+secondary+'<div class="week-headers" style="--cols:7">'+headers.map(h=>'<span>'+safe(h)+'</span>').join('')+'</div><div class="dates" style="--cols:7">'+cells.map(dateButton).join('')+'</div></section>';
+ const bands=Array.from({length:cells.length/7},(_,i)=>'<div class="week-band" data-band="'+(i+1)+'"><div class="week-days" style="--cols:7">'+cells.slice(i*7,i*7+7).map(dateButton).join('')+'</div></div>').join('');
+ return '<section class="month-section seven-day" data-week="7">'+secondary+'<div class="week-headers">'+headers.map(h=>'<span>'+safe(h)+'</span>').join('')+'</div><div class="week-bands">'+bands+'</div></section>';
 }
 function monthView(){
  const e=egy(state.focus);

@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "sourceId": "muslim-egypt",
+  "scope": "Partial evidence-backed list; unverified dates intentionally omitted",
+  "events": [
+    {
+      "id": "eid-al-fitr-2026",
+      "ar": "عيد الفطر — ٢٠٢٦",
+      "date": "2026-03-20",
+      "sourceUrl": "https://www.timeanddate.com/holidays/egypt/2026"
+    },
+    {
+      "id": "eid-al-adha-2026",
+      "ar": "عيد الأضحى — ٢٠٢٦",
+      "date": "2026-05-27",
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/"
+    },
+    {
+      "id": "mawlid-official-2026",
+      "ar": "المولد النبوي — العطلة الرسمية ٢٠٢٦",
+      "date": "2026-08-27",
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "Egyptian official observed holiday, not astronomical date"
+    }
+  ]
+}
