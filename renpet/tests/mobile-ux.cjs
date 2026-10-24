@@ -208,7 +208,7 @@ async function run(){
    if(!((await form.locator('[data-time-open=start]').innerText()).includes('١٤:٣٧')))throw Error('Arabic clock display did not update');
    await form.locator('[data-time-open=end]').click();
    await q.locator('[data-time-hour="15"]').click();
-   await q.locator('[data-time-minute="08"]').click();
+   await q.locator('[data-time-minute="8"]').click();
    await q.locator('[data-time-confirm]').click();
    await form.locator('input[name=title]').fill('RENPET LOCAL TIME QA');
    await form.locator('[type=submit]').click();
