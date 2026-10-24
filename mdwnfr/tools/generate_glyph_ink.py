@@ -8,7 +8,8 @@ from fontTools.pens.boundsPen import BoundsPen
 def build(font_path:Path,output:Path)->None:
     data=font_path.read_bytes()
     digest=hashlib.sha256(data).hexdigest()
-    print('Exact deployed font SHA-256:',digest)
+    if digest!='b792accc6207ca9caa59fc67f53926b6985a99d255dd432d7c68b68a6dfd62f8':
+        raise ValueError('Unexpected deployed Egyptian font release')
     font=TTFont(font_path)
     upm=font['head'].unitsPerEm
     cmap=font.getBestCmap()
@@ -23,8 +24,8 @@ def build(font_path:Path,output:Path)->None:
         x0,y0,x1,y1=pen.bounds
         if x1<=x0 or y1<=y0:continue
         entries[chr(cp)]=[round(x/upm,6) for x in (x0,y0,x1,y1)]
-    if len(entries)!=1071:
-        raise ValueError(f'Expected 1,071 actual hieroglyphic outlines, found {len(entries)}')
+    if len(entries)!=1072:
+        raise ValueError(f'Expected 1,072 actual hieroglyphic outlines, found {len(entries)}')
     payload={'format':'mdwnfr-glyph-ink-v1','font_sha256':digest,
              'em_units':upm,'glyphs':entries}
     output.parent.mkdir(parents=True,exist_ok=True)

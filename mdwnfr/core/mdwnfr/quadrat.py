@@ -48,7 +48,7 @@ class Quadrat:
 @lru_cache(maxsize=1)
 def glyph_geometry()->dict:
     source=json.loads(DATA_PATH.read_text(encoding='utf-8'))
-    if source.get('format')!='mdwnfr-glyph-ink-v1' or len(source.get('glyphs',{}))!=1071:
+    if source.get('format')!='mdwnfr-glyph-ink-v1' or len(source.get('glyphs',{}))!=1072:
         raise ValueError('Verified Egyptian glyph silhouettes are missing')
     for sign,bounds in source['glyphs'].items():
         if (len(sign)!=1 or len(bounds)!=4 or
