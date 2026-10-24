@@ -7,6 +7,7 @@ on:
       - 'shared-language/tests/test_aes_late_adapter.py'
       - 'shared-language/tests/test_gardiner_unicode.py'
       - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/ramses_unicode.py'
       - 'shared-language/src/aes_unicode.py'
       - 'shared-language/src/hieroglyphic_unicode.py'
       - 'shared-language/src/gardiner_unicode.py'
@@ -35,6 +36,7 @@ jobs:
           python -m unittest discover -s shared-language/tests -p 'test_aes*.py' -v
           python -m unittest discover -s shared-language/tests -p 'test_hieroglyphic_unicode.py' -v
           python -m unittest discover -s shared-language/tests -p 'test_gardiner_unicode.py' -v
+          python -m unittest discover -s shared-language/tests -p 'test_ramses_unicode.py' -v
           python -m unittest discover -s shared-language/tests -p 'test_benchmark_late_egyptian.py' -v
       - name: Fetch pinned open editions
         shell: bash
@@ -49,6 +51,8 @@ jobs:
           test "$(wc -c </tmp/lexicon-raw/coptic.xml)" -gt 10000000
           curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-raw/aes_sawlit.json
           echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-raw/aes_sawlit.json' | sha256sum -c -
+          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels/c612a91407bddf8d546beedaf46edd5190a67eef/Models/RamsesTrainingSetModel.json' -o /tmp/lexicon-raw/ramses.json
+          echo 'b399acfef9462c76f4df97794a97369c24f33dc6d87269f315e41a5d16103691  /tmp/lexicon-raw/ramses.json' | sha256sum -c -
           sha256sum /tmp/lexicon-raw/*
       - name: Audit additional New Kingdom documents without admitting them to lexicon
         run: |
@@ -63,7 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           python shared-language/src/compile_lexica.py egyptian \
-            --tla /tmp/lexicon-raw/tla.jsonl --aed /tmp/lexicon-raw/aed.xml --aes /tmp/lexicon-raw/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --out /tmp/lexicon-build/egy
+            --tla /tmp/lexicon-raw/tla.jsonl --aed /tmp/lexicon-raw/aed.xml --aes /tmp/lexicon-raw/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --ramses /tmp/lexicon-raw/ramses.json --out /tmp/lexicon-build/egy
           python shared-language/src/compile_lexica.py coptic \
             --tei /tmp/lexicon-raw/coptic.xml \
             --forms renpet/web/assets/dictionaries/coptic.json \
@@ -82,9 +86,13 @@ jobs:
               manifest=json.loads((p/'manifest.json').read_text())
               db=sqlite3.connect(p/'lexicon.sqlite3')
               assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
-              assert manifest['spelling_records'] >= (6800 if name=='egy' else 20000)
+              assert manifest['spelling_records'] >= (30000 if name=='egy' else 20000)
               assert manifest['complete'] is False
               assert report['unique_spellings' if name=='egy' else 'unique_written_forms'] == manifest['spelling_records']
+              if name=='egy':
+                  assert report['ramses_new_spelling_records']>=20000,report
+                  assert report['distinct_lemmas']>=3000
+                  assert db.execute('select count(*) from corpus_form').fetchone()[0]>=30000
               print('VERIFIED',name, json.dumps(report,ensure_ascii=False))
           PY
       - uses: actions/upload-artifact@v4

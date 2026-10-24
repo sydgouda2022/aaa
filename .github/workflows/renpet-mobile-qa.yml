@@ -5,6 +5,7 @@ on:
     paths:
       - 'renpet/**'
       - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/ramses_unicode.py'
       - 'shared-language/src/aes_unicode.py'
       - 'shared-language/src/aes_late_adapter.py'
       - 'shared-language/sources/aes_late_documents.json'
@@ -45,11 +46,13 @@ jobs:
           echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
           curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-sources/aes_sawlit.json
           echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-sources/aes_sawlit.json' | sha256sum -c -
+          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels/c612a91407bddf8d546beedaf46edd5190a67eef/Models/RamsesTrainingSetModel.json' -o /tmp/lexicon-sources/ramses.json
+          echo 'b399acfef9462c76f4df97794a97369c24f33dc6d87269f315e41a5d16103691  /tmp/lexicon-sources/ramses.json' | sha256sum -c -
           echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexicon-sources/coptic.xml' | sha256sum -c -
           cp shared-language/src/keyboard_search.mjs renpet/web/keyboard-search.mjs
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
           cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
-          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --out renpet/web/lexicon
+          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --ramses /tmp/lexicon-sources/ramses.json --out renpet/web/lexicon
           python shared-language/src/publish_release.py --catalog renpet/web/lexicon/lexicon.json --out renpet/web/lexicon
           python shared-language/src/compile_lexica.py coptic --tei /tmp/lexicon-sources/coptic.xml --forms renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
           python shared-language/src/publish_compiled_coptic.py --out renpet/web/coptic-lexicon

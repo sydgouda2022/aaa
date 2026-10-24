@@ -6,6 +6,9 @@ import unittest
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1] / 'src'))
 from compile_lexica import build_egyptian,build_coptic,source_rows
+from unittest.mock import patch
+import hashlib
+import ramses_unicode
 
 class Tests(unittest.TestCase):
  def test_tla_late_not_inventing_incomplete_spellings(self):
@@ -30,6 +33,34 @@ class Tests(unittest.TestCase):
    pack=json.loads((Path(tmp)/'result/lexicon.json').read_text())
    self.assertFalse(pack['metadata']['complete'])
    self.assertTrue(all('<g>' not in x['signs'] for x in pack['entries']))
+ def test_ramses_source_is_unlinked_and_deduplicated(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   root=Path(tmp)
+   tla=root/'tla.jsonl'
+   tla.write_text(json.dumps({'hieroglyphs':'𓀀𓅭','lemmatization':'123|a'},ensure_ascii=False))
+   aed=root/'aed.xml'
+   aed.write_text('<TEI xmlns="http://www.tei-c.org/ns/1.0"><text><body></body></text></TEI>')
+   src=root/'ramses.json'
+   src.write_text(json.dumps({'modelName':'Ramses Training data transliteration model','words':[
+    {'encoding':'A1 G39','interpretations':[{'freq':9}]},
+    {'encoding':'G17 X1','interpretations':[{'freq':13}]},
+    {'encoding':'A1 Ff100','interpretations':[{'freq':1}]}
+   ]}))
+   with patch.object(ramses_unicode,'RAMSES_MODEL_SHA256',hashlib.sha256(src.read_bytes()).hexdigest()):
+    report=build_egyptian(tla,aed,root/'out',ramses_path=src)
+   self.assertEqual(report['ramses_new_spelling_records'],1)
+   self.assertEqual(report['ramses_duplicate_existing_surfaces'],1)
+   self.assertEqual(report['distinct_lemmas'],1)
+   conn=sqlite3.connect(root/'out/lexicon.sqlite3')
+   self.assertEqual(conn.execute('select count(*) from corpus_form').fetchone()[0],2)
+   self.assertEqual(conn.execute('select count(*) from spelling').fetchone()[0],2)
+   row=conn.execute("select lemma_id from spelling where native_form='𓅓𓏏'").fetchone()
+   self.assertTrue(row[0].startswith('ramses-unlinked:'))
+   self.assertEqual(conn.execute('pragma integrity_check').fetchone()[0],'ok')
+   conn.close()
+   catalog=json.loads((root/'out/lexicon.json').read_text())
+   self.assertFalse(catalog['metadata']['complete'])
+   self.assertEqual(catalog['metadata']['unique_native_surfaces'],2)
  def test_coptic_dialects_and_homographs(self):
   with tempfile.TemporaryDirectory() as tmp:
    t=Path(tmp);tei=t/'lex.xml';tei.write_text('''<TEI xmlns="http://www.tei-c.org/ns/1.0"><text><body>

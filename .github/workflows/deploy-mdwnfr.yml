@@ -7,6 +7,7 @@ on:
       - 'shared-language/src/lexicon_install.mjs'
       - 'shared-language/src/publish_release.py'
       - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/ramses_unicode.py'
       - 'shared-language/src/aes_unicode.py'
       - 'shared-language/src/aes_late_adapter.py'
       - 'shared-language/sources/aes_late_documents.json'
@@ -57,10 +58,12 @@ jobs:
           echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
           curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-sources/aes_sawlit.json
           echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-sources/aes_sawlit.json' | sha256sum -c -
+          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels/c612a91407bddf8d546beedaf46edd5190a67eef/Models/RamsesTrainingSetModel.json' -o /tmp/lexicon-sources/ramses.json
+          echo 'b399acfef9462c76f4df97794a97369c24f33dc6d87269f315e41a5d16103691  /tmp/lexicon-sources/ramses.json' | sha256sum -c -
           cp shared-language/src/lexicon_install.mjs mdwnfr/web/lexicon-install.mjs
           cp shared-language/adapters/mdwnfr-worker.js mdwnfr/web/worker.js
           cp shared-language/adapters/mdwnfr-offline-publication.py mdwnfr/tools/offline_publication.py
-          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --out mdwnfr/web/lexicon
+          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --ramses /tmp/lexicon-sources/ramses.json --out mdwnfr/web/lexicon
           python shared-language/src/publish_release.py --catalog mdwnfr/web/lexicon/lexicon.json --out mdwnfr/web/lexicon
           cp mdwnfr/web/lexicon/lexicon.json mdwnfr/core/mdwnfr/data/lexicon.json
           python - <<'PY'
@@ -68,7 +71,7 @@ jobs:
           from pathlib import Path
           dest=Path('mdwnfr/web/lexicon')
           data=json.loads((dest/'manifest.json').read_text())
-          assert data['spelling_records']>=6800 and data['complete'] is False
+          assert data['spelling_records']>=30000 and data['complete'] is False
           db=sqlite3.connect(dest/'lexicon.sqlite3')
           assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
           db.close()
@@ -171,7 +174,7 @@ jobs:
               && curl -fsS --max-time 25 "$base/lexicon/manifest.json" -o /tmp/mdwnfr-public-lexicon \
               && grep -q 'MdwNfr' /tmp/mdwnfr-public-index \
               && grep -q 'standalone' /tmp/mdwnfr-public-manifest \
-              && python -c "import json; assert json.load(open('/tmp/mdwnfr-public-status'))['offline_ready']; assert json.load(open('/tmp/mdwnfr-public-lexicon'))['spelling_records']>=6800"; then
+              && python -c "import json; assert json.load(open('/tmp/mdwnfr-public-status'))['offline_ready']; assert json.load(open('/tmp/mdwnfr-public-lexicon'))['spelling_records']>=30000"; then
               echo 'Public PWA responding with complete runtime inventory'
               exit 0
             fi
