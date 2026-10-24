@@ -223,15 +223,20 @@ def build_coptic(tei_path,forms_path,popular_path,out):
     if core.get('dialects')!=['Sahidic','Bohairic']:
         raise ValueError('Unknown existing Coptic dialect inventory')
     merger={}
+    source_words=set()
     for word,mask in core['rows']:
-        if coptic(word) and isinstance(mask,int):merger[word]=merger.get(word,0)|mask
+        if coptic(word) and isinstance(mask,int):
+            merger[word]=merger.get(word,0)|mask
+            source_words.add(word)
     supplement={}
     for word,n in extra['rows']:
         if coptic(word) and isinstance(n,int) and n>=0:
             merger.setdefault(word,0)
             supplement[word]=max(supplement.get(word,0),n)
     tei_evidence,stats=coptic_tei_forms(tei_path)
+    tei_words=set()
     for lemma,form_ref,word,mask,pos,gloss in tei_evidence:
+        tei_words.add(word)
         merger[word]=merger.get(word,0)|mask
     db=db_connect(out/'lexicon.sqlite3')
     source_hashes={
@@ -252,6 +257,8 @@ def build_coptic(tei_path,forms_path,popular_path,out):
             db.execute('INSERT INTO spelling(id,lemma_id,native_form,dialect_mask,frequency) VALUES (?,?,?,?,?)',
                 (sid,lid,word,mask,supplement.get(word,0)))
             forms_inserted.add(sid)
+        else:
+            db.execute('UPDATE spelling SET dialect_mask=(dialect_mask | ?) WHERE id=?',(mask,sid))
         eid=hashlib.sha256((sid+form_ref).encode()).hexdigest()[:24]
         db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',
                    (eid,sid,'KELLIA-TEI',lemma+'/'+form_ref,source_hashes['KELLIA-TEI']))
@@ -262,6 +269,22 @@ def build_coptic(tei_path,forms_path,popular_path,out):
         sid='coptic:'+hashlib.sha256((lid+'|'+word).encode()).hexdigest()[:20]
         db.execute('INSERT OR IGNORE INTO spelling(id,lemma_id,native_form,dialect_mask,frequency) VALUES (?,?,?,?,?)',
                    (sid,lid,word,mask,supplement.get(word,0)))
+        # The unlinked record preserves corpus-level evidence without pretending
+        # to know which distinct homographic TEI lemma the word belongs to.
+        sources=[]
+        if word in source_words:sources.append('SCRIPTORIUM-FORMS')
+        if word in supplement:sources.append('KELLIA-SUPPLEMENT')
+        if word in tei_words:sources.append('KELLIA-TEI')
+        if not sources:
+            raise ValueError('Missing source evidence for Coptic form '+word)
+        for source in sources:
+            eid=hashlib.sha256((sid+'|'+source).encode()).hexdigest()[:24]
+            ref='written-form:'+hashlib.sha256(word.encode('utf-8')).hexdigest()[:20]
+            db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',
+                       (eid,sid,source,ref,source_hashes[source]))
+    unreferenced=db.execute('SELECT COUNT(*) FROM spelling s WHERE NOT EXISTS (SELECT 1 FROM attestation a WHERE a.spelling_id=s.id)').fetchone()[0]
+    if unreferenced:
+        raise ValueError(str(unreferenced)+' Coptic spellings lack per-form source evidence')
     db.commit()
     assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
     master_forms=db.execute('SELECT COUNT(*) FROM spelling').fetchone()[0]
