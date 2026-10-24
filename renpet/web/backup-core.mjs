@@ -1,13 +1,17 @@
 // Renpet's private, offline-only backup format. Never reads unrelated site storage.
 export const BACKUP_FORMAT = 'renpet.backup.v1';
-export const STORAGE_KEYS = Object.freeze(['renpet.settings.v1', 'renpet.scheduler.v1']);
+export const STORAGE_KEYS = Object.freeze(['renpet.settings.v1', 'renpet.scheduler.v1',
+ 'renpet.scheduler.recovery.1','renpet.scheduler.recovery.2',
+ 'renpet.keyboard.personal.v1','renpet.keyboard.coptic-dialect.v1']);
 const MAX_BYTES = 5 * 1024 * 1024;
 
 function validateEntry(value, key) {
   if (typeof value !== 'string' || value.length > MAX_BYTES) throw new Error('Invalid backup entry: ' + key);
   let decoded;
   try { decoded = JSON.parse(value); } catch { throw new Error('Corrupt backup entry: ' + key); }
-  if (!decoded || typeof decoded !== 'object') throw new Error('Invalid backup data: ' + key);
+  if (key === 'renpet.keyboard.coptic-dialect.v1') {
+    if (!['all','sahidic','bohairic'].includes(decoded)) throw new Error('Invalid Coptic dialect backup');
+  } else if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) throw new Error('Invalid backup data: ' + key);
   return value;
 }
 export function createBackup(storage, now = new Date()) {

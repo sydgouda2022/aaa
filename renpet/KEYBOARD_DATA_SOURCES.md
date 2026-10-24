@@ -24,3 +24,12 @@
 - [KELLIA Comprehensive Coptic Lexicon](https://github.com/KELLIA/dictionary) and [Coptic SCRIPTORIUM](https://github.com/CopticScriptorium), respecting separate upstream data-use conditions.
 
 Counts represent available written forms, **not** the total historical vocabulary. Neither lexicon is certified exhaustive.
+
+## Renpet 7 runtime, backup and release contract
+
+- The canonical browser prediction engine is `shared-language/src/keyboard_search.mjs`. `renpet/tools/build_release.sh` compiles the pinned source inventories and copies the same engine into the deployed PWA; mobile QA and production use the same script.
+- The browser installs individually verified Coptic and hieroglyphic JSON releases into independent IndexedDB databases, with checksum verification and rollback. The large SQLite Egyptian master is validated during the build but **not served as a Cloudflare static asset**.
+- Local keyboard learning, Coptic dialect preferences, and personal appointment data are kept separate from the lexicons. The Renpet JSON backup includes keyboard learning and two recent personal scheduler recovery snapshots when available.
+- GUI localization lives in `ui-words.js`; responsive week, agenda and hieroglyphic numeral styles live in `calendar-layout.css`. No language mode requires transliteration.
+- Release URLs are stamped from the authoritative `data.json.version` and content hashes of all linked JS/CSS, eliminating manual cache-buster edits.
+- Each named open dataset has attribution or share-alike requirements; the pinned sources and their terms must continue to be respected. Hash pinning alone does not confer redistribution rights.

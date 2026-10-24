@@ -1,4 +1,4 @@
-name: Deploy Renpet 6.6.0 to Cloudflare
+name: Deploy Renpet (versioned release)
 on:
   push:
     branches: [main]
@@ -27,7 +27,7 @@ permissions:
   contents: read
 concurrency:
   group: renpet-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -43,56 +43,13 @@ jobs:
       - name: Build offline assets from tracked source
         run: |
           set -euo pipefail
-          mkdir -p renpet/web/assets/fonts
-          curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
-          curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/OFL.txt' -o renpet/web/assets/fonts/OFL-NotoEgyptian.txt
-          test "$(wc -c <renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf)" -gt 200000
-          curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf' -o renpet/web/assets/fonts/Cairo-VF.ttf
-          curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/OFL.txt' -o renpet/web/assets/fonts/OFL-Cairo.txt
-          test "$(wc -c <renpet/web/assets/fonts/Cairo-VF.ttf)" -gt 100000
-          python renpet/tools/make_numerals.py
-          python renpet/tools/build_keyboard_signs.py
-          mkdir -p /tmp/lexicon-sources
-          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/lexicon-sources/tla.jsonl
-          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexicon-sources/aed.xml
-          echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexicon-sources/tla.jsonl' | sha256sum -c -
-          echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
-          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-sources/aes_sawlit.json
-          echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-sources/aes_sawlit.json' | sha256sum -c -
-          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels/c612a91407bddf8d546beedaf46edd5190a67eef/Models/RamsesTrainingSetModel.json' -o /tmp/lexicon-sources/ramses.json
-          echo 'b399acfef9462c76f4df97794a97369c24f33dc6d87269f315e41a5d16103691  /tmp/lexicon-sources/ramses.json' | sha256sum -c -
-          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/f365e2d239bd12b6897f3a761487e40d384b2b24/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/lexicon-sources/coptic.xml
-          echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexicon-sources/coptic.xml' | sha256sum -c -
-          cp shared-language/src/keyboard_search.mjs renpet/web/keyboard-search.mjs
-          cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
-          cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
-          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --ramses /tmp/lexicon-sources/ramses.json --out renpet/web/lexicon
-          python shared-language/src/publish_release.py --catalog renpet/web/lexicon/lexicon.json --out renpet/web/lexicon
-          python shared-language/src/compile_lexica.py coptic --tei /tmp/lexicon-sources/coptic.xml --forms renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
-          python shared-language/src/publish_compiled_coptic.py --out renpet/web/coptic-lexicon
-          # Historical source word tables are build inputs and must not ship in the PWA.
-          rm renpet/web/assets/dictionaries/coptic.json renpet/web/assets/dictionaries/coptic-popular.json
-          python - <<'PY'
-          import json, sqlite3
-          from pathlib import Path
-          for name,minimum in [('lexicon',30000),('coptic-lexicon',20000)]:
-              root=Path('renpet/web')/name
-              release=json.loads((root/'manifest.json').read_text())
-              assert release['spelling_records']>=minimum and release['complete'] is False
-              conn=sqlite3.connect(root/'lexicon.sqlite3')
-              assert conn.execute('pragma integrity_check').fetchone()[0]=='ok'
-              conn.close()
-          PY
-          # The authoritative SQLite master is validated/uploaded as a CI artifact.
-          # Browser PWAs install the verified JSON projection, not raw 32-MiB SQLite.
-          # Cloudflare limits individual static files to 25 MiB.
-          rm renpet/web/lexicon/lexicon.sqlite3
-          python renpet/tools/build_csp.py
-          python renpet/tools/build_service_worker.py
+          bash renpet/tools/build_release.sh
       - name: Validate single renderer and data
         run: |
           set -euo pipefail
           node --check renpet/web/app.js
+          node --check renpet/web/ui-words.js
+          node --check renpet/web/alerts.js
           node --check renpet/web/responsive-layout.js
           node --check renpet/web/lexicon-install.mjs
           node --check renpet/web/coptic-install.mjs
@@ -130,6 +87,7 @@ jobs:
           test -s renpet/web/coptic-lexicon/manifest.json
           ! test -e renpet/web/assets/dictionaries/coptic-popular.json
           node renpet/tests/scheduler.test.mjs
+          node --test renpet/tests/alerts.test.mjs
           node renpet/tests/backup.test.mjs
           node renpet/tests/ics.test.mjs
           test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 362
@@ -138,12 +96,12 @@ jobs:
           ! grep -q 'MutationObserver\|year-grid\|year-tile' renpet/web/app.js
           grep -q 'Single owner of #app' renpet/web/app.js
           grep -q 'openBackup' renpet/web/backup.js
-          grep -q 'ui.css?v=20261024-large-hiero-nums' renpet/web/index.html
+          grep -Fq 'ui.css?v=7.0.0-' renpet/web/index.html
           python - <<'PY'
           import json
           from pathlib import Path
           d=json.loads(Path('renpet/web/data.json').read_text())
-          assert d['version']=='6.6.0'
+          assert d['version']=='7.0.0'
           assert d['min_date']=='1900-01-01' and d['max_date']=='2200-12-31'
           assert len(d['years'])>300 and len(d['festivals'])>0
           print('Calendar data and version validated')
@@ -170,24 +128,24 @@ jobs:
           set -euo pipefail
           BASE="https://renpet.sydgouda.workers.dev"
           for i in 1 2 3 4 5 6 7 8; do
-            if curl -fsSL --max-time 20 "$BASE/?v=6.6.0" -o /tmp/renpet-index \
+            if curl -fsSL --max-time 20 "$BASE/?v=7.0.0" -o /tmp/renpet-index \
               && curl -fsSL --max-time 20 "$BASE/data.json" -o /tmp/renpet-data \
-              && curl -fsSL --max-time 20 "$BASE/app.js?v=6.6.0" -o /tmp/renpet-app \
-              && curl -fsSL --max-time 20 "$BASE/ui.css?v=20261024-large-hiero-nums" -o /tmp/renpet-css \
+              && curl -fsSL --max-time 20 "$BASE/app.js?v=7.0.0" -o /tmp/renpet-app \
+              && curl -fsSL --max-time 20 "$BASE/ui.css?v=7.0.0" -o /tmp/renpet-css \
               && curl -fsSL --max-time 20 "$BASE/festival-sources.json" -o /tmp/renpet-festival-sources \
-              && curl -fsSL --max-time 20 "$BASE/festival-catalog.js?v=6.6.0" -o /tmp/renpet-festival-code \
+              && curl -fsSL --max-time 20 "$BASE/festival-catalog.js?v=7.0.0" -o /tmp/renpet-festival-code \
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
               && curl -fsSL --max-time 20 "$BASE/lexicon/manifest.json" -o /tmp/renpet-egy-lexicon \
               && curl -fsSL --max-time 20 "$BASE/coptic-lexicon/manifest.json" -o /tmp/renpet-cop-lexicon \
-              && grep -q '"version":"6.6.0"' /tmp/renpet-data \
-              && grep -q 'ui.css?v=20261024-large-hiero-nums' /tmp/renpet-index \
+              && grep -q '"version":"7.0.0"' /tmp/renpet-data \
+              && grep -Fq 'ui.css?v=7.0.0-' /tmp/renpet-index \
               && grep -q 'Single owner of #app' /tmp/renpet-app \
               && grep -q 'month-section' /tmp/renpet-css \
               && grep -q 'itemsForDay' /tmp/renpet-scheduler \
               && grep -q 'amun-theban' /tmp/renpet-festival-sources \
               && grep -q 'festivalHitsForDay' /tmp/renpet-festival-code \
               && python -c "import json; assert json.load(open('/tmp/renpet-egy-lexicon'))['spelling_records']>=40000; assert json.load(open('/tmp/renpet-cop-lexicon'))['spelling_records']>=20000"; then
-              echo "Renpet 6.6.0 single-renderer build is live"
+              echo "Renpet 7.0.0 consolidated release is live"
               exit 0
             fi
             sleep 6
