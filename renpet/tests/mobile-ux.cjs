@@ -302,6 +302,15 @@ async function run(){
     const month=q.locator('.month-section');
     await month.waitFor();
     await screenshot(q,name+'-'+language+'-red-labels-month');
+     const bands=await month.locator('.week-band').count();
+     if(language!=='ar'){
+       if(bands!==3)throw Error('A full Egyptian month should have 3 ten-day horizontal bands: '+bands);
+       for(const group of await month.locator('.decade-days').all()){
+         if(await group.locator('.date').count()!==10)throw Error('A decade must show exactly ten adjacent dates');
+         const cols=await group.evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+         if(cols!==10)throw Error('Ten-day week unexpectedly wrapped into '+cols+' columns');
+       }
+     }else if(bands<4||bands>6)throw Error('Seven-day month needs 4–6 weekly bands: '+bands);
     const monthLabel=q.locator('.decade-label').first();
     if(language!=='ar'&&await monthLabel.count()){
       const labelColor=await monthLabel.evaluate(el=>getComputedStyle(el).color);
@@ -494,7 +503,7 @@ async function run(){
   });
 
 
-  await step(name+' Amun-only multi-select festival sources and personal calendar isolation',async()=>{
+  await step(name+' real four-source festival multi-selection and personal calendar isolation',async()=>{
    const q=await ctx.newPage();q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
@@ -506,10 +515,15 @@ async function run(){
    await settings.locator('[data-open-panel=festivals]').click();
    const source=q.locator('[data-festival-source-id=amun-theban]');
    await source.waitFor();
-   if((await q.locator('.festival-source-row').count())!==1)throw Error('There should be only one available source');
+   if((await q.locator('.festival-source-row').count())!==4)throw Error('Four festival sources must be selectable');
+    if(await q.locator('[data-festival-source-id=national-egypt]').isChecked())throw Error('National source must be opt-in');
    const initial=await source.isChecked();
    if(!initial){await source.check();}
-   await screenshot(q,name+'-amun-festival-source-picker');
+   await screenshot(q,name+'-festival-source-picker');
+    await q.locator('[data-festival-source-id=national-egypt]').check();
+    const together=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.settings.v1')).festivalSources);
+    if(!together.includes('national-egypt')||!together.includes('amun-theban'))throw Error('Combining independent sources failed');
+    await q.locator('[data-festival-source-id=national-egypt]').uncheck();
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    // An event on 1 Thoth (11 Sep 2026) should show a star in the month,
    // festival information on Day, and appear in the upcoming List.
@@ -543,7 +557,7 @@ async function run(){
    if(await source.isChecked())throw Error('Disabled Amun source was not persisted after reload');
    await source.check();
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
-   return {onlySource:'amun-theban',monthDayList:true,disabledHidesFestivals:true,
+   return {sources:['amun-theban','national-egypt','christian-coptic','muslim-egypt'],monthDayList:true,disabledHidesFestivals:true,
            personalAppointmentsUnaffected:true,persisted:true};
   });
 
