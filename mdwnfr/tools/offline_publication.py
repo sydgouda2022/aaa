@@ -16,7 +16,7 @@ SHELL = (
     'core/mdwnfr/quadrat.py', 'core/mdwnfr/silhouette.py', 'core/mdwnfr/tables.py',
     'core/mdwnfr/cartouches.py',
     'core/mdwnfr/typography.py', 'core/mdwnfr/layout.py',
-    'core/mdwnfr/prediction.py', 'core/mdwnfr/lexicon.py',
+    'core/mdwnfr/lexicon.py',
     'core/mdwnfr/history.py', 'core/mdwnfr/session.py',
     'core/mdwnfr/layout_sync.py', 'core/mdwnfr/api.py',
     'core/mdwnfr/data/lexicon.json',
@@ -24,9 +24,8 @@ SHELL = (
     'core/mdwnfr/data/catalog_integrity.json',
     'core/mdwnfr/data/artwork_catalog.json',
     'core/mdwnfr/data/artwork_silhouettes.json','artwork/catalog.json',
-    'icons/app_icon.svg', 'icons/keyboard_icon.svg',
-    'icons/icon-192.png', 'icons/icon-512.png',
-    'icons/apple-touch-icon.png',
+    'icons/app-192.png', 'icons/app-512.png',
+    'icons/apple-touch-icon.png', 'icons/keyboard_icon.svg',
 )
 RUNTIME = (
     'vendor/pyodide/pyodide.mjs',

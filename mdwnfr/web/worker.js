@@ -1,7 +1,6 @@
 import {ensureLexicon} from '/lexicon-install.mjs';
 /* Dedicated browser adapter. ALL content/geometry decisions remain Python. */
 const LAYOUT_ONLY = new URL(self.location.href).searchParams.get('role') === 'layout';
-const CDN = 'https://cdn.jsdelivr.net/pyodide/v0.27.8/full/';
 const LOCAL = '/vendor/pyodide/';
 let initialized = false;
 let handler = null;
@@ -10,29 +9,19 @@ async function boot() {
   if (initialized) return;
   if (bootPromise) return bootPromise;
   bootPromise = (async()=>{
-    // Pyodide v0.27.8 (CPython 3.12) is loaded as an ES module in a module worker.
-    // A local distribution is authoritative when installed; otherwise online
-    // development may use the pinned CDN. Production/offline must vendor ALL assets.
-    let local = false;
-    try {
-      const statusResponse=await fetch('/runtime-status.json',{cache:'no-store'});
-      if(statusResponse.ok){
-        const status=await statusResponse.json();
-        local=status.pyodide_version==='0.27.8' && status.runtime_ready===true;
-      }
-    }catch (_) { /* offline shell without a local runtime produces explicit error below */ }
-    const runtime = local ? LOCAL : CDN;
-    let loadPyodide;
-    try { ({loadPyodide} = await import(runtime+'pyodide.mjs')); }
-    catch (error) {
-      throw new Error('Python runtime unavailable. For offline use, run tools/vendor_runtime.py on a connected developer machine, rebuild and install the PWA. '+String(error));
-    }
-    const pyodide = await loadPyodide({indexURL:runtime});
+    // Only the bundled, verified CPython 3.12 runtime is supported.
+    const response=await fetch('/runtime-status.json',{cache:'no-store'});
+    if (!response.ok) throw new Error('Missing MdwNfr runtime status');
+    const meta=await response.json();
+    if (meta.pyodide_version!=='0.27.8' || !meta.offline_ready)
+      throw new Error('The installed Python 3.12 runtime is incomplete');
+    const {loadPyodide}=await import(LOCAL+'pyodide.mjs');
+    const pyodide=await loadPyodide({indexURL:LOCAL});
     const pythonVersion=pyodide.runPython('import sys; sys.version.split()[0]');
     if (!pythonVersion.startsWith('3.12.')) {
       throw new Error('Wrong browser Python runtime: expected 3.12, found '+pythonVersion);
     }
-    const names=['__init__.py','document.py','quadrat.py','silhouette.py','tables.py','cartouches.py','typography.py','layout.py','prediction.py','lexicon.py','history.py','session.py','layout_sync.py','api.py'];
+    const names=['__init__.py','document.py','quadrat.py','silhouette.py','tables.py','cartouches.py','typography.py','layout.py','lexicon.py','history.py','session.py','layout_sync.py','api.py'];
     pyodide.FS.mkdirTree('/home/pyodide/mdwnfr');
     for (const filename of names) {
       const response=await fetch('/core/mdwnfr/'+filename,{cache:'force-cache'});
@@ -51,8 +40,6 @@ async function boot() {
     // First-run verified installation: local IndexedDB -> integrity check -> atomic repair.
     // No source corpora at runtime. Never touch document/user profile stores.
     const installed=await ensureLexicon();
-    // Until the complete compiler release is published, preserve the explicit
-    // development warning rather than claiming these 728 spellings are complete.
     pyodide.FS.writeFile('/home/pyodide/mdwnfr/data/lexicon.json',new Uint8Array(installed.bytes));
     }
     pyodide.runPython("import sys;sys.path.insert(0, '/home/pyodide')");
