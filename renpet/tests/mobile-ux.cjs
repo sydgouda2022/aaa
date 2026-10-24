@@ -604,6 +604,49 @@ async function run(){
   if(eg.scrollWidth>eg.viewport+2||eg.agenda.width<180)throw Error('iPad hieroglyphic agenda clipped: '+JSON.stringify(eg));
   await ctx.close();return {arabic:ar,egyptian:eg};
  });
+ await step('Bold enlarged Egyptian numbers fit phone and iPad',async()=>{
+  const ctx=await b.newContext({viewport:{width:375,height:667},deviceScaleFactor:2,isMobile:true,hasTouch:true,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
+  const q=await ctx.newPage();q.setDefaultTimeout(10000);
+  await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await q.locator('.month-section').waitFor();
+  await q.locator('header [data-open-panel=settings]').click();
+  await q.locator('select[name=language]').selectOption('egy');
+  await q.locator('select[name=week]').selectOption('10');
+  await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+  await q.evaluate(()=>document.fonts.ready);
+  const cases=[[320,740,'phone'],[375,667,'phone'],[390,844,'phone'],[744,1133,'tablet-stacked'],[1024,768,'tablet-split']];
+  const data=[];
+  for(const [width,height,layout] of cases){
+   await q.setViewportSize({width,height});
+   await q.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+   const m=await q.evaluate(()=>{
+    const ones=document.querySelector('.egy-date-ones:has(>span:nth-child(9))');
+    const day=ones?.closest('.day-number'),tens=day?.querySelector('.egy-date-tens');
+    const css=el=>el?{size:parseFloat(getComputedStyle(el).fontSize),weight:parseFloat(getComputedStyle(el).fontWeight),
+     stroke:parseFloat(getComputedStyle(el).webkitTextStrokeWidth),height:el.getBoundingClientRect().height,width:el.getBoundingClientRect().width}:null;
+    return {layout:document.documentElement.dataset.renpetLayout,day:css(day),tens:css(tens),units:css(ones?.querySelector('span')),
+     count:ones?.querySelectorAll(':scope > span').length,
+     clipping:day&&(day.scrollWidth>day.clientWidth+2||day.scrollHeight>day.clientHeight+2),
+     documentWidth:document.documentElement.scrollWidth,viewport:innerWidth,
+     agendaTop:document.querySelector('.month-agenda').getBoundingClientRect().top};
+   });
+   if(m.layout!==layout||!m.day||!m.units||!m.tens||m.count!==9)throw Error('Lost nine-sign day numeral '+JSON.stringify(m));
+   if(m.clipping||m.documentWidth>m.viewport+2)throw Error('Larger bold number clipped '+JSON.stringify(m));
+   if(m.units.weight<700||m.tens.weight<700||m.units.stroke<.25||m.tens.stroke<.25)
+    throw Error('Hieroglyphic numbers are not bold '+JSON.stringify(m));
+   if(m.units.size<(layout==='phone'?15:20)||m.tens.size<(layout==='phone'?17:24))
+    throw Error('Hieroglyphic numbers still small '+JSON.stringify(m));
+   if(m.agendaTop>=height-65)throw Error('Agenda not visible '+JSON.stringify(m));
+   if(width===320||width===744||width===1024)await screenshot(q,'bold-hieroglyphic-numbers-'+width);
+   data.push({width,height,layout,unitSize:m.units.size,tensSize:m.tens.size});
+  }
+  await q.locator('header [data-new]').click();
+  await q.locator('input[name=title]').focus();
+  await q.locator('.renpet-keyboard:not([hidden])').waitFor();
+  const k=await q.locator('.kb-num').first().evaluate(el=>{const s=getComputedStyle(el);return {size:parseFloat(s.fontSize),weight:parseFloat(s.fontWeight),stroke:parseFloat(s.webkitTextStrokeWidth)};});
+  if(k.size<30||k.weight<700||k.stroke<.25)throw Error('Keyboard numerals not bold and larger '+JSON.stringify(k));
+  await ctx.close();return {screens:data,keyboard:k};
+ });
  await step('Viewport 700/1024 and 560 height rules preserve month and live editor',async()=>{
   const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
   const q=await ctx.newPage();q.setDefaultTimeout(8000);
