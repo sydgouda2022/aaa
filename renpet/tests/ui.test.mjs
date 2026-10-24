@@ -10,7 +10,7 @@ globalThis.document={querySelector:s=>s==='#app'?root:null,addEventListener:()=>
 // The unit smoke loader must serve the manifest AND its read-only packs,
 // not silently return data.json for every request.
 globalThis.fetch=async url=>({ok:true,json:async()=>JSON.parse(await readFile(
- new URL('../web/'+String(url).replace(/^\\.\\//,''),import.meta.url),'utf8'))});
+ new URL('../web/'+(String(url).startsWith('./')?String(url).slice(2):String(url)),import.meta.url),'utf8'))});
 await import('../web/app.js');
 for(let i=0;i<50&&!root.innerHTML;i++)await new Promise(r=>setTimeout(r,20));
 const has=s=>root.innerHTML.includes(s);
