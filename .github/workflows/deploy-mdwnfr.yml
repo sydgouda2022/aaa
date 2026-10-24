@@ -32,7 +32,108 @@ jobs:
           set -euo pipefail
           cat mdwnfr/.source/part*.b64.txt | base64 --decode > /tmp/mdwnfr-source.tar.gz
           echo '893615ce164747ca9baf7a673f179d88ad3714281009b13b5380c11ecf21d322  /tmp/mdwnfr-source.tar.gz' | sha256sum -c -
-          tar -tzf /tmp/mdwnfr-source.tar.gz | grep -q '^core/mdwnfr/api.py$'
+          tar -tzf /tmp/mdwnfr-source.tar.gz > /tmp/mdwnfr-source.lst
+          grep -q '^core/mdwnfr/api.py
+          tar -xzf /tmp/mdwnfr-source.tar.gz -C mdwnfr
+          test -s mdwnfr/web/app.js
+          test -s mdwnfr/core/mdwnfr/data/lexicon.json
+      - name: Install redistributable Egyptian font
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'fonttools[woff]' brotli
+          mkdir -p mdwnfr/web/assets/fonts
+          curl -fLsS --retry 3 --max-time 120 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o /tmp/mdwnfr-hieroglyphs.ttf
+          curl -fLsS --retry 3 --max-time 120 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/OFL.txt' -o mdwnfr/web/assets/fonts/OFL-NotoEgyptian.txt
+          python - <<'PY'
+          from fontTools.ttLib import TTFont
+          from pathlib import Path
+          target=Path('mdwnfr/web/assets/fonts/hieroglyphs.woff2')
+          source='/tmp/mdwnfr-hieroglyphs.ttf'
+          f=TTFont(source)
+          required={0x13000,0x13080,0x13100,0x13200,0x13300,0x1342F}
+          cmap=set().union(*(t.cmap.keys() for t in f['cmap'].tables))
+          if not required<=cmap:raise SystemExit('Missing core hieroglyph glyphs')
+          f.flavor='woff2'
+          f.save(target)
+          assert target.stat().st_size>100000 and target.read_bytes()[:4]==b'wOF2'
+          print('Licensed Noto Egyptian hieroglyph font verified and packaged')
+          PY
+      - name: Download and validate self-hosted Python 3.12 / Pyodide runtime
+        working-directory: mdwnfr
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/vendor_runtime.py
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,'tools')
+          from runtime_assets import inspect
+          r=inspect()
+          assert r['offline_ready'],r
+          print('Offline browser runtime ready:',r)
+          PY
+      - name: Build verified PWA and run source checks
+        working-directory: mdwnfr
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/build_static.py
+          node --check dist/app.js
+          node --check dist/worker.js
+          node --check dist/storage.js
+          node --check dist/sw.js
+          node tools/test_recovery_storage.mjs
+          python -m compileall -q core/mdwnfr
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('dist')
+          status=json.loads((root/'runtime-status.json').read_text())
+          publication=json.loads((root/'offline-assets.json').read_text())
+          assert status['offline_ready'] and publication['complete']
+          assert all((root/x['path'].lstrip('/')).is_file() for x in publication['assets'])
+          assert len(publication['assets'])>=100
+          print('Verified complete local PWA asset manifest:',len(publication['assets']))
+          PY
+      - name: Validate Cloudflare publishing access
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo '::error::Cloudflare account secret missing'; exit 1; }
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo '::error::Cloudflare token secret missing'; exit 1; }
+      - name: Publish independent MdwNfr Worker
+        working-directory: mdwnfr
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global wrangler@4
+          wrangler deploy --config wrangler.toml
+      - name: Public PWA smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://mdwnfr.sydgouda.workers.dev'
+          for attempt in $(seq 1 12); do
+            if curl -fsS --max-time 25 "$base/" -o /tmp/mdwnfr-public-index \
+              && curl -fsS --max-time 25 "$base/manifest.webmanifest" -o /tmp/mdwnfr-public-manifest \
+              && curl -fsS --max-time 25 "$base/runtime-status.json" -o /tmp/mdwnfr-public-status \
+              && grep -q 'MdwNfr' /tmp/mdwnfr-public-index \
+              && grep -q 'standalone' /tmp/mdwnfr-public-manifest \
+              && grep -q '"offline_ready": true' /tmp/mdwnfr-public-status; then
+              echo 'Public PWA responding with complete runtime inventory'
+              exit 0
+            fi
+            sleep 8
+          done
+          echo '::error::Public PWA smoke failed'
+          exit 1
+ /tmp/mdwnfr-source.lst
           tar -xzf /tmp/mdwnfr-source.tar.gz -C mdwnfr
           test -s mdwnfr/web/app.js
           test -s mdwnfr/core/mdwnfr/data/lexicon.json
