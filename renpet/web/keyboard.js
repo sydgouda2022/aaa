@@ -142,6 +142,8 @@ export function initKeyboard(getLanguage){
   if(e.key==='Escape'&&!keyboard.hidden)hide();
  });
 }
+// Leave space for the appointment time sheet rather than covering it.
+export function closeKeyboard(){hide();}
 export function syncKeyboard(){
  if(!keyboard)return;
  if(keyboardLanguage()==='ar'){hide();return;}
