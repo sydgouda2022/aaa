@@ -15,6 +15,9 @@ const dateCode=iso=>/^\d{4}-\d\d-\d\d$/.test(iso||'')&&
  new Date(iso+'T00:00:00Z').toISOString().slice(0,10)===iso;
 const duration=x=>Math.max(1,Math.min(366,Number.isInteger(x?.duration)?x.duration:1));
 const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9-]{1,63}$/.test(id);
+// Legacy Amun festival IDs include an ICS UID suffix (@egyptian-calendar.local).
+// Preserve these source identifiers exactly; pack source IDs stay stricter.
+const validEventId=id=>typeof id==='string'&&id.length<=180&&/^[a-z0-9@._-]+$/i.test(id);
 const validPack=path=>typeof path==='string'&&/^\.\/festival-packs\/[a-z0-9-]+\.json$/.test(path);
 const validSource=s=>s&&validId(s.id)&&s.status==='available'&&
  ['egyptian-fixed','gregorian-fixed','gregorian-annual','dated'].includes(s.calendarRule)&&
@@ -49,7 +52,7 @@ export async function loadFestivalCatalog(data,fetcher=fetch){
   }catch(err){console.warn('Renpet festival source unavailable',source.id,err);continue;}
   // A source may contain a mix of fixed and verified per-year movable dates.
   const normalized=events.filter(x=>{
-   if(!x||!validId(x.id)||typeof x.ar!=='string'||!x.ar.trim())return false;
+   if(!x||!validEventId(x.id)||typeof x.ar!=='string'||!x.ar.trim())return false;
    const rule=x.calendarRule||source.calendarRule;
    if(!['egyptian-fixed','gregorian-fixed','gregorian-annual','dated'].includes(rule))return false;
    if(rule==='dated')return dateCode(x.date);
