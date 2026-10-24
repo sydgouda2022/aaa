@@ -8,6 +8,8 @@ on:
       - 'shared-language/src/aes_unicode.py'
       - 'shared-language/src/hieroglyphic_unicode.py'
       - 'shared-language/src/benchmark_late_egyptian.py'
+      - 'shared-language/src/audit_aes_candidates.py'
+      - 'shared-language/sources/aes_candidate_documents.json'
       - 'shared-language/src/aes_late_adapter.py'
       - 'shared-language/sources/aes_late_documents.json'
       - 'shared-language/src/publish_compiled_coptic.py'
@@ -44,6 +46,14 @@ jobs:
           curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-raw/aes_sawlit.json
           echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-raw/aes_sawlit.json' | sha256sum -c -
           sha256sum /tmp/lexicon-raw/*
+      - name: Audit additional New Kingdom documents without admitting them to lexicon
+        run: |
+          python shared-language/src/audit_aes_candidates.py \
+            --aes /tmp/lexicon-raw/aes_sawlit.json \
+            --tla /tmp/lexicon-raw/tla.jsonl \
+            --whitelist shared-language/sources/aes_late_documents.json \
+            --candidates shared-language/sources/aes_candidate_documents.json > /tmp/aes-new-candidates.txt
+          cat /tmp/aes-new-candidates.txt
       - name: Compile two canonical SQLite masters and derived prediction releases
         shell: bash
         run: |
