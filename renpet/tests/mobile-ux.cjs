@@ -302,6 +302,15 @@ async function run(){
     const month=q.locator('.month-section');
     await month.waitFor();
     await screenshot(q,name+'-'+language+'-red-labels-month');
+     const bands=await month.locator('.week-band').count();
+     if(language!=='ar'){
+       if(bands!==3)throw Error('A full Egyptian month should have 3 ten-day horizontal bands: '+bands);
+       for(const group of await month.locator('.decade-days').all()){
+         if(await group.locator('.date').count()!==10)throw Error('A decade must show exactly ten adjacent dates');
+         const cols=await group.evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+         if(cols!==10)throw Error('Ten-day week unexpectedly wrapped into '+cols+' columns');
+       }
+     }else if(bands<4||bands>6)throw Error('Seven-day month needs 4–6 weekly bands: '+bands);
     const monthLabel=q.locator('.decade-label').first();
     if(language!=='ar'&&await monthLabel.count()){
       const labelColor=await monthLabel.evaluate(el=>getComputedStyle(el).color);
@@ -351,8 +360,11 @@ async function run(){
      const agenda=await q.locator('.month-agenda').evaluate(el=>({top:el.getBoundingClientRect().top,visible:el.getBoundingClientRect().top<innerHeight-80}));
      if(!agenda.visible||agenda.top>670)throw Error('Selected-day agenda still below fold: '+JSON.stringify({grid,agenda}));
      const num=q.locator('.decade-days .date .day-number').first();
-     const infoNum=await num.evaluate(el=>({size:getComputedStyle(el).fontSize,lines:getComputedStyle(el).lineHeight,images:el.querySelectorAll('img').length}));
-     if(parseFloat(infoNum.size)<26||infoNum.images)throw Error('Egyptian day numerals remain too small or scaled SVG: '+JSON.stringify(infoNum));
+     const infoNum=await num.evaluate(el=>({size:getComputedStyle(el).fontSize,
+       images:el.querySelectorAll('img').length,strokes:el.querySelectorAll('.egy-date-ones>span').length,
+       clustered:!!el.querySelector('.egy-day-ink'),overflow:el.scrollWidth>el.clientWidth+2}));
+     if(!infoNum.clustered||!infoNum.strokes||infoNum.images||infoNum.overflow)
+      throw Error('Egyptian day signs failed compact grouping: '+JSON.stringify(infoNum));
      await q.locator('[data-open-year]').click();
      const card=q.locator('.year-month-name').first();
      if(parseFloat(await card.evaluate(el=>getComputedStyle(el).fontSize))<22)throw Error('Egyptian year month title still tiny');
@@ -494,7 +506,7 @@ async function run(){
   });
 
 
-  await step(name+' Amun-only multi-select festival sources and personal calendar isolation',async()=>{
+  await step(name+' real four-source festival multi-selection and personal calendar isolation',async()=>{
    const q=await ctx.newPage();q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
@@ -506,10 +518,15 @@ async function run(){
    await settings.locator('[data-open-panel=festivals]').click();
    const source=q.locator('[data-festival-source-id=amun-theban]');
    await source.waitFor();
-   if((await q.locator('.festival-source-row').count())!==1)throw Error('There should be only one available source');
+   if((await q.locator('.festival-source-row').count())!==4)throw Error('Four festival sources must be selectable');
+    if(await q.locator('[data-festival-source-id=national-egypt]').isChecked())throw Error('National source must be opt-in');
    const initial=await source.isChecked();
    if(!initial){await source.check();}
-   await screenshot(q,name+'-amun-festival-source-picker');
+   await screenshot(q,name+'-festival-source-picker');
+    await q.locator('[data-festival-source-id=national-egypt]').check();
+    const together=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.settings.v1')).festivalSources);
+    if(!together.includes('national-egypt')||!together.includes('amun-theban'))throw Error('Combining independent sources failed');
+    await q.locator('[data-festival-source-id=national-egypt]').uncheck();
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    // An event on 1 Thoth (11 Sep 2026) should show a star in the month,
    // festival information on Day, and appear in the upcoming List.
@@ -543,12 +560,40 @@ async function run(){
    if(await source.isChecked())throw Error('Disabled Amun source was not persisted after reload');
    await source.check();
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
-   return {onlySource:'amun-theban',monthDayList:true,disabledHidesFestivals:true,
+   return {sources:['amun-theban','national-egypt','christian-coptic','muslim-egypt'],monthDayList:true,disabledHidesFestivals:true,
            personalAppointmentsUnaffected:true,persisted:true};
   });
 
   await ctx.close();
  }
+ await step('iPad/web large GUI has separated calendar, agenda and navigation rail',async()=>{
+  const ctx=await b.newContext({viewport:{width:1024,height:768},deviceScaleFactor:1,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
+  const q=await ctx.newPage();q.setDefaultTimeout(8000);
+  await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await q.locator('.month-agenda').waitFor();
+  const inspect=()=>q.evaluate(()=>{
+   const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {left:r.left,right:r.right,width:r.width};};
+   return {shell:getComputedStyle(document.querySelector('.app-shell')).display,month:getComputedStyle(document.querySelector('.month-scroll')).display,
+    rail:rect('.ux-bottom'),calendar:rect('.month-section'),agenda:rect('.month-agenda'),
+    scrollWidth:document.documentElement.scrollWidth,viewport:innerWidth};
+  });
+  const ar=await inspect();
+  if(ar.shell!=='grid'||ar.month!=='grid')throw Error('Large screen still renders phone-only stack: '+JSON.stringify(ar));
+  const overlap=(a,b)=>a.left<b.right-2&&b.left<a.right-2;
+  if(overlap(ar.rail,ar.calendar)||overlap(ar.rail,ar.agenda)||overlap(ar.calendar,ar.agenda))
+   throw Error('Large view panes overlap: '+JSON.stringify(ar));
+  if(ar.scrollWidth>ar.viewport+2)throw Error('Large GUI horizontally clips: '+JSON.stringify(ar));
+  await screenshot(q,'ipad-arabic-split-month');
+  await q.locator('header [data-open-panel=settings]').click();
+  await q.locator('select[name=language]').selectOption('egy');
+  await q.locator('select[name=week]').selectOption('10');
+  await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+  if(await q.locator('.week-band').count()!==3)throw Error('Egyptian large month has to contain 3 horizontal decade bands');
+  await screenshot(q,'ipad-hieroglyphic-split-month');
+  const eg=await inspect();
+  if(eg.scrollWidth>eg.viewport+2||eg.agenda.width<180)throw Error('iPad hieroglyphic agenda clipped: '+JSON.stringify(eg));
+  await ctx.close();return {arabic:ar,egyptian:eg};
+ });
  await b.close();
 }
 (async()=>{try{await run()}catch(e){errors.push('FATAL '+String(e.stack||e))}

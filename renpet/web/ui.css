@@ -460,3 +460,94 @@ body[data-language=ar] .year-month-name{font-family:CairoRenpet,system-ui,sans-s
 .festival-source-personal{padding:11px 13px;background:var(--soft);border-radius:11px}
 .day-festivals{padding:8px 12px 12px;border-bottom:1px solid var(--line)}
 .day-festivals .festival-in-agenda{min-height:43px}
+
+/* RENPET 6.7 — horizontal week bands, not boxed date cells.
+   Small: vertical month + selected day. Large: navigation rail + two panes. */
+.week-bands,.month-section.ten-day .decades{display:flex;flex-direction:column;gap:0;padding:0}
+.week-band{position:relative;min-width:0;padding:6px 0 8px;border-bottom:1px solid var(--line)}
+.week-band:last-child{border-bottom:0}
+.week-days,.decade-days{display:grid;grid-template-columns:repeat(var(--cols,10),minmax(0,1fr));gap:0;direction:inherit}
+.week-headers{border-top:0;border-bottom:1px solid var(--line);padding:4px 0}
+.month-section .date,.month-section .blank{min-width:0;min-height:54px;border:0;background:transparent}
+.month-section .date{gap:2px;border-radius:7px;padding:2px 0;overflow:visible}
+.month-section .date .day-number{max-width:100%;min-width:0;line-height:1.1}
+.month-section .date:focus-visible{z-index:2}
+.month-section .date .fest-mark{inset-inline-end:1px;top:1px;font-size:8px;pointer-events:none}
+.month-section .date .dots{flex:0 0 5px;height:5px}
+.month-section .date .greg-day{font-size:9px;line-height:1.1}
+.month-section.ten-day .decade-days{grid-template-columns:repeat(10,minmax(0,1fr));gap:0}
+.month-section.ten-day .decade-days .date{min-height:60px}
+.month-section.ten-day .decade-days .date .day-number{font-size:15px;min-width:0;width:100%;height:34px;padding:2px 0}
+body[data-language=egy] .month-scroll{overflow:visible}
+body[data-language=egy] .month-section{flex:0 0 auto;min-height:0;overflow:visible}
+body[data-language=egy] .month-agenda{flex:1 1 auto;min-height:112px;max-height:none;overflow-y:auto}
+body[data-language=egy] .month-section.ten-day .decades{gap:0}
+body[data-language=egy] .month-section.ten-day .decade-days .date{min-height:68px}
+body[data-language=egy] .month-section.ten-day .decade-days .date .day-number{
+ width:100%;min-width:0;min-height:48px;height:48px;max-height:none;
+ padding:2px 0;font-size:14px;line-height:1;letter-spacing:normal;
+ overflow:visible;overflow-wrap:normal;word-break:normal;white-space:nowrap
+}
+body[data-language=egy] .month-section.ten-day .date.chosen .day-number{padding:2px 0}
+.egy-day-ink{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;width:100%;height:100%;white-space:nowrap}
+.egy-date-tens{display:flex;justify-content:center;white-space:nowrap;font-size:clamp(12px,3.5vw,17px);line-height:1.1;letter-spacing:-2px}
+.egy-date-ones{display:grid;grid-template-columns:repeat(3,minmax(0,7px));justify-content:center;gap:0;line-height:10px;font-size:11px;letter-spacing:-1px}
+.egy-date-ones>span{display:block;width:7px;height:10px;line-height:10px;text-align:center}
+body[data-language=egy] .seven-day .date .day-number{min-height:42px;height:44px;font-size:20px}
+body[data-language=egy] .month-section .date.chosen .day-number{background:var(--green);color:#fff;border-radius:12px}
+@media(max-width:390px){
+ body[data-language=egy] .month-section.ten-day .decade-days .date .day-number{font-size:14px}
+ .month-section .date .fest-mark{font-size:7px}
+}
+@media(min-width:768px){
+ .app-shell{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+   max-width:1500px;width:100%;height:100dvh;border-inline:1px solid var(--line)}
+ .ux-toolbar{grid-column:2;grid-row:1;padding:12px 26px 2px}
+ .main-scroll{grid-column:2;grid-row:2;min-width:0}
+ .ux-bottom,.ux-bottom:has(.ux-nav-item:nth-child(2):last-child){
+   grid-column:1;grid-row:1/3;display:flex;flex-direction:column;
+   align-items:stretch;justify-content:flex-start;gap:12px;
+   min-height:0;padding:22px 9px;background:var(--surface);
+   border-top:0;border-inline-end:1px solid var(--line)
+ }
+ .ux-bottom .ux-nav-item,.ux-bottom:has(.ux-nav-item:nth-child(2):last-child) .ux-nav-item{
+   flex:0 0 auto;max-width:none;min-height:72px;width:100%;gap:5px
+ }
+ body[data-language=egy] .ux-bottom .ux-nav-item{min-height:90px}
+ .month-scroll{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(210px,.9fr);
+   gap:24px;max-width:1250px;height:100%;min-height:0;padding:12px 24px 20px}
+ .month-section,body[data-language=egy] .month-section{
+   min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain
+ }
+ .month-agenda,body[data-language=egy] .month-agenda{
+   min-height:0;height:100%;max-height:none;overflow-y:auto;overflow-x:hidden;
+   margin:0;padding:5px 0 8px 18px;border-top:0;border-inline-start:1px solid var(--line)
+ }
+ html[dir=rtl] .month-agenda{padding-inline-start:18px;padding-inline-end:0}
+ .week-band{padding:10px 0 12px}
+ .month-section.ten-day .decade-days .date{min-height:80px}
+ body[data-language=egy] .month-section.ten-day .decade-days .date{min-height:86px}
+ .month-section.ten-day .decade-days .date .day-number{font-size:18px}
+ .egy-date-tens{font-size:19px}
+ .egy-date-ones{grid-template-columns:repeat(3,8px);font-size:13px;line-height:12px}
+ .egy-date-ones>span{width:8px;height:12px;line-height:12px}
+}
+@media(min-width:1120px){
+ .app-shell{grid-template-columns:110px minmax(0,1fr)}
+ .month-scroll{grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:35px}
+ .month-section.ten-day .decade-days .date{min-height:95px}
+}
+
+/* On a narrow phone the 7-day month can occupy six rows. Preserve a usable
+   selected-day agenda rather than letting the entire section fall behind nav. */
+@media(max-width:767px){
+ .month-scroll:has(.seven-day){height:100%;min-height:0;overflow:hidden}
+ .month-scroll:has(.seven-day) .month-section{
+   flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none
+ }
+ .month-scroll:has(.seven-day) .month-section::-webkit-scrollbar{display:none}
+ .month-scroll:has(.seven-day) .month-agenda{
+   flex:0 0 clamp(126px,28%,170px);min-height:126px;max-height:38%;
+   overflow-y:auto;overscroll-behavior:contain
+ }
+}

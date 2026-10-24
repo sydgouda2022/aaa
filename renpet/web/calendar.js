@@ -40,7 +40,8 @@ export function festivalHits(day,years,festivals){
  for(const f of festivals){
   for(const year of [e.year-1,e.year]){
    if(!years.some(y=>y.year===year))continue;
-   const start=toGregorian({year,month:f.month,day:f.day},years);
+   // The sixth epagomenal day is absent from a common year.
+   let start;try{start=toGregorian({year,month:f.month,day:f.day},years);}catch{continue;}
    if(day>=start&&day<start+f.duration){hits.push({...f,start,end:start+f.duration});break;}
   }
  }return hits;

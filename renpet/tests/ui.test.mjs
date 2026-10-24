@@ -7,7 +7,10 @@ const root={innerHTML:'',addEventListener:(n,fn)=>{(handlers[n]??=[]).push(fn)},
 const memory=new Map();
 globalThis.localStorage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
 globalThis.document={querySelector:s=>s==='#app'?root:null,addEventListener:()=>{},documentElement:{lang:'ar',dir:'rtl'},body:{dataset:{}}};
-globalThis.fetch=async()=>({ok:true,json:async()=>JSON.parse(await readFile(new URL('../web/data.json',import.meta.url),'utf8'))});
+// The unit smoke loader must serve the manifest AND its read-only packs,
+// not silently return data.json for every request.
+globalThis.fetch=async url=>({ok:true,json:async()=>JSON.parse(await readFile(
+ new URL('../web/'+(String(url).startsWith('./')?String(url).slice(2):String(url)),import.meta.url),'utf8'))});
 await import('../web/app.js');
 for(let i=0;i<50&&!root.innerHTML;i++)await new Promise(r=>setTimeout(r,20));
 const has=s=>root.innerHTML.includes(s);
@@ -44,8 +47,8 @@ assert.ok(has('preferences-page')&&has('class="app-shell"'),'Settings opens as c
 assert.ok(has('data-open-panel="calendars"')&&has('data-backup'),'Advanced features nested in Settings');
 assert.ok(has('data-open-panel="festivals"'),'Festival source selector is available within Settings');
 click('data-open-panel','festivals');
-assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun is the only selectable source');
-assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,1,'Only Amun is available');
+assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun remains a selectable source');
+assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,4,'Amun, national, Christian, Muslim choices present');
 for(const handler of handlers.change||[])handler({target:{
  name:'',checked:false,dataset:{festivalSourceId:'amun-theban'},
  hasAttribute:key=>key==='data-festival-source-id',closest:()=>null

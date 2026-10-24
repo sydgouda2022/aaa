@@ -22,6 +22,69 @@
         "key": "festivals"
       },
       "defaultEnabled": true
+    },
+    {
+      "id": "national-egypt",
+      "category": "national",
+      "status": "available",
+      "name": {
+        "ar": "المناسبات الوطنية المصرية",
+        "cop": "Ⲛⲓϣⲁⲓ ⲛ̀Ⲭⲏⲙⲓ",
+        "egy": "المناسبات الوطنية المصرية"
+      },
+      "description": {
+        "ar": "تواريخ المناسبات، وليس بالضرورة أيام الإجازة المنقولة",
+        "cop": "Egyptian civic observances (not shifted leave)",
+        "egy": "Egyptian civic observances"
+      },
+      "calendarRule": "gregorian-annual",
+      "data": {
+        "type": "file",
+        "path": "./festival-packs/national-egypt.json"
+      },
+      "defaultEnabled": false
+    },
+    {
+      "id": "christian-coptic",
+      "category": "christian",
+      "status": "available",
+      "name": {
+        "ar": "الأعياد المسيحية — القبطية",
+        "cop": "Ⲛⲓϣⲁⲓ ⲛ̀ⲭⲣⲏⲥⲧⲓⲁⲛⲟⲥ",
+        "egy": "الأعياد المسيحية"
+      },
+      "description": {
+        "ar": "الميلاد سنوي، والقيامة مؤرخة لعام ٢٠٢٦ فقط",
+        "cop": "Christmas annually; Easter date verified for 2026",
+        "egy": "Christian dates, partial 2026"
+      },
+      "calendarRule": "gregorian-annual",
+      "data": {
+        "type": "file",
+        "path": "./festival-packs/christian-coptic.json"
+      },
+      "defaultEnabled": false
+    },
+    {
+      "id": "muslim-egypt",
+      "category": "muslim",
+      "status": "available",
+      "name": {
+        "ar": "المناسبات الإسلامية — مصر",
+        "cop": "Ⲛⲓϣⲁⲓ ⲙ̀ⲙⲟⲥⲗⲉⲙ",
+        "egy": "المناسبات الإسلامية"
+      },
+      "description": {
+        "ar": "تواريخ منشورة لعام ٢٠٢٦ فقط؛ بلا تكرار قمري آلي",
+        "cop": "Egyptian 2026 dates only; no invented lunar recurrence",
+        "egy": "Islamic observances · 2026"
+      },
+      "calendarRule": "dated",
+      "data": {
+        "type": "file",
+        "path": "./festival-packs/muslim-egypt.json"
+      },
+      "defaultEnabled": false
     }
   ]
 }

@@ -15,6 +15,9 @@ const dateCode=iso=>/^\d{4}-\d\d-\d\d$/.test(iso||'')&&
  new Date(iso+'T00:00:00Z').toISOString().slice(0,10)===iso;
 const duration=x=>Math.max(1,Math.min(366,Number.isInteger(x?.duration)?x.duration:1));
 const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9-]{1,63}$/.test(id);
+// Legacy Amun festival IDs include an ICS UID suffix (@egyptian-calendar.local).
+// Preserve these source identifiers exactly; pack source IDs stay stricter.
+const validEventId=id=>typeof id==='string'&&id.length<=180&&/^[a-z0-9@._-]+$/i.test(id);
 const validPack=path=>typeof path==='string'&&/^\.\/festival-packs\/[a-z0-9-]+\.json$/.test(path);
 const validSource=s=>s&&validId(s.id)&&s.status==='available'&&
  ['egyptian-fixed','gregorian-fixed','gregorian-annual','dated'].includes(s.calendarRule)&&
@@ -47,17 +50,21 @@ export async function loadFestivalCatalog(data,fetcher=fetch){
     events=pack.events;
    }
   }catch(err){console.warn('Renpet festival source unavailable',source.id,err);continue;}
-  const normalized=events.filter(x=>x&&typeof x.ar==='string'&&
-    (source.calendarRule==='egyptian-fixed'
-      ?Number.isInteger(x.month)&&x.month>=1&&x.month<=13&&Number.isInteger(x.day)&&x.day>=1&&x.day<=30
-      :source.calendarRule==='dated'?dateCode(x.date):
-      Number.isInteger(x.month)&&x.month>=1&&x.month<=12&&Number.isInteger(x.day)&&x.day>=1&&x.day<=31))
-   .map(event=>({...event,sourceId:source.id,duration:duration(event)}));
+  // A source may contain a mix of fixed and verified per-year movable dates.
+  const normalized=events.filter(x=>{
+   if(!x||!validEventId(x.id)||typeof x.ar!=='string'||!x.ar.trim())return false;
+   const rule=x.calendarRule||source.calendarRule;
+   if(!['egyptian-fixed','gregorian-fixed','gregorian-annual','dated'].includes(rule))return false;
+   if(rule==='dated')return dateCode(x.date);
+   if(!Number.isInteger(x.month)||!Number.isInteger(x.day)||x.day<1)return false;
+   if(rule==='egyptian-fixed')return x.month>=1&&x.month<=13&&x.day<=(x.month===13?6:30);
+   return x.month>=1&&x.month<=12&&dateCode('2000-'+String(x.month).padStart(2,'0')+'-'+String(x.day).padStart(2,'0'));
+  }).map(event=>({...event,sourceId:source.id,calendarRule:event.calendarRule||source.calendarRule,duration:duration(event)}));
   sources.push({...source,events:normalized});
  }
  // Never allow an unreachable registry to erase the existing Amun catalog.
  if(!sources.length&&Array.isArray(data?.festivals)){
-  return {sources:[{...fallback[0],events:data.festivals.map(x=>({...x,sourceId:AMUN_SOURCE,duration:duration(x)}))}]};
+  return {sources:[{...fallback[0],events:data.festivals.map(x=>({...x,sourceId:AMUN_SOURCE,calendarRule:'egyptian-fixed',duration:duration(x)}))}]};
  }
  return {sources};
 }
@@ -96,9 +103,10 @@ export function festivalHitsForDay(day,years,catalog,selection){
  const results=[];
  for(const source of catalog?.sources||[]){
   if(!allowed.has(source.id))continue;
-  const hits=source.calendarRule==='egyptian-fixed'
-    ?festivalHits(day,years,source.events)
-    :source.events.flatMap(e=>hitGregorian(day,e,source.calendarRule)||[]);
+  const hits=source.events.flatMap(e=>{
+   const rule=e.calendarRule||source.calendarRule;
+   return rule==='egyptian-fixed'?festivalHits(day,years,[e]):hitGregorian(day,e,rule)||[];
+  });
   for(const hit of hits)results.push({...hit,sourceId:source.id,
    sourceName:source.name,category:source.category,calendarRule:source.calendarRule});
  }
