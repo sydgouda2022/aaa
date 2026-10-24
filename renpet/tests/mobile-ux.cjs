@@ -43,34 +43,34 @@ async function run(){
    if(!at59.includes('٥٩'))throw Error('Red marker did not reach minute 59: '+at59);
    await p.locator('[data-open-panel=settings]').click();
    await p.locator('[name=language]').selectOption('egy');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await p.locator('.timeline-now-clock img[src$="/59.svg"]').waitFor({timeout:4000});
    const loaded=await p.locator('.timeline-now-clock img[src$="/59.svg"]').evaluate(img=>img.complete&&img.naturalWidth>0);
    if(!loaded)throw Error('Hieroglyphic minute 59 SVG is missing or failed to load');
    await screenshot(p,name+'-hieroglyphic-minute59');
    await p.locator('[data-open-panel=settings]').click();
    await p.locator('[name=language]').selectOption('ar');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await p.locator('[data-next]').click();
    if(await p.locator('[data-now-line]').count())throw Error('Red time line appears on future date');
    await p.locator('[data-prev]').click();
    if(!(await p.locator('[data-now-line]').count()))throw Error('Red line absent when returning to today');
    await p.locator('[data-open-panel=settings]').click();
    await p.locator('[name=language]').selectOption('cop');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    const cop=await p.locator('.timeline-hour>span').nth(9).innerText();
    if(/[0-9]/.test(cop))throw Error('Coptic hour still has Western digits: '+cop);
    await screenshot(p,name+'-coptic-clock');
    await p.locator('[data-open-panel=settings]').click();
    await p.locator('[name=language]').selectOption('egy');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    const pictograms=await p.locator('.timeline-hour .clock-glyph').count();
    if(pictograms!==23||!(await p.locator('.timeline-hour .clock-zero').count()))throw Error('Missing hieroglyphic numeral artwork or midnight zero marker: '+pictograms);
    if(!(await p.locator('[data-now-line]').count()))throw Error('Live red line absent after language change');
    await screenshot(p,name+'-hieroglyphic-clock');
    await p.locator('[data-open-panel=settings]').click();
    await p.locator('[name=language]').selectOption('ar');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await p.locator('[data-back]').click();
    return {arabicHour:hourLabel,arabicNow:current,copticHour:cop,hieroglyphics:pictograms,oldY:first,newY:next};
   });
@@ -94,7 +94,7 @@ async function run(){
    await screenshot(p,name+'-settings');
    const first=await inspect(p,name+'-settings');
    await p.locator('[name=language]').selectOption('cop');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await p.locator('[data-primary-view=month]').click();
    await screenshot(p,name+'-coptic');
    return {panelHeight:first.viewport.h,decades:await p.locator('.renpet-decade').count()};
@@ -102,7 +102,7 @@ async function run(){
   await step(name+' Egyptian font and dates',async()=>{
    await p.locator('[data-open-panel=settings]').first().click();
    await p.locator('[name=language]').selectOption('egy');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await p.evaluate(()=>document.fonts.ready);
    await screenshot(p,name+'-hieroglyphic');
    return {font:await p.evaluate(()=>document.fonts.check('16px RenpetEgyptian')),numerals:await p.locator('.date .glyph').count(),metric:await inspect(p,name+'-hieroglyphic')};
@@ -111,7 +111,7 @@ async function run(){
    await p.locator('[data-open-panel=settings]').first().click();
    await p.locator('[name=week]').selectOption('7');
    await p.locator('[name=gregorian]').uncheck();
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    const n=await p.locator('.seven-day').count();
    const hidden=(await p.locator('.greg-day').count())===0;
    await screenshot(p,name+'-hieroglyphic-7');
@@ -122,7 +122,7 @@ async function run(){
    await p.locator('[data-open-panel=calendars]').click();
    const manage=await p.locator('#new-calendar').count();
    await screenshot(p,name+'-manage');
-   await p.locator('[data-close-panel]').click();
+   await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await p.locator('[data-open-panel=settings]').first().click();
    await p.locator('[data-backup]').click();
    const backup=await p.locator('.renpet-backup-panel').count();
@@ -137,7 +137,7 @@ async function run(){
    await k.locator('.month-agenda').waitFor();
    await k.locator('[data-open-panel="settings"]').click();
    await k.locator('select[name="language"]').selectOption('cop');
-   await k.locator('[data-close-panel]').click();
+   await k.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await k.locator('header [data-new]').click();
    await k.locator('input[name="title"]').focus();
    await k.locator('.renpet-keyboard:not([hidden])').waitFor({timeout:5000});
@@ -158,7 +158,7 @@ async function run(){
    await k.locator('#event-editor [data-close]').click();
    await k.locator('[data-open-panel="settings"]').click();
    await k.locator('select[name="language"]').selectOption('egy');
-   await k.locator('[data-close-panel]').click();
+   await k.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await k.locator('header [data-new]').click();
    await k.locator('input[name="title"]').focus();
    await k.locator('.renpet-keyboard:not([hidden])').waitFor({timeout:5000});
@@ -191,7 +191,7 @@ async function run(){
    // Other tests in this browser context may have selected Coptic/Egyptian.
    await q.locator('[data-open-panel=settings]').click();
    await q.locator('select[name=language]').selectOption('ar');
-   await q.locator('[data-close-panel]').click();
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await q.locator('header [data-new]').click();
    const form=q.locator('#event-editor');
    await form.waitFor();
@@ -220,7 +220,7 @@ async function run(){
    for(const lang of ['cop','egy']){
     await q.locator('[data-open-panel=settings]').click();
     await q.locator('select[name=language]').selectOption(lang);
-    await q.locator('[data-close-panel]').click();
+    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
     await q.locator('header [data-new]').click();
     const start=q.locator('#event-editor [data-time-open=start]');
     const end=q.locator('#event-editor [data-time-open=end]');
@@ -262,7 +262,7 @@ async function run(){
    for(const language of ['ar','cop','egy']){
     await q.locator('[data-open-panel=settings]').click();
     await q.locator('select[name=language]').selectOption(language);
-    await q.locator('[data-close-panel]').click();
+    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
     await q.locator('header [data-new]').click();
     const field=q.locator('#event-editor select[name=egyYear]');
     await field.waitFor();
@@ -297,7 +297,7 @@ async function run(){
     await q.locator('[data-open-panel=settings]').click();
     await q.locator('select[name=language]').selectOption(language);
     if(language==='egy'||language==='cop')await q.locator('select[name=week]').selectOption('10');
-    await q.locator('[data-close-panel]').click();
+    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
     const month=q.locator('.month-section');
     await month.waitFor();
     await screenshot(q,name+'-'+language+'-red-labels-month');
