@@ -252,6 +252,39 @@ async function run(){
    return {languageSystems:['ar','cop','egy'],start:'14:37',end:'15:08',savedAndRestored:true};
   });
 
+
+  await step(name+' event year uses selected language, not English number input',async()=>{
+   const q=await ctx.newPage();
+   q.on('dialog',d=>d.accept());
+   await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+   await q.locator('.month-agenda').waitFor();
+   const results={};
+   for(const language of ['ar','cop','egy']){
+    await q.locator('[data-open-panel=settings]').click();
+    await q.locator('select[name=language]').selectOption(language);
+    await q.locator('[data-close-panel]').click();
+    await q.locator('header [data-new]').click();
+    const field=q.locator('#event-editor select[name=egyYear]');
+    await field.waitFor();
+    if(await q.locator('input[name=egyYear][type=number]').count())throw Error('Untranslated numeric year input survives in '+language);
+    const year=Number(await field.inputValue());
+    const display=await field.locator('option:checked').innerText();
+    if(language==='ar'&&!/[٠-٩]/.test(display))throw Error('Arabic year uses Latin digits: '+display);
+    if(language==='cop'&&(!/[\u2c80-\u2cff\u03e2-\u03ef]/u.test(display)||/[0-9]/.test(display)))throw Error('Coptic year uses Latin digits: '+display);
+    if(language==='egy'&&(!/[\u{13000}-\u{1342f}]/u.test(display)||/[0-9]/.test(display)))throw Error('Egyptian year uses Latin digits: '+display);
+    await screenshot(q,name+'-'+language+'-localized-year');
+    await field.selectOption(String(year+1));
+    if(Number(await field.inputValue())!==year+1)throw Error('Year selection failed in '+language);
+    const preview=await q.locator('#event-editor .date-preview').innerText();
+    if(!preview.trim())throw Error('Date preview missing after year selection');
+    if((await q.locator('#event-editor select[name=egyYear] option:checked').innerText())===display)throw Error('Year display did not change in '+language);
+    results[language]={original:display,selected:year+1};
+    await q.locator('#event-editor [data-close]').click();
+   }
+   await q.close();
+   return results;
+  });
+
   await ctx.close();
  }
  await b.close();
