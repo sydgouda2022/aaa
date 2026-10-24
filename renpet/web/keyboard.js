@@ -3,9 +3,12 @@ import {ensureLexicon} from './lexicon-install.mjs';
 import {ensureCopticLexicon} from './coptic-install.mjs';
 
 const STORAGE='renpet.keyboard.personal.v1';
+const DIALECT_STORAGE='renpet.keyboard.coptic-dialect.v1';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const catalog={cop:null,egy:null};
 let active=null,keyboard=null,locale=()=>document.body.dataset.language,tab='uni',upper=false,personal={};
+let copticDialect='all';
+try{const value=localStorage.getItem(DIALECT_STORAGE);if(['all','sahidic','bohairic'].includes(value))copticDialect=value;}catch{}
 try{personal=JSON.parse(localStorage.getItem(STORAGE)||'{}')||{};}catch{personal={};}
 
 const eligible=el=>(el instanceof HTMLTextAreaElement)||(el instanceof HTMLInputElement&&['text','search'].includes(el.type));
@@ -13,10 +16,22 @@ const keyboardLanguage=()=>{const x=locale();return x==='cop'||x==='egy'?x:null;
 function persist(){
  try{localStorage.setItem(STORAGE,JSON.stringify(Object.fromEntries(Object.entries(personal).sort((a,b)=>b[1]-a[1]).slice(0,1500))));}catch{}
 }
+function contextPrevious(){
+ const lang=keyboardLanguage();if(!active||!lang)return '';
+ const before=active.value.slice(0,current().start).trimEnd();
+ const word=before.match(lang==='cop'?/[\p{Script=Coptic}\p{Script=Greek}\p{Mark}]+$/u:/[\u{13000}-\u{1342f}\u{13460}-\u{143ff}]+$/u);
+ return word?.[0]||'';
+}
 function remember(text){
  if(!text)return;
  const lang=keyboardLanguage();if(!lang)return;
- const k=lang+':'+text;personal[k]=(personal[k]||0)+1;persist();
+ const previous=contextPrevious();
+ const k=lang+':'+text;personal[k]=(personal[k]||0)+1;
+ if(previous){
+  const ctx='ctx:'+lang+':'+previous+':'+text;
+  personal[ctx]=(personal[ctx]||0)+1;
+ }
+ persist();
 }
 async function load(lang){
  if(catalog[lang]?.lexiconReady)return;
@@ -48,7 +63,8 @@ async function load(lang){
   }
   try{
    const installed=await ensureLexicon();
-   catalog.egy.rows=installed.payload.entries.map(e=>[e.signs,e.attestations||1,e.lemma||e.ref]);
+   catalog.egy.entries=installed.payload.entries;
+   catalog.egy.rows=installed.payload.entries.map(e=>[e.signs,e.attestations||1,e.lemma||e.ref,e.ref]);
    catalog.egy.source=installed.manifest.release;
    catalog.egy.complete=installed.complete;
    catalog.egy.lexiconReady=true;
@@ -84,11 +100,11 @@ function current(){
 }
 function predictBar(lang){
  const raw=current().raw;
- const options=suggestions(raw,lang,catalog[lang],personal,4);
+ const options=suggestions(raw,lang,catalog[lang],personal,4,{dialect:copticDialect,previous:contextPrevious()});
  if(!options.length)return '<div class="kb-suggestions kb-quiet" role="status"><span> '+(lang==='cop'?(catalog.cop?.lexiconError?'Coptic · connect to install':catalog.cop?.lexiconReady?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'Coptic · loading'):catalog.egy?.lexiconError?'Late Egyptian · connect to install':catalog.egy?.lexiconReady?'Late Egyptian · development lexicon':'Late Egyptian · loading')+' </span></div>';
  return '<div class="kb-suggestions" role="listbox" aria-label="Prediction candidates">'+options.map((o,i)=>{
-  const dialects=o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='LATE'?(catalog.egy?.complete?'TLA':'DEV'):o.personal?'★':o.frequency?'CDO':'';
-  return '<button type="button" role="option" data-kb-pick="'+i+'" aria-selected="'+(i===0)+'"><span>'+escape(o.text)+'</span><small>'+(o.raw?'✓':dialects)+'</small></button>';
+  const dialects=o.raw?'✓':o.personal?'★':o.dialects===3?'S+B':o.dialects===1?'S':o.dialects===2?'B':o.source==='LATE'?'LE':o.source==='COP'?'Coptic':'';
+  return '<button type="button" role="option" data-kb-pick="'+i+'" aria-selected="'+(i===0)+'"><span>'+escape(o.text)+'</span><small>'+dialects+'</small></button>';
  }).join('')+'</div>';
 }
 function draw(){
@@ -100,6 +116,7 @@ function draw(){
  const title=lang==='cop'?'Ⲥⲁϩⲓⲇⲓⲕⲏ · Ⲃⲟϩⲁⲓⲣⲓⲕⲏ':'𓄿 · 𓉐 · 𓆣';
  keyboard.setAttribute('aria-label',title);
  keyboard.innerHTML='<div class="kb-top"><span class="kb-name">'+title+'</span><button type="button" data-kb-done aria-label="Close keyboard">✓</button></div>'
+  +(lang==='cop'?'<div class="kb-dialects" role="group" aria-label="Coptic dialect">'+[['all','Both'],['sahidic','Sahidic'],['bohairic','Bohairic']].map(([id,label])=>'<button type="button" data-kb-dialect="'+id+'" aria-pressed="'+(copticDialect===id)+'" class="'+(copticDialect===id?'selected':'')+'">'+label+'</button>').join('')+'</div>':'')
   +predictBar(lang)+pageButtons(lang)+numberButtons(lang)+keys(lang)
   +'<div class="kb-controls">'+(lang==='cop'?'<button type="button" data-kb-shift aria-pressed="'+upper+'">⇧</button>':'')
   +'<button type="button" data-kb-insert="،">،</button><button type="button" class="kb-space" data-kb-space>Space</button>'
@@ -131,11 +148,20 @@ function click(ev){
  const lang=keyboardLanguage();if(!lang)return;
  if(btn.hasAttribute('data-kb-done')){active?.blur();hide();return;}
  if(btn.hasAttribute('data-kb-tab')){tab=btn.dataset.kbTab;draw();return;}
+ if(btn.hasAttribute('data-kb-dialect')){
+  const next=btn.dataset.kbDialect;
+  if(['all','sahidic','bohairic'].includes(next)){
+   copticDialect=next;
+   try{localStorage.setItem(DIALECT_STORAGE,next);}catch{}
+   draw();
+  }
+  return;
+ }
  if(btn.hasAttribute('data-kb-shift')){upper=!upper;draw();return;}
  if(btn.hasAttribute('data-kb-back')){edit('',deleteGrapheme(active.value,active.selectionStart,active.selectionEnd));return;}
  if(btn.hasAttribute('data-kb-space')){remember(current().raw);edit(' ');return;}
  if(btn.hasAttribute('data-kb-pick')){
-  const list=suggestions(current().raw,lang,catalog[lang],personal,4),pick=list[Number(btn.dataset.kbPick)];
+  const list=suggestions(current().raw,lang,catalog[lang],personal,4,{dialect:copticDialect,previous:contextPrevious()}),pick=list[Number(btn.dataset.kbPick)];
   if(!pick)return;
   remember(pick.text);
   const range=current();
