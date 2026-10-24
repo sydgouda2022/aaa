@@ -26,10 +26,20 @@ jobs:
           test "$(wc -c <renpet/web/assets/fonts/Cairo-VF.ttf)" -gt 100000
           python renpet/tools/make_numerals.py
           python renpet/tools/build_keyboard_signs.py
+          mkdir -p /tmp/lexicon-sources
+          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/lexicon-sources/tla.jsonl
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexicon-sources/aed.xml
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/f365e2d239bd12b6897f3a761487e40d384b2b24/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/lexicon-sources/coptic.xml
+          echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexicon-sources/tla.jsonl' | sha256sum -c -
+          echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
+          echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexicon-sources/coptic.xml' | sha256sum -c -
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
           cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
-          python shared-language/src/publish_coptic_release.py --coptic renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
-          python shared-language/src/publish_release.py --catalog shared-language/releases/dev-late-egyptian/lexicon.json --out renpet/web/lexicon
+          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --out renpet/web/lexicon
+          python shared-language/src/publish_release.py --catalog renpet/web/lexicon/lexicon.json --out renpet/web/lexicon
+          python shared-language/src/compile_lexica.py coptic --tei /tmp/lexicon-sources/coptic.xml --forms renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
+          python shared-language/src/publish_compiled_coptic.py --out renpet/web/coptic-lexicon
+          rm renpet/web/assets/dictionaries/coptic.json renpet/web/assets/dictionaries/coptic-popular.json
           python renpet/tools/build_csp.py
           python renpet/tools/build_service_worker.py
           python renpet/tests/test_service_worker_source.py
