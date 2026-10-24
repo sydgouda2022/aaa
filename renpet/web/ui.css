@@ -332,6 +332,18 @@ body[data-language=egy] .sheet-body select,
 body[data-language=egy] .sheet-body textarea{min-height:53px}
 body[data-language=egy] .kind-toggle label{padding-block:12px}
 body[data-language=egy] .date-preview{font:12px/1.5 system-ui,sans-serif}
+/* Keep the selected-day agenda visible even on the smallest iPhone. The
+   six rows of 10-day signs scroll independently; glyphs remain full size. */
+body[data-language=egy] .month-scroll{overflow:hidden}
+body[data-language=egy] .month-section{
+ flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ scrollbar-width:none;
+}
+body[data-language=egy] .month-section::-webkit-scrollbar{display:none}
+body[data-language=egy] .month-agenda{
+ flex:0 0 122px;min-height:115px;max-height:31%;margin-top:6px;
+ overflow-y:auto;
+}
 /* Compact iPhones: preserve sign size; allow the calendar or form to scroll. */
 @media(max-width:390px){
  body[data-language=egy] .year-shortcut-value .glyph{height:38px;max-width:145px}
