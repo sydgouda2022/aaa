@@ -81,26 +81,42 @@ function hiddenCalendarNotice(day){
  const prefix=lang()==='ar'?'مواعيد محفوظة في تقاويم مخفية':lang()==='cop'?'Ⲛⲓⲉⲣⲅⲟⲛ':'𓏞';
  return '<div class="hidden-calendar-notice" role="status"><span>'+safe(prefix)+' · '+safe(N(hidden.length))+'</span><button type="button" data-show-all-calendars>'+safe(T().manage)+'</button></div>';
 }
+// Festival names, notes and interface controls follow the *active script*.
+// Coptic and hieroglyphic fields are editorial language/script renderings;
+// modern dates are never represented as ancient textual attestations.
+const festivalText=(f,field)=>lang()==='ar'?(field==='title'?f.ar:f.description_ar||''):
+ (field==='title'?f[lang()]||'':f['description_'+lang()]||'');
+const FESTIVAL_UI={
+ ar:{details:'تفاصيل العيد',close:'إغلاق',sources:'المصادر',ancient:'إسقاط سكندري حديث لتاريخ مصري قديم',dated:'تاريخ معتمد للسنة المذكورة فقط',annual:'مناسبة سنوية حديثة',orthodox:'تاريخ محسوب من الفصح القبطي',notice:'قائمة جزئية، والتواريخ القديمة ليست ثابتة ميلادياً عبر جميع العصور.',translation:'',sourceIntro:'اختر قوائم الأعياد التي تريد عرضها. يمكن اختيار أكثر من قائمة.',personalIntro:'مواعيدك وأعياد الميلاد التي تضيفها بنفسك تظل مستقلة عن هذه القوائم.'},
+ cop:{details:'Ⲡⲓϣⲁⲓ',close:'Ϣⲑⲁⲙ',sources:'Ⲛⲓⲡⲏⲅⲏ',ancient:'Ⲟⲩⲙⲉⲧⲉⲣⲙⲏⲛⲓⲁ ⲛ̀ⲁⲗⲉⲝⲁⲛⲇⲣⲓⲛⲏ ⲛ̀ⲃⲉⲣⲓ',dated:'Ⲡⲓⲉϩⲟⲟⲩ ⲛ̀ⲧⲉ ⲡⲓⲣⲟⲙⲡⲓ ⲛ̀ⲟⲩⲱⲧ',annual:'Ⲡⲓⲙⲉⲩⲓ ⲛ̀ⲣⲟⲙⲡⲓ ⲛ̀ⲃⲉⲣⲓ',orthodox:'Ⲡⲓⲉϩⲟⲟⲩ ⲙ̀ⲫⲟⲣⲙⲏ ⲛ̀ⲧⲉ ⲡⲓⲡⲁⲥⲭⲁ',notice:'Ⲡⲓⲕⲁⲧⲁⲗⲟⲅⲟⲥ ⲙ̀ⲡⲉϥϫⲱⲕ ⲉ̀ⲃⲟⲗ. Ⲛⲓⲉϩⲟⲟⲩ ⲛ̀ⲁⲣⲭⲁⲓⲟⲥ ⲙ̀ⲡⲟⲩⲥⲙⲟⲛⲧ ⲉ̀ⲡⲓⲣⲟⲙⲡⲓ ⲛ̀ⲃⲉⲣⲓ.',translation:'Ⲡⲓⲉⲣⲙⲏⲛⲓⲁ ⲛ̀ⲃⲉⲣⲓ',sourceIntro:'Ⲥⲱⲧⲡ ⲛ̀ⲛⲓⲕⲁⲧⲁⲗⲟⲅⲟⲥ ⲛ̀ⲛⲓϣⲁⲓ. Ⲥⲱⲧⲡ ⲛ̀ⲟⲩⲙⲏϣ.',personalIntro:'Ⲛⲓⲉⲣⲅⲟⲛ ⲛ̀ⲧⲁⲕ ⲥⲉⲟⲩⲟⲛϧ ⲥⲁⲃⲟⲗ ⲛ̀ⲛⲓϣⲁⲓ.'},
+ egy:{details:'𓎛𓃀𓎱',close:'𓐍𓏏𓅓',sources:'𓏞𓏤',ancient:'𓆳𓏺 𓏞𓏤 𓎛𓃀𓎱',dated:'𓆳𓏺 𓏺',annual:'𓎛𓃀𓎱 𓆳𓏺',orthodox:'𓆳𓏺 𓋹𓏤',notice:'𓏞𓏤 · 𓆳𓏺 · 𓎛𓃀𓎱',translation:'𓏞𓏤',sourceIntro:'𓎛𓃀𓎱 𓏞𓏤 𓏥',personalIntro:'𓏞𓏤 𓉐𓏤 𓎛𓃀𓎱'}
+};
 function festivalMarkup(events,day=state.focus){
- return events.map(f=>'<button type="button" class="festival-in-agenda" data-festival-source="'+safe(f.sourceId)+'" data-festival-open="'+safe(f.id)+'" data-festival-day="'+day+'" aria-label="'+safe(f.ar)+'"><span aria-hidden="true">✦</span><span class="festival-title"><strong>'+safe(f.ar)+'</strong><small>'+safe(festivalSourceName({name:f.sourceName},lang()))+(f.duration>1?' · '+safe(N(f.duration))+' '+safe(T().day):'')+'</small></span><span aria-hidden="true">›</span></button>').join('');
+ return events.map(f=>{
+  const label=festivalText(f,'title');
+  return '<button type="button" class="festival-in-agenda" data-festival-source="'+safe(f.sourceId)+'" data-festival-open="'+safe(f.id)+'" data-festival-day="'+day+'" aria-label="'+safe(label)+'"><span aria-hidden="true">✦</span><span class="festival-title"><strong lang="'+lang()+'">'+safe(label)+'</strong><small>'+safe(festivalSourceName({name:f.sourceName},lang()))+(f.duration>1?' · '+safe(N(f.duration))+' '+safe(T().day):'')+'</small></span><span aria-hidden="true">›</span></button>';
+ }).join('');
 }
 function festivalDetails(){
  if(!state.festivalDetail)return '';
  const day=state.festivalDetail.day,f=festivalsOn(day).find(x=>x.id===state.festivalDetail.id);
  if(!f)return '';
- const src=festivalCatalog.sources.find(x=>x.id===f.sourceId),history=f.description_ar||'';
- const ar=lang()==='ar',type=f.calendarRule==='dated'?(ar?'تاريخ خاص بالسنة المذكورة':'Dated for the listed year only'):
- f.calendarRule==='egyptian-fixed'?(ar?'إسقاط سكندري حديث لتاريخ عيد مصري قديم':'Modern Alexandrian projection of an ancient date'):
- (ar?'تاريخ سنوي حديث':'Modern annual date');
- const sourceURLs=[f.sourceUrl,...(history.match(/https:\/\/[^\s|]+/g)||[])].filter(x=>typeof x==='string'&&x.startsWith('https://')&&x.length<2048);
- const sources=[...new Set(sourceURLs)].slice(0,8);
- const sourceTitle=ar?'المصادر':'Sources',notice=ar?'هذه القائمة جزئية، والتواريخ التاريخية ليست ثابتة بالضرورة عبر العصور.':'This is a partial calendar. Historical dates are not necessarily constant across eras.';
- return '<div class="festival-detail-overlay" data-close-festival-overlay><section class="festival-detail-sheet" role="dialog" aria-modal="true" aria-label="'+safe(ar?'تفاصيل العيد':'Festival details')+'"><header><h2>'+safe(f.ar)+'</h2><button type="button" data-close-festival aria-label="'+safe(ar?'إغلاق':'Close')+'">×</button></header><p class="festival-type">'+safe(type)+'</p><p class="festival-when">'+safe(N(egy(day).day))+' '+safe(monthName(egy(day).month))+' · '+safe(greg(day,{day:'numeric',month:'long',year:'numeric'}))+'</p>'+(history?'<p class="festival-evidence" lang="ar" dir="rtl">'+safe(history)+'</p>':'<p>'+safe(notice)+'</p>')+'<h3>'+safe(sourceTitle)+' · '+safe(festivalSourceName(src||{name:f.sourceName},lang()))+'</h3>'+(sources.length?'<div class="festival-sources-links">'+sources.map((url,i)=>'<a href="'+safe(url)+'" target="_blank" rel="noopener noreferrer">'+safe(sourceTitle)+' '+N(i+1)+' ↗</a>').join('')+'</div>':'<p>'+safe(notice)+'</p>')+'</section></div>';
+ const ui=FESTIVAL_UI[lang()],title=festivalText(f,'title');
+ const src=festivalCatalog.sources.find(x=>x.id===f.sourceId);
+ const original=f.description_ar||'',scriptNote=festivalText(f,'description');
+ // A historical Arabic research note often contains bare external URLs.
+ // Present those only as safe, short links; never dump them inside prose.
+ const note=lang()==='ar'?scriptNote.replace(/(^|\n)\s*المراجع\s*:[^\n]*/g,'').trim():scriptNote;
+ const rule=f.calendarRule,type=rule==='dated'?ui.dated:rule==='egyptian-fixed'?ui.ancient:rule==='orthodox-easter'?ui.orthodox:ui.annual;
+ const sources=[...new Set([f.sourceUrl,...(original.match(/https:\/\/[^\s|]+/g)||[])].filter(url=>{
+  try{const u=new URL(url);return u.protocol==='https:'&&url.length<2048;}catch{return false;}
+ }))].slice(0,8);
+ return '<div class="festival-detail-overlay" data-close-festival-overlay><section class="festival-detail-sheet" role="dialog" aria-modal="true" aria-label="'+safe(ui.details)+'"><header><h2 lang="'+lang()+'">'+safe(title)+'</h2><button type="button" data-close-festival aria-label="'+safe(ui.close)+'">×</button></header><p class="festival-type" lang="'+lang()+'">'+safe(type)+'</p><p class="festival-when">'+safe(N(egy(day).day))+' '+safe(monthName(egy(day).month))+' · '+safe(greg(day,{day:'numeric',month:'long',year:'numeric'}))+'</p>'+(note?'<p class="festival-evidence" lang="'+lang()+'" dir="'+(lang()==='ar'?'rtl':'ltr')+'">'+safe(note)+'</p>':'<p>'+safe(ui.notice)+'</p>')+(ui.translation?'<p class="festival-translation-note" lang="'+lang()+'">'+safe(ui.translation)+'</p>':'')+'<h3 lang="'+lang()+'">'+safe(ui.sources)+' · '+safe(festivalSourceName(src||{name:f.sourceName},lang()))+'</h3>'+(sources.length?'<div class="festival-sources-links">'+sources.map((url,i)=>'<a href="'+safe(url)+'" target="_blank" rel="noopener noreferrer" lang="'+lang()+'" aria-label="'+safe(ui.sources)+' '+N(i+1)+'">'+safe(ui.sources)+' '+safe(N(i+1))+' ↗</a>').join('')+'</div>':'<p>'+safe(ui.notice)+'</p>')+'</section></div>';
 }
 function agenda(d){
  const a=items(d),festivals=festivalsOn(d);
  const festivalCards=festivalMarkup(festivals,d);
- return '<section class="agenda"><div class="agenda-heading"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<span class="subtle">'+safe(greg(d,{weekday:'short',day:'numeric',month:'short'}))+'</span>':'')+'</div>'+hiddenCalendarNotice(d)+festivalCards+(a.length?a.map(i=>eventRow(i,d)).join(''):festivals.length?'':hiddenItemsForDay(schedule,d,data.years).length?'':'<div class="agenda-empty"><p>'+safe(T().noEvents)+'</p>'+(state.view==='month'?'<button type="button" class="agenda-add-action" data-new-date="'+d+'" aria-label="'+safe(spoken('add'))+'">+ '+safe(spoken('add'))+'</button>':'')+'</div>')+'</section>';
+ return '<section class="agenda"><div class="agenda-heading"><h3>'+numHtml(egy(d).day)+' '+safe(monthName(egy(d).month))+'</h3>'+(prefs.gregorian?'<span class="subtle">'+safe(greg(d,{weekday:'short',day:'numeric',month:'short'}))+'</span>':'')+'</div>'+hiddenCalendarNotice(d)+festivalCards+(a.length?a.map(i=>eventRow(i,d)).join(''):festivals.length?'':hiddenItemsForDay(schedule,d,data.years).length?'':'<div class="agenda-empty"><p>'+safe(T().noEvents)+'</p>'+'</div>')+'</section>';
 }
 // A compact, genuine hieroglyphic date group: ten-signs above units arranged
 // in at most three columns, never a wrapped string or Latin replacement.
@@ -223,7 +239,7 @@ function festivalsView(){
   const description=source.description?.[lang()]||source.description?.ar||'';
   return '<label class="festival-source-row"><input type="checkbox" data-festival-source-id="'+safe(source.id)+'" '+(checked?'checked':'')+'><span class="festival-source-info"><strong>'+safe(name)+'</strong><small>'+safe(N(source.events.length))+' · '+safe(T().festivals)+'</small>'+(description?'<small>'+safe(description)+'</small>':'')+'</span></label>';
  }).join('');
- return '<section class="page festival-source-page"><p class="festival-source-intro">'+safe(lang()==='ar'?'اختر قوائم الأعياد التي تريد عرضها. يمكن اختيار أكثر من قائمة.':'Select any combination of festival sources')+'</p><div class="festival-source-options">'+options+'</div><p class="festival-source-personal">'+safe(lang()==='ar'?'مواعيدك وأعياد الميلاد التي تضيفها بنفسك تظل مستقلة عن هذه القوائم.':'Your own appointments and birthdays remain separate from festival sources.')+'</p></section>';
+ return '<section class="page festival-source-page"><p class="festival-source-intro">'+safe(FESTIVAL_UI[lang()].sourceIntro)+'</p><div class="festival-source-options">'+options+'</div><p class="festival-source-personal">'+safe(FESTIVAL_UI[lang()].personalIntro)+'</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -489,8 +505,7 @@ root.addEventListener('click',ev=>{
  if(b.hasAttribute('data-close-panel')){state.panel=null;render();return;}
  if(b.hasAttribute('data-close')){state.dialog=null;render();return;}
  if(b.hasAttribute('data-hour')){state.saveNotice=false;state.dialog={kind:'event',hour:Number(b.dataset.hour)};render();return;}
- if(b.hasAttribute('data-new-date')){state.focus=clamp(Number(b.dataset.newDate));state.saveNotice=false;state.dialog={kind:'event'};render();root.querySelector('[name="title"]')?.focus();return;}
-  if(b.hasAttribute('data-new')){state.saveNotice=false;state.dialog={kind:'event'};render();root.querySelector('[name="title"]')?.focus();return;}
+ if(b.hasAttribute('data-new')){state.saveNotice=false;state.dialog={kind:'event'};render();root.querySelector('[name="title"]')?.focus();return;}
  if(b.hasAttribute('data-edit')){state.dialog={id:b.dataset.edit,occurrenceDay:Number(b.dataset.occurrence??state.focus)};render();return;}
  if(b.hasAttribute('data-delete')){
   const v=loadScheduler(),item=v.items.find(x=>x.id===b.dataset.delete);
