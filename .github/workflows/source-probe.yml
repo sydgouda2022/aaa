@@ -1,0 +1,42 @@
+name: Audit full Egyptian and Coptic corpus formats
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/source-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Download and inspect source corpus structures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/sources
+          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/sources/tla.jsonl
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/master/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/sources/coptic.xml
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/master/files/dictionary.xml' -o /tmp/sources/aed.xml
+          python - <<'PY'
+          import json, pathlib, xml.etree.ElementTree as ET
+          root=pathlib.Path('/tmp/sources')
+          for x in root.iterdir(): print('FILE',x.name,x.stat().st_size,flush=True)
+          with (root/'tla.jsonl').open() as f:
+            for i in range(2):
+              d=json.loads(f.readline())
+              print('TLA JSON',json.dumps(d,ensure_ascii=False)[:12000],flush=True)
+          for source in ['coptic.xml','aed.xml']:
+            count=0
+            for ev,elem in ET.iterparse(root/source,events=['end']):
+              if elem.tag.rsplit('}',1)[-1] in ('entry','entryFree'):
+                print('ENTRY',source,ET.tostring(elem,encoding='unicode')[:6000],flush=True)
+                count+=1
+                if count>=2:break
+          PY
