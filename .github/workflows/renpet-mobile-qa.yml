@@ -22,6 +22,7 @@ jobs:
           mkdir -p renpet/web/assets/fonts
           curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
           python renpet/tools/make_numerals.py
+          python renpet/tools/build_keyboard_signs.py
           if ! command -v google-chrome >/dev/null; then /tmp/renpet-pw/node_modules/.bin/playwright install chromium; fi
       - name: Start Renpet for interaction tests
         run: |
