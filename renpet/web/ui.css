@@ -119,7 +119,7 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .timeline-hour{display:flex;align-items:flex-start;gap:10px;height:64px}
 .timeline-hour>span{flex:0 0 53px;transform:translateY(-8px);text-align:end;font-size:12px;color:var(--muted);direction:ltr}
 .timeline-slot{flex:1;min-width:0;height:64px;padding:0;border:0;border-top:1px solid var(--line);background:transparent}
-.timeline-events{position:absolute;top:0;bottom:0;left:72px;right:4px;pointer-events:none}
+.timeline-events{position:absolute;top:0;bottom:0;inset-inline-start:72px;inset-inline-end:4px;pointer-events:none}
 .timeline-event{position:absolute;pointer-events:auto;display:flex;flex-direction:column;min-width:0;padding:0;overflow:hidden;text-align:start;color:var(--ink);background:color-mix(in srgb,var(--event) 17%,white);border:0;border-inline-start:4px solid var(--event);border-radius:11px;touch-action:none;user-select:none}
 .event-drag{display:flex;flex:1;flex-direction:column;gap:2px;min-height:0;width:100%;overflow:hidden;padding:6px 7px;cursor:grab}
 .event-drag:active{cursor:grabbing}
@@ -231,3 +231,30 @@ body[data-language=egy] .year-shortcut{font-size:16px}
 }
 
 @media(min-width:650px){.decade-days{grid-template-columns:repeat(10,minmax(0,1fr))}}
+
+
+/* Localized 24-hour clock; SVG numerals follow the same Nile Green font and
+   scale on Arabic, Coptic, and hieroglyphic timeline rows. */
+.clock-text{display:inline-flex;align-items:center;justify-content:center;gap:1px;direction:ltr;unicode-bidi:isolate;white-space:nowrap;font-variant-numeric:tabular-nums}
+.clock-part{display:inline-flex;align-items:center;justify-content:center;min-width:0}
+.clock-glyph{display:inline-block;width:auto;height:17px;max-width:24px;object-fit:contain}
+.clock-zero{font:13px/1 system-ui,sans-serif}
+.clock-separator{font:12px/1 system-ui,sans-serif}
+.timeline-hour>span{display:flex;align-items:center;justify-content:flex-end;overflow:visible;min-width:0}
+.timeline-hour .clock-text{font-size:11px}
+.event-clock .clock-text{font-size:11px}
+.event-drag .clock-text{font-size:11px}
+.event-drag .clock-glyph{height:14px;max-width:19px}
+.event-drag small{display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden}
+body[data-language=egy] .timeline-hour .clock-glyph{height:16px;max-width:23px}
+
+/* iOS-style live red time locator. No pointer events so hour cells and drag
+   operations continue to work underneath it. The top is set in JS using
+   device-local hours/minutes/seconds, 64px per hour. */
+.timeline-now{position:absolute;inset-inline:0;height:2px;display:flex;align-items:center;z-index:8;pointer-events:none;color:#cf343b}
+.timeline-now-clock{flex:0 0 70px;display:flex;align-items:center;justify-content:center;max-width:70px;min-height:26px;padding:3px 2px;border-radius:999px;background:#cf343b;color:white;box-shadow:0 1px 2px #0002}
+.timeline-now-clock .clock-text{font-size:11px;font-weight:700}
+.timeline-now-clock .clock-glyph{filter:brightness(0) invert(1);height:15px;max-width:22px}
+.timeline-now-clock .clock-zero,.timeline-now-clock .clock-separator{color:white}
+.timeline-now-rule{position:relative;flex:1;min-width:0;height:2px;background:#cf343b}
+.timeline-now-rule::before{position:absolute;content:'';inset-inline-start:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:#cf343b}
