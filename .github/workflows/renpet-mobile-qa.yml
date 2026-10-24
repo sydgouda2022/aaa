@@ -5,6 +5,7 @@ on:
     paths:
       - 'renpet/**'
       - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/keyboard_search.mjs'
       - 'shared-language/src/publish_compiled_coptic.py'
       - '.github/workflows/renpet-mobile-qa.yml'
   pull_request:
@@ -40,6 +41,7 @@ jobs:
           echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexicon-sources/tla.jsonl' | sha256sum -c -
           echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
           echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexicon-sources/coptic.xml' | sha256sum -c -
+          cp shared-language/src/keyboard_search.mjs renpet/web/keyboard-search.mjs
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
           cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
           python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --out renpet/web/lexicon

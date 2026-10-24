@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'renpet/**'
+      - 'shared-language/src/keyboard_search.mjs'
       - 'shared-language/src/lexicon_install.mjs'
       - 'shared-language/src/publish_release.py'
       - 'shared-language/src/compile_lexica.py'
@@ -54,6 +55,7 @@ jobs:
           echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
           curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/f365e2d239bd12b6897f3a761487e40d384b2b24/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/lexicon-sources/coptic.xml
           echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexicon-sources/coptic.xml' | sha256sum -c -
+          cp shared-language/src/keyboard_search.mjs renpet/web/keyboard-search.mjs
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
           cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
           python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --out renpet/web/lexicon
@@ -84,6 +86,7 @@ jobs:
           node --check renpet/web/keyboard.js
           node --check renpet/web/time-editor.js
           node --check renpet/web/keyboard-core.js
+          node --check renpet/web/keyboard-search.mjs
           node --check renpet/web/clock.js
           node --check renpet/web/calendar.js
           node --check renpet/web/festival-catalog.js
@@ -98,6 +101,7 @@ jobs:
           python renpet/tests/test_service_worker_source.py
           node renpet/tests/ui.test.mjs
           node renpet/tests/keyboard.test.mjs
+          node --test shared-language/tests/keyboard_search.test.mjs
           node --test shared-language/tests/lexicon_install.test.mjs shared-language/tests/coptic_install.test.mjs
           node renpet/tests/time-editor.test.mjs
           node renpet/tests/clock.test.mjs

@@ -72,3 +72,9 @@ body[data-language=egy] .kb-hiero .kb-sign{font-size:38px;min-height:51px}
 body[data-language=egy] .kb-suggestions button span{font:23px/1.2 RenpetEgyptian,system-ui,sans-serif}
 body[data-language=cop] .kb-num{font-family:Coptic,system-ui,sans-serif}
 @media(min-width:550px){.kb-hiero{grid-template-columns:repeat(7,minmax(0,1fr))}}
+
+/* Coptic dialects are explicit search filters, not inferred properties of the text. */
+.kb-dialects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;min-height:28px;flex-shrink:0}
+.kb-dialects button{min-height:28px;min-width:0;border:1px solid #c4d5c9;border-radius:9px;background:#f7f9f5;color:var(--rubric);font:600 12px/1.15 system-ui,sans-serif;touch-action:manipulation}
+.kb-dialects button.selected,.kb-dialects button[aria-pressed=true]{background:var(--green);color:#fff;border-color:var(--green)}
+@media(max-height:680px){.kb-dialects,.kb-dialects button{min-height:25px}}

@@ -37,6 +37,8 @@ jobs:
           python shared-language/src/publish_release.py --catalog shared-language/releases/dev-late-egyptian/lexicon.json --out /tmp/late-egyptian-release
           python -c "import json; from pathlib import Path; a=json.loads(Path('shared-language/releases/dev-late-egyptian/manifest.json').read_text()); b=json.loads(Path('/tmp/late-egyptian-release/manifest.json').read_text()); assert a==b"
           cmp shared-language/releases/dev-late-egyptian/lexicon.json /tmp/late-egyptian-release/lexicon.json
+      - name: Validate indexed keyboard prediction and Coptic dialect isolation
+        run: node --test shared-language/tests/keyboard_search.test.mjs
       - name: Validate reusable JS predictor
         run: node --test shared-language/tests/predict.test.mjs
       - name: Validate Python pack builder

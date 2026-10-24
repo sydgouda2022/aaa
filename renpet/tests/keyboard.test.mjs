@@ -56,4 +56,11 @@ assert.ok(copticPack.rows.some(row=>row[1]===0),'KELLIA additions without dialec
 const copticPackSuggestions=suggestions('ⲛ','cop',copticPack,{},4);
 assert.equal(copticPackSuggestions[0].text,'ⲛ','Coptic raw candidate stays first');
 assert.ok(copticPackSuggestions.length>=3,'Coptic installer release supports prediction');
+
+const sahidic=suggestions('ⲡ','cop',coptic,{},12,{dialect:'sahidic'});
+assert.ok(sahidic.slice(1).every(x=>x.dialects&1),'Sahidic mode never suggests Bohairic-only or unknown-dialect words');
+const bohairic=suggestions('ⲡ','cop',coptic,{},12,{dialect:'bohairic'});
+assert.ok(bohairic.slice(1).every(x=>x.dialects&2),'Bohairic mode never suggests Sahidic-only or unknown-dialect words');
+const egyptianSource=suggestions([...late.entries[0].signs][0],'egy',late,{},6);
+assert.ok(egyptianSource.slice(1).every(x=>x.lexicon_ref&&x.source==='LATE'),'Source-backed hieroglyphic suggestions retain stable lexicon reference IDs');
 console.log('Renpet keyboard catalog and bilingual prediction tests passed');
