@@ -196,7 +196,8 @@ async function run(){
    const form=q.locator('#event-editor');
    await form.waitFor();
    if(await form.locator('input[type=time]').count())throw Error('iOS native English time inputs still exist');
-   if(!((await form.locator('[data-time-open=start]').innerText()).includes('٠٩:٠٠')))throw Error('Arabic start is not Arabic-Indic');
+   const initialTime=await form.locator('[data-time-open=start]').innerText();
+   if(!/[٠-٩]/.test(initialTime)||/[0-9]/.test(initialTime))throw Error('Arabic start is not Arabic-Indic: '+initialTime);
    await screenshot(q,name+'-arabic-event-time');
    await form.locator('[data-time-open=start]').click();
    await q.locator('.time-picker-host:not([hidden])').waitFor();

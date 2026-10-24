@@ -392,3 +392,11 @@ body[data-language=ar] .year-month-name{font-family:CairoRenpet,system-ui,sans-s
 .event-error{margin:0;padding:10px 16px;border-bottom:1px solid var(--rubric);background:var(--rubric-soft);color:var(--rubric);font-weight:700;line-height:1.45}
 .ux-bottom:has(.ux-nav-item:nth-child(2):last-child){justify-content:space-evenly}
 .ux-bottom:has(.ux-nav-item:nth-child(2):last-child) .ux-nav-item{flex:0 1 44%;max-width:240px}
+
+
+/* Renpet 6.2: never silently save offscreen. The confirmation stays in a
+   dedicated visible status strip, above overlays and below modal content. */
+.save-confirmation{position:fixed;z-index:23;left:50%;transform:translateX(-50%);top:calc(max(env(safe-area-inset-top),10px) + 58px);
+  min-height:42px;padding:10px 17px;border:1px solid var(--green);border-radius:14px;
+  background:var(--surface);color:var(--green);font-weight:750;box-shadow:0 4px 18px #1b292429;
+  max-width:calc(100vw - 40px);text-align:center;pointer-events:none}
