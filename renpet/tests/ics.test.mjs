@@ -20,9 +20,19 @@ const multi=exportICS({...state,items:[allDay]},years,resolver,opts);
 assert.match(multi.text,/DTSTART;VALUE=DATE:20261014/);
 assert.match(multi.text,/DTEND;VALUE=DATE:20261017/);
 const daily={...item,id:'c',repeat:'daily',startDay:days('2026-10-14')};
-assert.throws(()=>exportICS({...state,items:[daily]},years,resolver,{...opts,maxOccurrences:3}),/Too many/);
 const bounded=exportICS({...state,items:[daily]},years,resolver,opts);
-assert.equal(bounded.count,731);
-assert.equal((bounded.text.match(/BEGIN:VEVENT/g)||[]).length,731);
+assert.equal(bounded.count,1);
+assert.equal((bounded.text.match(/BEGIN:VEVENT/g)||[]).length,1);
+assert.match(bounded.text,/RRULE:FREQ=DAILY/);
+for(const [repeat,rule] of [['weekly','FREQ=WEEKLY'],['egy10','FREQ=DAILY;INTERVAL=10']]){
+ const recurring=exportICS({...state,items:[{...daily,repeat}]},years,resolver,opts);
+ assert.equal(recurring.count,1);
+ assert.ok(recurring.text.includes('RRULE:'+rule));
+}
+const excluded=exportICS({...state,items:[{...daily,excludedDays:[days('2026-10-15')]}]},years,resolver,opts);
+assert.match(excluded.text,/EXDATE:20261015T090000/);
+const midnight=exportICS({...state,items:[{...item,id:'midnight',endMinutes:1440}]},years,resolver,opts);
+assert.match(midnight.text,/DTEND:20261015T000000/);
+assert.doesNotMatch(midnight.text,/T240000/);
 assert.match(bounded.text,/END:VCALENDAR\r\n$/);
 console.log('Renpet ICS tests passed');

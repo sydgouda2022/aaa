@@ -24,11 +24,71 @@ export function normalizeState(value){
  return base;
 }
 
+// Personal calendar records have a recoverable primary copy and two rotating
+// snapshots, independent of dictionary IndexedDB caches. Never call clear().
+export const SCHEDULER_RECOVERY_KEYS=Object.freeze(['renpet.scheduler.recovery.1','renpet.scheduler.recovery.2']);
+const parseStored=text=>{
+ if(typeof text!=='string')return null;
+ try{
+  const state=JSON.parse(text);
+  if(!state||typeof state!=='object'||!Array.isArray(state.items)||!Array.isArray(state.calendars))return null;
+  if(state.items.some(i=>!i||typeof i.id!=='string'||!['event','reminder'].includes(i.kind)||
+     !Number.isInteger(i.startDay)||!Number.isInteger(i.endDay??i.startDay)||(i.endDay??i.startDay)<i.startDay))return null;
+  return normalizeState(state);
+ }catch{return null;}
+};
+export function schedulerRecoveryStatus(storage=globalThis.localStorage){
+ try{
+  const primary=storage?.getItem(SCHEDULER_STORE);
+  const recovered=SCHEDULER_RECOVERY_KEYS.find(key=>parseStored(storage?.getItem(key))!==null);
+  return {primaryValid:primary===null||parseStored(primary)!==null,
+   primaryMissing:primary===null,recoveryAvailable:!!recovered,recoveredFrom:primary!==null&&!parseStored(primary)?recovered:null};
+ }catch{return {primaryValid:false,primaryMissing:false,recoveryAvailable:false,recoveredFrom:null};}
+}
 export function loadScheduler(storage=globalThis.localStorage){
- try{return normalizeState(JSON.parse(storage?.getItem(SCHEDULER_STORE)||'null'));}catch{return emptyState();}
+ try{
+  const primary=storage?.getItem(SCHEDULER_STORE);
+  if(primary!==null){const valid=parseStored(primary);if(valid)return valid;}
+  for(const key of SCHEDULER_RECOVERY_KEYS){
+   const snapshot=parseStored(storage?.getItem(key));if(snapshot)return snapshot;
+  }
+ }catch{}
+ return emptyState();
 }
 export function saveScheduler(state,storage=globalThis.localStorage){
- try{storage?.setItem(SCHEDULER_STORE,JSON.stringify(state));return true;}catch{return false;}
+ try{
+  if(!storage)return false;
+  const current=storage.getItem(SCHEDULER_STORE);
+  // An invalid primary without a usable snapshot must not be overwritten by
+  // the empty fallback: that would permanently erase the only salvageable copy.
+  if(current!==null&&!parseStored(current)&&!SCHEDULER_RECOVERY_KEYS.some(k=>parseStored(storage.getItem(k))))return false;
+  const value=JSON.stringify(state);
+  if(!parseStored(value))return false;
+  // Keep two *previous* verified versions; snapshots failing due to quota
+  // cannot erase the primary, but the verified write is still mandatory.
+  if(current&&parseStored(current)&&current!==value){
+   const prior=storage.getItem(SCHEDULER_RECOVERY_KEYS[0]);
+   try{
+    if(prior&&parseStored(prior))storage.setItem(SCHEDULER_RECOVERY_KEYS[1],prior);
+    storage.setItem(SCHEDULER_RECOVERY_KEYS[0],current);
+   }catch{}
+  }
+  storage.setItem(SCHEDULER_STORE,value);
+  return storage.getItem(SCHEDULER_STORE)===value;
+ }catch{return false;}
+}
+export function restoreSchedulerSnapshot(storage=globalThis.localStorage){
+ try{
+  const existing=storage.getItem(SCHEDULER_STORE);
+  for(const key of SCHEDULER_RECOVERY_KEYS){
+   const raw=storage.getItem(key);
+   if(!parseStored(raw))continue;
+   storage.setItem(SCHEDULER_STORE,raw);
+   if(storage.getItem(SCHEDULER_STORE)!==raw)throw Error('Failed to restore calendar records');
+   return {restored:true,hadCorruptPrimary:existing!==null&&!parseStored(existing)};
+  }
+ }catch{}
+ return {restored:false};
 }
 export function createItem(values){
  const now=new Date().toISOString();
@@ -107,7 +167,7 @@ export function toggleCompleted(item,day){
 
 function monthSerial(e){return e.year*13+(e.month-1);}
 function isStartOccurrence(item,day,years){
- if(day<item.startDay)return false;
+ if(day<item.startDay||(item.excludedDays||[]).includes(day))return false;
  const delta=day-item.startDay;
  if(item.repeat==='none')return day===item.startDay;
  if(item.repeat==='daily')return true;
@@ -118,17 +178,29 @@ function isStartOccurrence(item,day,years){
  if(item.repeat==='egyYearly')return candidate.year>=base.year&&candidate.month===base.month&&candidate.day===base.day;
  return false;
 }
+// A concrete recurrence start is identified separately from a day within
+// a multi-day occurrence, so moving one event cannot delete the entire series.
+export function occurrenceStartForDay(item,day,years){
+ const duration=Math.max(0,(item.endDay??item.startDay)-item.startDay);
+ for(let start=Math.max(item.startDay,day-duration);start<=day;start++)
+  if(isStartOccurrence(item,start,years))return start;
+ return null;
+}
+export function excludeOccurrence(item,start){
+ if(item.repeat==='none'||!Number.isInteger(start))return false;
+ item.excludedDays=[...new Set([...(item.excludedDays||[]),start])].sort((a,b)=>a-b);
+ item.updatedAt=new Date().toISOString();
+ return true;
+}
 export function occursOn(item,day,years){
  if(day<item.startDay)return false;
- const duration=Math.max(0,(item.endDay??item.startDay)-item.startDay);
- for(let start=Math.max(item.startDay,day-duration);start<=day;start++)if(isStartOccurrence(item,start,years))return true;
- return false;
+ return occurrenceStartForDay(item,day,years)!==null;
 }
 
 export function itemsForDay(state,day,years){
  const visible=visibleCalendars(state);
  return state.items.filter(item=>visible.has(item.calendarId)&&occursOn(item,day,years))
-  .sort((a,b)=>Number(a.allDay)-Number(b.allDay)||a.startMinutes-b.startMinutes||a.title.localeCompare(b.title));
+  .sort((a,b)=>Number(b.allDay)-Number(a.allDay)||a.startMinutes-b.startMinutes||a.title.localeCompare(b.title));
 }
 
 export function itemsInRange(state,start,endExclusive,years){

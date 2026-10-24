@@ -18,7 +18,10 @@ web = ROOT / "web"
 files = [
     "./" + p.relative_to(web).as_posix()
     for p in sorted(web.rglob("*"))
-    if p.is_file() and p.name not in {"sw.js", "_headers"}
+    # JSON + manifests are the installed prediction engines. SQLite is a
+    # release/build artifact and never opened by the browser: do not precache
+    # duplicate multi-megabyte database files on every PWA update.
+    if p.is_file() and p.name not in {"sw.js", "_headers"} and p.suffix != ".sqlite3"
 ]
 required = {"./index.html", "./app.js", "./data.json", "./ui.css",
             "./calendar.js", "./scheduler.js", "./locales.js",

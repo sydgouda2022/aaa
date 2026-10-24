@@ -286,7 +286,7 @@ async function run(){
     await screenshot(q,name+'-'+language+'-localized-year');
     await field.selectOption(String(year+1));
     if(Number(await field.inputValue())!==year+1)throw Error('Year selection failed in '+language);
-    const preview=await q.locator('#event-editor .date-preview').innerText();
+    const preview=await q.locator('#event-editor .date-preview[data-date-prefix=""]').innerText();
     if(!preview.trim())throw Error('Date preview missing after year selection');
     if((await q.locator('#event-editor select[name=egyYear] option:checked').innerText())===display)throw Error('Year display did not change in '+language);
     results[language]={original:display,selected:year+1};

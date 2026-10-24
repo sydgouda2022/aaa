@@ -1,12 +1,12 @@
 import { createBackup, parseBackup, restoreBackup } from './backup-core.mjs';
 import { exportICS } from './ics-core.mjs';
-import { occursOn, loadScheduler } from './scheduler.js';
+import { occursOn, loadScheduler, schedulerRecoveryStatus, restoreSchedulerSnapshot } from './scheduler.js';
 
 // Backup and restore work entirely on the user's device. No account or upload.
 const words = {
-  ar: { trigger:'النسخ الاحتياطي', title:'بيانات رنبت', info:'احتفظ بنسخة من مواعيدك وتقاويمك وإعداداتك على جهازك. لا تُرسل أي بيانات إلى الإنترنت.', export:'تصدير نسخة', ics:'تصدير إلى Apple / Google Calendar', import:'استعادة نسخة', close:'إغلاق', confirm:'استعادة النسخة ستستبدل البيانات الموجودة من نفس النوع. هل تريد المتابعة؟', done:'تمت استعادة البيانات. سيُعاد تحميل رنبت.', empty:'لا توجد بيانات محفوظة للتصدير.' },
-  cop: { trigger:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', title:'Ⲣⲉⲛⲡⲉⲧ · ⲇⲉⲇⲟⲙⲉⲛⲁ', info:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ ⲉ̀ⲡⲉⲕⲥⲱⲙⲁ. Ⲙ̀ⲙⲟⲛ ⲟⲩⲱⲣⲡ ⲉ̀ⲡⲓⲓⲛⲧⲉⲣⲛⲉⲧ.', export:'Ⲥⲱⲧⲡ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', ics:'ICS · Apple / Google Calendar', import:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', close:'Ϣⲧⲁⲙ', confirm:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ?', done:'Ⲁⲩⲧⲁϩⲟ ⲛ̀ⲛⲓⲇⲉⲇⲟⲙⲉⲛⲁ.', empty:'Ⲙ̀ⲙⲟⲛ ⲇⲉⲇⲟⲙⲉⲛⲁ.' },
-  egy: { trigger:'𓏞 𓂋𓏤', title:'𓆳𓏏𓏤 · 𓏞', info:'𓏞 · 𓂋𓏤𓈖𓆎𓏏𓊖', export:'𓏞 ↓', ics:'ICS ↓', import:'𓏞 ↑', close:'𓐍𓏏𓅓', confirm:'𓏞 ↑ ?', done:'𓏞 ✓', empty:'𓏞 —' }
+  ar: { trigger:'النسخ الاحتياطي', title:'بيانات رنبت', info:'احتفظ بنسخة من مواعيدك وتقاويمك وإعداداتك على جهازك. لا تُرسل أي بيانات إلى الإنترنت.', export:'تصدير نسخة', ics:'تصدير إلى Apple / Google Calendar', import:'استعادة نسخة', close:'إغلاق', confirm:'استعادة النسخة ستستبدل البيانات الموجودة من نفس النوع. هل تريد المتابعة؟', done:'تمت استعادة البيانات. سيُعاد تحميل رنبت.', empty:'لا توجد بيانات محفوظة للتصدير.', recover:'استعادة آخر نسخة تلقائية للمواعيد' },
+  cop: { trigger:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', title:'Ⲣⲉⲛⲡⲉⲧ · ⲇⲉⲇⲟⲙⲉⲛⲁ', info:'Ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ ⲉ̀ⲡⲉⲕⲥⲱⲙⲁ. Ⲙ̀ⲙⲟⲛ ⲟⲩⲱⲣⲡ ⲉ̀ⲡⲓⲓⲛⲧⲉⲣⲛⲉⲧ.', export:'Ⲥⲱⲧⲡ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', ics:'ICS · Apple / Google Calendar', import:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ', close:'Ϣⲧⲁⲙ', confirm:'Ⲧⲁϩⲟ ⲁⲛⲧⲓⲅⲣⲁⲫⲟⲛ?', done:'Ⲁⲩⲧⲁϩⲟ ⲛ̀ⲛⲓⲇⲉⲇⲟⲙⲉⲛⲁ.', empty:'Ⲙ̀ⲙⲟⲛ ⲇⲉⲇⲟⲙⲉⲛⲁ.', recover:'Ⲧⲁϩⲟ ⲙ̀ⲙⲉⲧⲥⲱⲛϩ' },
+  egy: { trigger:'𓏞 𓂋𓏤', title:'𓆳𓏏𓏤 · 𓏞', info:'𓏞 · 𓂋𓏤𓈖𓆎𓏏𓊖', export:'𓏞 ↓', ics:'ICS ↓', import:'𓏞 ↑', close:'𓐍𓏏𓅓', confirm:'𓏞 ↑ ?', done:'𓏞 ✓', empty:'𓏞 —', recover:'𓏞 ↺' }
 };
 const lang = () => words[document.body.dataset.language] ? document.body.dataset.language : 'ar';
 const tr = () => words[lang()];
@@ -75,12 +75,16 @@ function open() {
     <button type="button" data-backup="export" class="renpet-backup-action"></button>
     <button type="button" data-backup="ics" class="renpet-backup-action secondary"></button>
     <button type="button" data-backup="import" class="renpet-backup-action secondary"></button>
+    <button type="button" data-backup="recover" class="renpet-backup-action secondary" hidden></button>
   </section>`;
   dialog.querySelector('h2').textContent = t.title;
   dialog.querySelector('.renpet-backup-info').textContent = t.info;
   dialog.querySelector('[data-backup="export"]').textContent = t.export;
   dialog.querySelector('[data-backup="import"]').textContent = t.import;
   dialog.querySelector('[data-backup="ics"]').textContent = t.ics;
+  const recoveryButton=dialog.querySelector('[data-backup="recover"]');
+  recoveryButton.textContent=t.recover;
+  recoveryButton.hidden=!schedulerRecoveryStatus(localStorage).recoveryAvailable;
   dialog.dir = lang() === 'ar' ? 'rtl' : 'ltr';
   dialog.addEventListener('click', event => {
     const action = event.target.closest('[data-backup]')?.dataset.backup;
@@ -88,6 +92,11 @@ function open() {
     else if (action === 'export') exportData();
     else if (action === 'import') importData();
     else if (action === 'ics') exportCalendar();
+    else if (action === 'recover' && window.confirm(t.confirm)) {
+      const outcome=restoreSchedulerSnapshot(localStorage);
+      if(outcome.restored)window.location.reload();
+      else window.alert(lang()==='ar'?'لم يتم العثور على نسخة صالحة':'No valid recovery snapshot');
+    }
   });
   document.body.append(dialog);
   dialog.querySelector('[data-backup="export"]')?.focus();
