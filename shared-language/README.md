@@ -1,105 +1,64 @@
-# Egyptian Language Platform — infrastructure foundation
+# Egyptian Language Platform — source-expanded lexicon releases
 
-**Status: Stage 0 / contract and test harness, not a comprehensive corpus or finished keyboard.**
+**Status (2026-10-24): Source ingestion, canonical SQLite compilation, signed-by-SHA256 browser release installation and two-app deployment are implemented and tested. The selected available source editions have been fully processed; historically exhaustive coverage and advanced morphological/contextual prediction are NOT certified.**
 
-Reusable native-script dictionaries and prediction APIs for Renpet (Coptic + Egyptian)
-and MdwNfr (Egyptian only). Two separate *language-specific packs* share one search
-protocol. The shared package neither imports MdwNfr's document model nor changes
-Renpet's appointment storage. This directory is not hooked into either released app.
+## Current independently audited source builds
 
-## Current implementation
+| Pack | Native prediction surfaces | SQLite records | Lexical evidence |
+| --- | ---: | ---: | --- |
+| Late Egyptian hieroglyphic | **6,150** attested native-script word spellings | 2,902 lemmas; 6,150 spellings; 13,821 sentence references | 3,606 TLA Late Egyptian v19 sentences with 23,403 Unicode word occurrences; matching metadata for 2,834 lemmas from AED's 35,052 entries |
+| Coptic | **20,652** native-script word forms | 11,283 TEI entries plus 20,652 unlinked corpus-index identities; 38,194 spelling records with per-form provenance | 32,229 TEI form records from the full published KELLIA Comprehensive Coptic Lexicon v1.2 (2020), reconciled against existing Scriptorium Sahidic/Bohairic forms and KELLIA supplements |
 
-- `src/predict.mjs`: deterministic UTF-8/native-script Unicode candidate search using
-  binary search over pre-sorted lexical keys, strict language-stage/dialect filters,
-  documented-source candidate identities, context weights and caller-provided local
-  personalization; user's exact raw input is always first. No silent fallback.
-- `src/build_packs.py`: Python 3.12-compatible compiler for verified normalized
-  JSONL records and a pinned source manifest, with explicit failure for missing
-  provenance, stage/dialect or invented spellings. Coverage is always `UNVERIFIED`
-  until individual source adapters have been audited.
-- `tests/`: purely synthetic contract fixtures. **No test fixture is an attested
-  historical word and none is distributed as a production dictionary.**
+Unique prediction surfaces are **not** the number of meanings, lemmas, textual occurrences, or the total vocabulary used in all periods.
 
-Run `node --test tests/predict.test.mjs` and
-`python -m unittest discover -s tests -p 'test_*.py' -v`.
+The Coptic prediction masks retain Sahidic-only (12,246), Bohairic-only (3,358), both (4,041), and no verified Sahidic/Bohairic attribution (1,007) forms. Unverified dialect attribution is never guessed.
 
-## Next required implementations
+All provided datasets were acquired from their explicit public release and checked against pinned SHA-256 source hashes. The Late Egyptian vocabulary does **not** silently include Earlier Egyptian material. AES/ORAEC remain registered as open-source supplement candidates: they do not yet supply independently verified, stage-qualified native spellings in the published build. Access-restricted Ramsès, Lesko and the full TLA online corpus are excluded.
 
-1. Source-specific importers for approved *open* Late Egyptian data only:
-   TLA Late Egyptian v19 filtered extract, AED, AES and individually verified
-   CC BY-SA/CC0 ORAEC files. Ramsès, Lesko and the full TLA Corpus 20 are
-   excluded from all active source builds. Pin each actual file and audit
-   spelling provenance, stage and overlaps. Recover and validate the original
-   full MdwNfr lexicon only when its underlying records satisfy this policy.
-2. Morphological inference limited to documented grammatical paradigms,
-   non-destructive fuzzy correction, per-language contextual models from licensed
-   corpora and an efficient install/download/verify/rollback protocol.
-3. Renpet adapter: native inline LTR Unicode text for both Coptic and hieroglyphics.
-   No quadrat editor, no custom glyph scaling, no formatting; preserve appointments.
-4. MdwNfr adapter: Python remains sole authority for document mutations and
-   layout, while shared predictor returns spelling IDs + evidence. No Coptic mode.
-5. MdwNfr sign compositor: outline-measured dimensions; historically grounded
-   quadrat arrangement; RTL/LTR, sign facing, robust hit testing/export. Retain
-   existing *one word = one logical quadrat* rule until explicitly changed.
+## Binary authority and app behavior
 
-### Publication gate
+- **One canonical SQLite master per language:** `src/compile_lexica.py` produces immutable `lexicon.sqlite3` with lemma, spelling and evidence tables.
+- The compact Unicode prediction JSON is an **export of that master build**, not another independently edited dictionary.
+- Renpet bundles and installs both validated releases; MdwNfr bundles and installs only the Late Egyptian release. Renpet no longer ships raw Scriptorium/KELLIA word source tables as its editable prediction authority.
+- A dedicated IndexedDB installation area checks SHA-256 and structural integrity on every startup. Valid saved copies start offline. Missing or corrupt copies are installed, repaired from a verified previous release or fetched from the bundled PWA cache/network. Failed updates cannot delete personal appointments, documents or learning.
+- MdwNfr's Python runtime spelling catalog is replaced at build time with the **same 6,150-record release** shipped in Renpet; MdwNfr's advanced layout and Renpet's simple inline Unicode layout remain separate.
 
-No claims of `complete`, `comprehensive`, or `offline-ready` based only on the
-sample packs or passing synthetic tests. Tests must compare actual source record
-counts/hashes, fonts, stage/dialect partitions, reproducible lexical evidence,
-physical iPhone keyboard input, save/reload behavior and airplane mode.
+## How to regenerate the verified release
 
-**Sources to evaluate:** KELLIA Coptic Dictionary Online (CC BY-SA 4.0 lexical
-TEI), Coptic SCRIPTORIUM NLP and corpus resources (per-dataset license), TLA and
-user-pinned AED/AES/ORAEC editions (rights and source-format verification).
+Download these specific open files into a private build directory, checking the exact SHA-256 digest:
 
-## Late Egyptian open-only registry (2026-10-24)
-
-The active registry contains **four openly reusable source editions**:
-TLA v19 Late Egyptian, AED, AES and selected ORAEC files. Restricted or
-permission-only material has been **removed from the registry and rejected by
-the production canonical builder**. These open editions still have attribution
-and, for CC BY-SA, ShareAlike requirements. The registry is not an archive and
-no full source corpus has yet been imported. Run
-`python src/source_registry.py status` for the active list.
-
-## Canonical single-database design (2026-10-24 decision)
-
-**External source corpora never ship with or serve the apps.** They are consulted
-in a repeatable *offline build stage* that produces the one canonical Late Egyptian
-`lexicon.sqlite3`. `src/build_master.py` builds this database from normalized,
-attested records and their reviewed cross-source lemma mappings. It preserves
-referential provenance inside the database and deduplicates exact spelling/forms
-only when semantic lemma equivalence has been verified. Two identical written
-strings do not automatically have the same meaning. AED/AES/ORAEC shared lineage
-is tracked to avoid false independent-corpus counts.
-
-`src/export_runtime.py` derives a compact native-Unicode prediction index from
-that SQLite master, using the *same release* in both Renpet and MdwNfr. The
-browser adapter may read that index as JSON (Safari cannot natively open SQLite
-without a reader); this is a generated view of the same database, not another
-linguistic authority. Native Python can query the master directly. No runtime
-fetch to TLA, Ramsès, AED, AES, ORAEC or Lesko is ever required.
-
-**Private, build-only use and public distribution are different decisions.** A
-personal, noncommercial project lowers distribution needs but does not erase
-copyright, website access rules, or permission requirements. The local builder
-accepts legitimately obtained research input and records its provenance; the
-separate `--distribution public` export refuses any non-open input.
-The current GitHub repository and Cloudflare PWA are public, so full restricted
-lexical datasets must not be pushed there as part of a private workflow.
-
-Example after source-specific adapters have produced verified normalized records:
+- TLA Late Egyptian v19 premium `train.jsonl`: `dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df`
+- AED-TEI `dictionary.xml` at commit `462c722e0323e05641aea2eee8cdf1e27303d939`: `faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730`
+- KELLIA Comprehensive Coptic Lexicon v1.2 (2020) XML at commit `f365e2d239bd12b6897f3a761487e40d384b2b24`: `ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d`
 
 ```bash
-python shared-language/src/build_master.py \
-  --records /private/late-egyptian-normalized.jsonl \
-  --manifest /private/source-manifest.json \
-  --out /private/lexicon.sqlite3
-python shared-language/src/export_runtime.py \
-  --db /private/lexicon.sqlite3 \
-  --out /private/egyptian-late-runtime.json \
-  --distribution local
+python shared-language/src/compile_lexica.py egyptian \
+  --tla /private/tla.jsonl --aed /private/aed.xml --out /private/build/egy
+python shared-language/src/publish_release.py \
+  --catalog /private/build/egy/lexicon.json --out /private/build/egy
+python shared-language/src/compile_lexica.py coptic \
+  --tei /private/coptic.xml \
+  --forms renpet/web/assets/dictionaries/coptic.json \
+  --popular renpet/web/assets/dictionaries/coptic-popular.json \
+  --out /private/build/cop
+python shared-language/src/publish_compiled_coptic.py --out /private/build/cop
 ```
 
-No full historical corpora have yet been imported by these contract tests.
+The compiler prints coverage reports and writes `coverage.json`, `manifest.json`, `lexicon.json`, and `lexicon.sqlite3` per language. The automated source-build workflow also uploads both master databases as a downloadable artifact.
+
+## Verification
+
+- `validate-corpora.yml`: checks all source imports, manifests, SQLite integrity, reproducible coverage counts, native-script exclusion filters and licensed source fingerprints.
+- `test-shared-language.yml`: verifies missing/corrupt/offline/rollback first-run scenarios and dictionary-pack contracts.
+- `deploy-renpet-pages.yml` and `deploy-mdwnfr.yml`: reconstruct and verify the same source editions, then check deployed release counts via HTTPS smoke tests.
+- `renpet-mobile-qa.yml`: exercises iPhone-size WebKit/Chromium calendar input, save/reopen and offline behavior against the source-expanded packs.
+
+## What is still NOT 100% linguistically complete
+
+The downloadable TLA v19 premium dataset contains a *filtered portion* of known Late Egyptian materials, not the entire TLA corpus. Some attested words use non-Unicode or unencoded signs (1,034 word occurrences in this import), which cannot become valid native-sign suggestions without independent source verification. AED additionally contains many broader-stage transliteration-only entries; those are **not** automatically converted into Late Egyptian written words.
+
+The Coptic sources are substantial, not all historic dialects or inflected word forms ever attested. TEI lexical descriptions do not automatically constitute a contextual predictive language model. A future comprehensive orthographic coverage audit and trained next-word/morphology evaluation are separate requirements.
+
+This distinction prevents a falsely '100% complete' badge even though the **implemented database pipeline, bootstrap and deployment** are production-operational for the imported material.
+
+Attribution: Thesaurus Linguae Aegyptiae, Simon D. Schweitzer and contributors (AED), KELLIA Comprehensive Coptic Lexicon (BBAW/DDGLC), Coptic SCRIPTORIUM. Reuse follows the respective published CC BY-SA permissions and acknowledgments.
