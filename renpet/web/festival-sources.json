@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "description": "Renpet festival-source registry. Add future catalogs here; each selected source is independently enabled. Calendar appointments are managed separately.",
+  "sources": [
+    {
+      "id": "amun-theban",
+      "category": "ancient-egyptian",
+      "status": "available",
+      "name": {
+        "ar": "آمون — طيبة",
+        "cop": "Ⲁⲙⲟⲩⲛ — Ⲑⲏⲃⲁⲓ",
+        "egy": "𓇋𓏠𓈖 — 𓌀𓏏𓊖"
+      },
+      "description": {
+        "ar": "أعياد لاهوت آمون الطيبي؛ التواريخ المثبتة في القائمة الحالية فقط",
+        "cop": "Amun · Theban festival calendar",
+        "egy": "Amun · Theban festival calendar"
+      },
+      "calendarRule": "egyptian-fixed",
+      "data": {
+        "type": "embedded",
+        "key": "festivals"
+      },
+      "defaultEnabled": true
+    }
+  ]
+}
