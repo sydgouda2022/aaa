@@ -563,6 +563,32 @@ async function run(){
 
   await ctx.close();
  }
+ await step('iPad/web large GUI has separated calendar, agenda and navigation rail',async()=>{
+  const ctx=await b.newContext({viewport:{width:1024,height:768},deviceScaleFactor:1,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
+  const q=await ctx.newPage();q.setDefaultTimeout(8000);
+  await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await q.locator('.month-agenda').waitFor();
+  const inspect=()=>q.evaluate(()=>{
+   const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {left:r.left,right:r.right,width:r.width};};
+   return {shell:getComputedStyle(document.querySelector('.app-shell')).display,month:getComputedStyle(document.querySelector('.month-scroll')).display,
+    rail:rect('.ux-bottom'),calendar:rect('.month-section'),agenda:rect('.month-agenda'),
+    scrollWidth:document.documentElement.scrollWidth,viewport:innerWidth};
+  });
+  const ar=await inspect();
+  if(ar.shell!=='grid'||ar.month!=='grid')throw Error('Large screen still renders phone-only stack: '+JSON.stringify(ar));
+  if(ar.rail.right>ar.calendar.left+2||ar.calendar.right>ar.agenda.left+2)throw Error('Large view overlaps: '+JSON.stringify(ar));
+  if(ar.scrollWidth>ar.viewport+2)throw Error('Large GUI horizontally clips: '+JSON.stringify(ar));
+  await screenshot(q,'ipad-arabic-split-month');
+  await q.locator('header [data-open-panel=settings]').click();
+  await q.locator('select[name=language]').selectOption('egy');
+  await q.locator('select[name=week]').selectOption('10');
+  await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+  if(await q.locator('.week-band').count()!==3)throw Error('Egyptian large month has to contain 3 horizontal decade bands');
+  await screenshot(q,'ipad-hieroglyphic-split-month');
+  const eg=await inspect();
+  if(eg.scrollWidth>eg.viewport+2||eg.agenda.width<180)throw Error('iPad hieroglyphic agenda clipped: '+JSON.stringify(eg));
+  await ctx.close();return {arabic:ar,egyptian:eg};
+ });
  await b.close();
 }
 (async()=>{try{await run()}catch(e){errors.push('FATAL '+String(e.stack||e))}
