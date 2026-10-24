@@ -620,7 +620,7 @@ async function run(){
    await q.setViewportSize({width,height});
    await q.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
    const m=await q.evaluate(()=>{
-    const ones=document.querySelector('.egy-date-ones:has(>span:nth-child(9))');
+    const ones=[...document.querySelectorAll('.egy-date-ones:has(>span:nth-child(9))')].at(-1); // day 29, not day 9
     const day=ones?.closest('.day-number'),tens=day?.querySelector('.egy-date-tens');
     const css=el=>el?{size:parseFloat(getComputedStyle(el).fontSize),weight:parseFloat(getComputedStyle(el).fontWeight),
      stroke:parseFloat(getComputedStyle(el).webkitTextStrokeWidth),height:el.getBoundingClientRect().height,width:el.getBoundingClientRect().width}:null;
