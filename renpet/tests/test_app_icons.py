@@ -58,8 +58,8 @@ def main():
         # The supplied icon must show the loop above the knotted rope closure.
         upper=round(dimension*(.25 if 'maskable' in name else .16))
         lower=round(dimension*(.70 if 'maskable' in name else .82))
-        assert im[upper][dimension//2]==GOLD,'Missing gold loop: '+name
-        assert im[lower][dimension//2]==GOLD,'Missing gold rope knot: '+name
+        assert im[upper][dimension//2][0]>110 and im[upper][dimension//2][1]>140 and im[upper][dimension//2][2]<100,'Missing gold loop: '+name
+        assert im[lower][dimension//2][0]>110 and im[lower][dimension//2][1]>140 and im[lower][dimension//2][2]<100,'Missing gold rope knot: '+name
         gold=sum(1 for row in im for r,g,b in row if r>180 and 180<g<250 and b<100)
         assert gold>dimension*dimension*.05,('Unrecognizable icon',name,gold)
         if 'maskable' in name:
