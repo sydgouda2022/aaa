@@ -4,7 +4,7 @@ import sqlite3
 import tempfile
 import unittest
 import sys
-sys.path.insert(0,str(Path(__file__).parent))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1] / 'src'))
 from compile_lexica import build_egyptian,build_coptic,source_rows
 
 class Tests(unittest.TestCase):
