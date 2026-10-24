@@ -53,8 +53,12 @@ test('failed update preserves last verified release',async()=>{
  assert.equal(a.manifest.sha256,manifest.sha256);
  assert.equal(s.state.active.manifest.sha256,manifest.sha256);
 });
-test('missing offline database reports install required',async()=>{
- await assert.rejects(ensureLexiconImpl({store:store(),online:false}),/connect once/);
+test('missing offline database repairs from offline PWA precache',async()=>{
+ const s=store();const a=await ensureLexiconImpl({store:s,online:false,fetcher:fetcher()});
+ assert.equal(a.manifest.sha256,manifest.sha256);assert.ok(await validateSlot(s.state.active));
+});
+test('missing database without cached assets reports install required',async()=>{
+ await assert.rejects(ensureLexiconImpl({store:store(),online:false,fetcher:fetcher({failManifest:true})}),/no verified local copy/);
 });
 test('fake poisoned manifest cannot damage working installation',async()=>{
  const s=store(example);const a=await ensureLexiconImpl({store:s,fetcher:fetcher({manifestValue:{...manifest,complete:'yes'}})});

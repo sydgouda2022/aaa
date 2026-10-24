@@ -94,7 +94,9 @@ export async function ensureLexiconImpl({store=idbStore(),fetcher=fetch,online=t
  let recovered=false;
  if(!active&&previous){await store.restore(previous.slot);active=previous;recovered=true;}
  let remote=null;
- if(online){
+ if(online||!active){
+  // When the local record is missing, also try the PWA's offline precache.
+  // A cached, SHA-256-valid release can repair IndexedDB without connectivity.
   try{remote=validateManifest(await (await requestJSON(MANIFEST_URL,fetcher,active?1600:timeoutMs)).json());}
   catch(e){if(!active)throw Error('Lexicon unavailable and no verified local copy: '+String(e?.message||e));}
  }
