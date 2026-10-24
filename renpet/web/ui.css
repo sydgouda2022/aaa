@@ -387,3 +387,8 @@ body[data-language=ar] .year-month-name{font-family:CairoRenpet,system-ui,sans-s
 }
 /* No Close X in settings: the existing backdrop is the dismiss control. */
 .ux-panel-head{justify-content:flex-start}
+
+/* Renpet 6.1: immediate, accessible feedback when an appointment cannot be saved. */
+.event-error{margin:0;padding:10px 16px;border-bottom:1px solid var(--rubric);background:var(--rubric-soft);color:var(--rubric);font-weight:700;line-height:1.45}
+.ux-bottom:has(.ux-nav-item:nth-child(2):last-child){justify-content:space-evenly}
+.ux-bottom:has(.ux-nav-item:nth-child(2):last-child) .ux-nav-item{flex:0 1 44%;max-width:240px}
