@@ -537,3 +537,17 @@ body[data-language=egy] .month-section .date.chosen .day-number{background:var(-
  .month-scroll{grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:35px}
  .month-section.ten-day .decade-days .date{min-height:95px}
 }
+
+/* On a narrow phone the 7-day month can occupy six rows. Preserve a usable
+   selected-day agenda rather than letting the entire section fall behind nav. */
+@media(max-width:767px){
+ .month-scroll:has(.seven-day){height:100%;min-height:0;overflow:hidden}
+ .month-scroll:has(.seven-day) .month-section{
+   flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none
+ }
+ .month-scroll:has(.seven-day) .month-section::-webkit-scrollbar{display:none}
+ .month-scroll:has(.seven-day) .month-agenda{
+   flex:0 0 clamp(126px,28%,170px);min-height:126px;max-height:38%;
+   overflow-y:auto;overscroll-behavior:contain
+ }
+}
