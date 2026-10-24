@@ -60,6 +60,16 @@ export function ensureSavedItemVisible(state,item){
  calendar.visible=true;
  return item;
 }
+// Show saved appointments from historical app versions whose calendar was
+// hidden or later deleted. Preserve appointment records and identifiers.
+export function revealSavedCalendars(state){
+ if(!state.calendars.length)state.calendars.push(copy(DEFAULT_CALENDARS[0]));
+ const fallback=state.calendars.find(c=>c.id==='personal')||state.calendars[0];
+ const ids=new Set(state.calendars.map(c=>c.id));
+ for(const cal of state.calendars)cal.visible=true;
+ for(const item of state.items)if(!ids.has(item.calendarId))item.calendarId=fallback.id;
+ return state;
+}
 export function hiddenItemsForDay(state,day,years){
  const visible=visibleCalendars(state);
  return state.items.filter(item=>!visible.has(item.calendarId)&&occursOn(item,day,years));
