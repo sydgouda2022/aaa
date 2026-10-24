@@ -44,8 +44,8 @@ assert.ok(has('preferences-page')&&has('class="app-shell"'),'Settings opens as c
 assert.ok(has('data-open-panel="calendars"')&&has('data-backup'),'Advanced features nested in Settings');
 assert.ok(has('data-open-panel="festivals"'),'Festival source selector is available within Settings');
 click('data-open-panel','festivals');
-assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun is the only selectable source');
-assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,1,'Only Amun is available');
+assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun remains a selectable source');
+assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,4,'Amun, national, Christian, Muslim choices present');
 for(const handler of handlers.change||[])handler({target:{
  name:'',checked:false,dataset:{festivalSourceId:'amun-theban'},
  hasAttribute:key=>key==='data-festival-source-id',closest:()=>null
