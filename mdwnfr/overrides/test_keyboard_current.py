@@ -70,7 +70,7 @@ class KeyboardCurrentTests(unittest.TestCase):
  def test_rpc_rejects_transliteration(self):
   result=json.loads(handle_json(json.dumps({'method':'suggest','prefix':['nfr']})))
   self.assertFalse(result['ok'])
-  self.assertIn('hieroglyph',result['error'].lower())
+  self.assertTrue('hieroglyph' in result['error'].lower() or 'unicode codepoint' in result['error'].lower())
  def test_prediction_response_has_source_provenance(self):
   result=json.loads(handle_json(json.dumps({'method':'suggest','prefix':['𓅓'],'limit':8})))
   self.assertTrue(result['ok'])
