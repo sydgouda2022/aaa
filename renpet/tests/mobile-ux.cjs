@@ -18,7 +18,7 @@ async function run(){
  const b=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
  for(const [name,w,h] of [['iphone-375',375,667],['iphone-390',390,844]]){
   const ctx=await b.newContext({viewport:{width:w,height:h},deviceScaleFactor:2,isMobile:true,hasTouch:true,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
-  const p=await ctx.newPage();await p.clock.install({time:new Date('2026-10-24T06:30:15.000Z')});p.on('pageerror',e=>errors.push(String(e)));p.on('dialog',d=>d.accept());
+  const p=await ctx.newPage(); p.setDefaultTimeout(8000);await p.clock.install({time:new Date('2026-10-24T06:30:15.000Z')});p.on('pageerror',e=>errors.push(String(e)));p.on('dialog',d=>d.accept());
   await step(name+' initial',async()=>{await p.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});await p.locator('.month-agenda').waitFor();await p.evaluate(()=>document.fonts.ready);await screenshot(p,name+'-month');return inspect(p,name+'-month');});
   await step(name+' Year picker',async()=>{await p.locator('[data-open-year]').click();await p.locator('.year-season').first().waitFor();await screenshot(p,name+'-year');return {seasonCount:await p.locator('.year-season').count(),monthCount:await p.locator('.year-month').count()};});
   await step(name+' month selection',async()=>{await p.locator('[data-open-month="1"]').click();await screenshot(p,name+'-month-from-year');return inspect(p,name+'-month-from-year');});
@@ -131,7 +131,7 @@ async function run(){
   });
 
   await step(name+' native Coptic and hieroglyphic keyboards',async()=>{
-   const k=await ctx.newPage();
+   const k=await ctx.newPage(); k.setDefaultTimeout(8000);
    k.on('dialog',d=>d.accept());
    await k.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await k.locator('.month-agenda').waitFor();
@@ -184,7 +184,7 @@ async function run(){
 
 
   await step(name+' localized Arabic, Coptic and hieroglyphic event time controls',async()=>{
-   const q=await ctx.newPage();
+   const q=await ctx.newPage(); q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await q.locator('.month-agenda').waitFor();
@@ -254,7 +254,7 @@ async function run(){
 
 
   await step(name+' event year uses selected language, not English number input',async()=>{
-   const q=await ctx.newPage();
+   const q=await ctx.newPage(); q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await q.locator('.month-agenda').waitFor();
@@ -287,7 +287,7 @@ async function run(){
 
 
   await step(name+' shared red rubric and readable hieroglyphic controls',async()=>{
-   const q=await ctx.newPage();
+   const q=await ctx.newPage(); q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await q.locator('.month-agenda').waitFor();
@@ -379,7 +379,7 @@ async function run(){
 
 
   await step(name+' Year grids, Cairo, attested dictionaries and universal outside tap',async()=>{
-   const q=await ctx.newPage();
+   const q=await ctx.newPage(); q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await q.locator('.month-agenda').waitFor();
