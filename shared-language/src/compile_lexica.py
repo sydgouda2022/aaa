@@ -31,7 +31,7 @@ def digest(path):
 
 
 def hieroglyphic(s):
-    return isinstance(s,str) and bool(s) and all(0x13000<=ord(c)<=0x1345F for c in s) and any(0x13000<=ord(c)<=0x1342F for c in s)
+    return isinstance(s,str) and bool(s) and len(s)<=256 and all(0x13000<=ord(c)<=0x1342F or 0x13460<=ord(c)<=0x143FF for c in s)
 
 
 def coptic(s):
