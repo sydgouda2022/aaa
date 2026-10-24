@@ -51,7 +51,7 @@ async function run(){
    await p.locator('[name=language]').selectOption('egy');
    await p.locator('[data-close-panel]').click();
    const pictograms=await p.locator('.timeline-hour .clock-glyph').count();
-   if(pictograms<24)throw Error('Missing hieroglyphic clock numeral artwork: '+pictograms);
+   if(pictograms!==23||!(await p.locator('.timeline-hour .clock-zero').count()))throw Error('Missing hieroglyphic numeral artwork or midnight zero marker: '+pictograms);
    if(!(await p.locator('[data-now-line]').count()))throw Error('Live red line absent after language change');
    await screenshot(p,name+'-hieroglyphic-clock');
    await p.locator('[data-open-panel=settings]').click();
