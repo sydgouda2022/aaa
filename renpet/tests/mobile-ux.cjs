@@ -296,6 +296,7 @@ async function run(){
    for(const language of ['ar','cop','egy']){
     await q.locator('[data-open-panel=settings]').click();
     await q.locator('select[name=language]').selectOption(language);
+    if(language==='egy'||language==='cop')await q.locator('select[name=week]').selectOption('10');
     await q.locator('[data-close-panel]').click();
     const month=q.locator('.month-section');
     await month.waitFor();
@@ -345,6 +346,9 @@ async function run(){
     palette[language]=info;
     await q.locator('#event-editor [data-close]').click();
     if(language==='egy'){
+     const grid=await q.locator('.month-section').evaluate(el=>({scroll:el.scrollHeight,client:el.clientHeight,top:el.getBoundingClientRect().top}));
+     const agenda=await q.locator('.month-agenda').evaluate(el=>({top:el.getBoundingClientRect().top,visible:el.getBoundingClientRect().top<innerHeight-80}));
+     if(!agenda.visible||agenda.top>670)throw Error('Selected-day agenda still below fold: '+JSON.stringify({grid,agenda}));
      const num=q.locator('.decade-days .date .day-number').first();
      const infoNum=await num.evaluate(el=>({size:getComputedStyle(el).fontSize,lines:getComputedStyle(el).lineHeight,images:el.querySelectorAll('img').length}));
      if(parseFloat(infoNum.size)<26||infoNum.images)throw Error('Egyptian day numerals remain too small or scaled SVG: '+JSON.stringify(infoNum));
