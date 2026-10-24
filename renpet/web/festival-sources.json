@@ -85,6 +85,48 @@
         "path": "./festival-packs/muslim-egypt.json"
       },
       "defaultEnabled": false
+    },
+    {
+      "id": "esna-khnum",
+      "category": "ancient-egyptian",
+      "status": "available",
+      "name": {
+        "ar": "إسنا — خنوم ونيت",
+        "cop": "Ⲉⲥⲛⲏ — Ⲭⲛⲟⲩⲙ",
+        "egy": "𓎛𓈖𓅓"
+      },
+      "description": {
+        "ar": "تواريخ موثقة مختارة من تقويم إسنا المتأخر؛ القائمة ليست شاملة. التثبيت السكندري إسقاط حديث.",
+        "cop": "Selected attested Esna festival dates; partial",
+        "egy": "Esna · sourced, partial"
+      },
+      "calendarRule": "egyptian-fixed",
+      "data": {
+        "type": "file",
+        "path": "./festival-packs/esna-khnum.json"
+      },
+      "defaultEnabled": false
+    },
+    {
+      "id": "isis-philae",
+      "category": "ancient-egyptian",
+      "status": "available",
+      "name": {
+        "ar": "إيزيس — فيلة",
+        "cop": "Ⲏⲥⲓⲥ — Ⲫⲓⲗⲁⲓ",
+        "egy": "𓊨𓏏𓆇"
+      },
+      "description": {
+        "ar": "ذكرى ميلاد إيزيس المثبتة في أيام النسيء؛ تقويم أولي يحتاج توسعة، ولا ننسب له تواريخ غير موثقة.",
+        "cop": "Isis birthday, documented epagomenal date; partial",
+        "egy": "Isis · sourced, partial"
+      },
+      "calendarRule": "egyptian-fixed",
+      "data": {
+        "type": "file",
+        "path": "./festival-packs/isis-philae.json"
+      },
+      "defaultEnabled": false
     }
   ]
 }

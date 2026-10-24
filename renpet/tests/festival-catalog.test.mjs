@@ -11,7 +11,7 @@ const fetchManifest=async u=>({ok:true,json:async()=>
  u==='./festival-sources.json'?actualManifest:read(u.replace('./',''))
 });
 const catalog=await loadFestivalCatalog(data,fetchManifest);
-assert.equal(catalog.sources.length,4,'Four independently selectable source packs are loaded');
+assert.equal(catalog.sources.length,6,'Six independently selectable source packs are loaded');
 assert.equal(catalog.sources[0].id,AMUN_SOURCE);
 assert.equal(catalog.sources[0].events.length,data.festivals.length,'Do not change attested Amun date list');
 assert.equal(enabledSourceIds(null,catalog).join(','),AMUN_SOURCE,'Amun enabled for existing users');
@@ -24,6 +24,11 @@ const newYear=toGregorian({year:6282,month:1,day:1},data.years);
 assert.equal(catalog.sources.find(s=>s.id==='national-egypt').events.length,7);
 assert.equal(catalog.sources.find(s=>s.id==='christian-coptic').events.length,2);
 assert.equal(catalog.sources.find(s=>s.id==='muslim-egypt').events.length,3);
+assert.equal(catalog.sources.find(s=>s.id==='esna-khnum').events.length,3);
+assert.equal(catalog.sources.find(s=>s.id==='isis-philae').events.length,1);
+assert.ok(festivalHitsForDay(toGregorian({year:6282,month:11,day:13},data.years),data.years,catalog,['esna-khnum']).some(f=>f.id==='esna-neith-visit'));
+assert.ok(festivalHitsForDay(toGregorian({year:6282,month:13,day:4},data.years),data.years,catalog,['isis-philae']).some(f=>f.id==='isis-epagomenal-birthday'));
+assert.equal(festivalHitsForDay(toGregorian({year:6282,month:13,day:4},data.years),data.years,catalog,[]).length,0,'No historical catalog on opt-out');
 assert.ok(festivalHitsForDay(dayNumber('2026-04-13'),data.years,catalog,['national-egypt']).some(f=>f.id==='sham-el-nessim-2026'));
 assert.ok(festivalHitsForDay(dayNumber('2026-04-12'),data.years,catalog,['christian-coptic']).some(f=>f.id==='coptic-easter-2026'));
 assert.ok(festivalHitsForDay(dayNumber('2026-03-20'),data.years,catalog,['muslim-egypt']).some(f=>f.id==='eid-al-fitr-2026'));
@@ -67,4 +72,4 @@ assert.equal(festivalHitsForDay(christmas,data.years,future,[]).length,0);
 
 const fallback=await loadFestivalCatalog(data,async()=>{throw Error('offline registry blocked')});
 assert.equal(fallback.sources[0].events.length,data.festivals.length,'Amun remains readable if registry request fails');
-console.log('Four-source registry, per-event fixed/dated rules and calendar isolation passed');
+console.log('Six-source registry, per-event fixed/dated rules and calendar isolation passed');

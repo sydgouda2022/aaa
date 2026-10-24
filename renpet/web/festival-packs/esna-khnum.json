@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "sourceId": "esna-khnum",
+  "scope": "Three securely dated selected Esna occasions; published temple inscriptions. Alexandrian modern projection, not a claim of fixed Gregorian antiquity.",
+  "events": [
+    {
+      "id": "esna-akhet4-festivities",
+      "ar": "احتفالات إسنا في الشهر الرابع من آخت",
+      "month": 4,
+      "day": 1,
+      "duration": 6,
+      "description_ar": "شواهد إسنا: احتفالات من اليوم 1 إلى 6 من الشهر الرابع لآخت، في Esna V:47–67. تفاصيل الطقس لا ترد بكاملها في العرض المختصر. تحويل التاريخ إلى التقويم السكندري إحياء حديث، لا تاريخ ميلادي أثري ثابت.",
+      "sourceUrl": "https://escholarship.org/uc/item/6k78t4w9"
+    },
+    {
+      "id": "esna-neith-visit",
+      "ar": "عيد زيارة الإلهة نيت — إسنا",
+      "month": 11,
+      "day": 13,
+      "duration": 1,
+      "description_ar": "ورد في نصوص إسنا V:245–308 زيارة الإلهة نيت في اليوم 13 من الشهر الثالث لشمو. المصدر نقوش المعبد المتأخر، ولا يعني أن العيد كان قائماً بالشكل نفسه في كل عصور مصر.",
+      "sourceUrl": "https://escholarship.org/uc/item/6k78t4w9"
+    },
+    {
+      "id": "esna-khnum-victory",
+      "ar": "عيد انتصار خنوم رع — إسنا",
+      "month": 11,
+      "day": 19,
+      "duration": 2,
+      "description_ar": "عيد انتصار خنوم رع في اليومين 19 و20 من الشهر الثالث لشمو، Esna V:309–378. عُرضت التواريخ وفق ترقيم السنة المصرية ثم أُسقطت سكندرياً.",
+      "sourceUrl": "https://escholarship.org/uc/item/6k78t4w9"
+    }
+  ]
+}
