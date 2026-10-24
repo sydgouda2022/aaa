@@ -130,18 +130,31 @@ def persist_json(path, payload):
     Path(path).write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
 
 
-def build_egyptian(tla_path,aed_path,out):
+def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None):
+    """Produce one stage-filtered SQLite master and identical browser spellings.
+
+    AES never enters by historical date alone. The source file must match its
+    pinned SHA-256 and each document ID must have explicit philological approval.
+    """
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     counts,evidence,stats=source_rows(tla_path)
     aed=aed_metadata(aed_path) if aed_path else {}
     sha_tla=digest(tla_path)
     sha_aed=digest(aed_path) if aed_path else None
+    aes_counts,aes_evidence,aes_stats,sha_aes={},{},{},None
+    if bool(aes_path)!=bool(aes_whitelist):
+        raise ValueError('AES source and individual text whitelist must be supplied together')
+    if aes_path:
+        from aes_late_adapter import curated_aes_rows
+        aes_counts,aes_evidence,aes_stats,sha_aes=curated_aes_rows(aes_path,aes_whitelist)
     db=db_connect(out/'lexicon.sqlite3')
     db.execute('INSERT INTO metadata VALUES (?,?)',('language','egy'))
     db.execute('INSERT INTO metadata VALUES (?,?)',('stage','Late Egyptian'))
     db.execute('INSERT INTO metadata VALUES (?,?)',('tla_sha256',sha_tla))
     if sha_aed:db.execute('INSERT INTO metadata VALUES (?,?)',('aed_sha256',sha_aed))
+    if sha_aes:db.execute('INSERT INTO metadata VALUES (?,?)',('aes_curated_sha256',sha_aes))
     entries=[]
+    known={}
     for (lemma,form),frequency in sorted(counts.items()):
         lexical_id=('tla19:'+lemma if lemma!='unresolved' else 'unresolved:'+hashlib.sha256(form.encode()).hexdigest()[:12])
         a=aed.get(lemma,{})
@@ -153,26 +166,58 @@ def build_egyptian(tla_path,aed_path,out):
             ref='line:'+str(at)
             att_id=hashlib.sha256((record_id+ref).encode()).hexdigest()[:24]
             db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',(att_id,record_id,'TLA-LE19',ref,sha_tla))
+        known[(lemma,form)]=len(entries)
         entries.append({'ref':record_id,'signs':form,'lemma':lexical_id,
                         'source':'TLA-LE19','primary':True,'attestations':frequency})
+    added=0
+    for (lemma,form),frequency in sorted(aes_counts.items()):
+        lexical_id='tla19:'+lemma
+        a=aed.get(lemma,{})
+        db.execute('INSERT OR IGNORE INTO lemma VALUES (?,?,?,?)',(lexical_id,a.get('headword',''),a.get('pos',''),a.get('gloss','')))
+        record_id='tla19:'+hashlib.sha256((lexical_id+'|'+form).encode()).hexdigest()[:20]
+        key=(lemma,form)
+        if key in known:
+            existing=entries[known[key]]
+            existing['attestations']+=frequency
+            existing['source']='TLA-LE19+AES-LATE-CURATED'
+            db.execute('UPDATE spelling SET frequency=frequency+? WHERE id=?',(frequency,record_id))
+        else:
+            db.execute('INSERT INTO spelling(id,lemma_id,native_form,frequency) VALUES (?,?,?,?)',
+                       (record_id,lexical_id,form,frequency))
+            entries.append({'ref':record_id,'signs':form,'lemma':lexical_id,
+                'source':'AES-LATE-CURATED','primary':True,'attestations':frequency})
+            known[key]=len(entries)-1
+            added+=1
+        for reference in aes_evidence[key]:
+            eid=hashlib.sha256((record_id+'|AES|'+reference).encode()).hexdigest()[:24]
+            db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',
+                       (eid,record_id,'AES-LATE-CURATED',reference,sha_aes))
     db.commit()
     assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
+    sql_count=db.execute('SELECT COUNT(*) FROM spelling').fetchone()[0]
+    assert sql_count==len(entries)==len(known)
+    missing=db.execute('SELECT COUNT(*) FROM spelling s WHERE NOT EXISTS(SELECT 1 FROM attestation a WHERE a.spelling_id=s.id)').fetchone()[0]
+    assert missing==0,'Every written form must retain an attestation'
     match_count=db.execute("SELECT COUNT(*) FROM lemma WHERE headword != ''").fetchone()[0]
     db.close()
+    sources={'TLA-LE19':sha_tla,'AED-TEI':sha_aed}
+    if sha_aes:sources['AES-LATE-CURATED']=sha_aes
     payload={'format':'mdwnfr-predict-v1',
         'metadata':{'name':'Late Egyptian Attested Unicode Lexicon','complete':False,
                     'stage':'Late Egyptian', 'lexemes':len({x['lemma'] for x in entries}),
                     'spelling_records':len(entries),
-                    'source_corpus':'TLA Late Egyptian v19 premium; AED lexical crosswalk',
-                    'tla_sha256':sha_tla,'aed_sha256':sha_aed,
+                    'source_corpus':'TLA Late Egyptian v19; AED crosswalk'+('; individually approved AES Late Egyptian manuscripts' if sha_aes else ''),
+                    'tla_sha256':sha_tla,'aed_sha256':sha_aed,'aes_sha256':sha_aes,
+                    'aes_additional_spelling_records':added,
                     'aed_matched_lemmas':match_count,
                     'evidence_status':'source-filtered-not-exhaustive'},'entries':entries}
     persist_json(out/'lexicon.json',payload)
     report={'language':'egy','stage':'Late Egyptian','unique_spellings':len(entries),
             'distinct_lemmas':len({x['lemma'] for x in entries}),
-            'aed_dictionary_entries':len(aed),'aed_matched_lemmas':match_count,**stats,
-            'sources':{'TLA-LE19':sha_tla,'AED-TEI':sha_aed},
-            'claim':'Entire downloaded Late Egyptian filtered release processed; not all known Late Egyptian text'}
+            'aed_dictionary_entries':len(aed),'aed_matched_lemmas':match_count,
+            'aes_new_lemma_spelling_records':added,'aes_audit':aes_stats,**stats,
+            'sources':sources,
+            'claim':'Downloaded Late Egyptian edition and individually curated AES documents processed; not all historical Late Egyptian'}
     persist_json(out/'coverage.json',report)
     return report
 
@@ -312,10 +357,10 @@ def build_coptic(tei_path,forms_path,popular_path,out):
 def main():
     p=argparse.ArgumentParser()
     sub=p.add_subparsers(dest='language',required=True)
-    e=sub.add_parser('egyptian');e.add_argument('--tla',type=Path,required=True);e.add_argument('--aed',type=Path,required=True);e.add_argument('--out',type=Path,required=True)
+    e=sub.add_parser('egyptian');e.add_argument('--tla',type=Path,required=True);e.add_argument('--aed',type=Path,required=True);e.add_argument('--out',type=Path,required=True);e.add_argument('--aes',type=Path);e.add_argument('--aes-whitelist',type=Path)
     c=sub.add_parser('coptic');c.add_argument('--tei',type=Path,required=True);c.add_argument('--forms',type=Path,required=True);c.add_argument('--popular',type=Path,required=True);c.add_argument('--out',type=Path,required=True)
     args=p.parse_args()
-    if args.language=='egyptian': report=build_egyptian(args.tla,args.aed,args.out)
+    if args.language=='egyptian': report=build_egyptian(args.tla,args.aed,args.out,args.aes,args.aes_whitelist)
     else:report=build_coptic(args.tei,args.forms,args.popular,args.out)
     print(json.dumps(report,ensure_ascii=False,sort_keys=True))
 
