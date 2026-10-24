@@ -93,7 +93,7 @@ function edit(text,range=null){
 function click(ev){
  const btn=ev.target.closest('button');if(!btn||!keyboard.contains(btn))return;
  const lang=keyboardLanguage();if(!lang)return;
- if(btn.hasAttribute('data-kb-done')){hide();return;}
+ if(btn.hasAttribute('data-kb-done')){active?.blur();hide();return;}
  if(btn.hasAttribute('data-kb-tab')){tab=btn.dataset.kbTab;draw();return;}
  if(btn.hasAttribute('data-kb-shift')){upper=!upper;draw();return;}
  if(btn.hasAttribute('data-kb-back')){edit('',deleteGrapheme(active.value,active.selectionStart,active.selectionEnd));return;}
@@ -120,6 +120,9 @@ export function initKeyboard(getLanguage){
  // Dock pointer events cannot take focus away from the field being edited.
  keyboard.addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault();});
  keyboard.addEventListener('click',click);
+ document.addEventListener('pointerdown',e=>{
+  if(keyboardLanguage()&&eligible(e.target))e.target.setAttribute('inputmode','none');
+ },true);
  document.addEventListener('focusin',e=>{
   const lang=keyboardLanguage();if(!lang||!eligible(e.target))return;
   active=e.target;
