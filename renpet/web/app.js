@@ -81,16 +81,23 @@ function monthView(){
 }
 
 function yearView(){
- const e=egy(state.focus),seasons=lang()==='ar'?['آخت','برت','شمو']:lang()==='cop'?['Ⲁⲭⲉⲧ','Ⲡⲉⲣⲉⲧ','Ⲥⲙⲟⲩ']:['𓈗','𓆤','𓇳'];
- const groups=Array.from({length:3},(_,season)=>{
-  const months=Array.from({length:4},(_,index)=>{
-   const m=season*4+index+1;
-   return '<button class="year-month'+(m===e.month?' active-month':'')+'" data-open-month="'+m+'" aria-label="'+safe(monthName(m))+'"><span class="year-month-name">'+safe(monthName(m))+'</span><span class="year-month-index">'+numHtml(m)+'</span></button>';
+ const e=egy(state.focus),yr=e.year,w=week(),current=today();
+ const seasons=lang()==='ar'?['آخت','برت','شمو']:lang()==='cop'?['Ⲁⲭⲉⲧ','Ⲡⲉⲣⲉⲧ','Ⲥⲙⲟⲩ']:['𓈗','𓆤','𓇳'];
+ const monthCard=m=>{
+  const start=monthStart({year:yr,month:m});
+  const cells=monthGrid(yr,m,w,data.years);
+  const body=cells.map(c=>{
+   if(!c)return '<span class="year-mini-blank" aria-hidden="true"></span>';
+   const isToday=c.gregorian===current,isSelected=c.gregorian===state.focus;
+   return '<span class="year-mini-day'+(isToday?' year-mini-today':'')+(isSelected&&!isToday?' year-mini-selected':'')+'"'+(isToday?' aria-label="'+safe(T().today)+'"':'')+'>'+numHtml(c.day)+'</span>';
   }).join('');
-  return '<section class="year-season"><h2>'+safe(seasons[season])+'</h2><div class="year-months">'+months+'</div></section>';
- }).join('');
- const days=monthDays({year:e.year,month:13});
- return '<div class="year-overview">'+groups+'<button class="epagomenal-tile" data-open-month="13"><span>✦</span><strong>'+safe(LOCALES[lang()].epagomenal)+'</strong><small>'+safe(N(days))+' '+safe(T().day)+'</small></button></div>';
+  return '<button class="year-month'+(m===e.month?' active-month':'')+'" data-open-month="'+m+'" aria-label="'+safe(monthName(m))+'"><span class="year-mini-title"><span class="year-month-name">'+safe(monthName(m))+'</span><span class="year-month-index">'+numHtml(m)+'</span></span><span class="year-mini-grid" data-week="'+w+'" aria-hidden="true">'+body+'</span></button>';
+ };
+ const groups=Array.from({length:3},(_,season)=>'<section class="year-season"><h2>'+safe(seasons[season])+'</h2><div class="year-months">'+Array.from({length:4},(_,i)=>monthCard(season*4+i+1)).join('')+'</div></section>').join('');
+ const days=monthDays({year:yr,month:13});
+ const epStart=monthStart({year:yr,month:13});
+ const mini=Array.from({length:days},(_,i)=>'<span class="year-mini-day'+(epStart+i===current?' year-mini-today':'')+'">'+numHtml(i+1)+'</span>').join('');
+ return '<div class="year-overview">'+groups+'<button class="epagomenal-tile" data-open-month="13"><span>✦</span><strong>'+safe(LOCALES[lang()].epagomenal)+'</strong><span class="year-mini-epagomenal">'+mini+'</span></button></div>';
 }
 function dayView(){
  const daily=items(state.focus),all=daily.filter(i=>i.allDay),timed=daily.filter(i=>!i.allDay);
@@ -130,7 +137,7 @@ function listView(){
 }
 
 function settingsView(){
- return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 5.0.0</p></section>';
+ return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 6.0.0</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -193,7 +200,7 @@ function panelContent(){
  const title={settings:T().settings,calendars:T().calendars};
  const body=panels[state.panel]?.();
  if(!body)return '';
- return '<div class="ux-panel-backdrop" data-dismiss-panel></div><section class="ux-panel" role="dialog" aria-modal="true" aria-label="'+safe(title[state.panel])+'"><div class="ux-panel-head"><strong>'+safe(title[state.panel])+'</strong><button data-close-panel aria-label="'+safe(T().cancel)+'">×</button></div><div class="ux-panel-body">'+body+'</div></section>';
+ return '<div class="ux-panel-backdrop" data-dismiss-panel></div><section class="ux-panel" role="dialog" aria-modal="true" aria-label="'+safe(title[state.panel])+'"><div class="ux-panel-head"><strong>'+safe(title[state.panel])+'</strong></div><div class="ux-panel-body">'+body+'</div></section>';
 }
 function render(){
  if(!data)return;
@@ -252,6 +259,13 @@ function submitEvent(form){
 
 root.addEventListener('click',ev=>{
  if(ev.target.closest('[data-dismiss-panel]')){state.panel=null;render();return;}
+ if(ev.target.classList?.contains('sheet-overlay')){closeKeyboard();state.dialog=null;render();return;}
+ // Time picker is an overlay within the event form. Touching its backdrop
+ // cancels the picker and never accidentally commits a hidden selection.
+ const openPicker=root.querySelector('.time-picker-host:not([hidden])');
+ if(openPicker&&!openPicker.contains(ev.target)&&!ev.target.closest('[data-time-open]')){
+  closeTimeEditor(root.querySelector('#event-editor'),false,lang());return;
+ }
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
  const b=ev.target.closest('button');if(!b||b.disabled)return;
@@ -372,6 +386,13 @@ function finishDrag(ev,cancel=false){
 root.addEventListener('pointerup',ev=>finishDrag(ev));
 root.addEventListener('pointercancel',ev=>finishDrag(ev,true));
 root.addEventListener('click',ev=>{if(Date.now()<suppressEditUntil&&ev.target.closest('[data-edit]')){ev.stopImmediatePropagation();ev.preventDefault();}},true);
+document.addEventListener('click',ev=>{
+ // Single click-away convention for inline search; dialogs and keyboard
+ // have their own backdrops and should not conflict with this handler.
+ if(state.search&&!ev.target.closest('.search-panel')&&!ev.target.closest('[data-search]')&&!ev.target.closest('.renpet-keyboard')){
+  state.search=false;state.query='';render();
+ }
+});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncCurrentTimeLine();});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(state.dialog)state.dialog=null;else if(state.panel)state.panel=null;else if(state.search)state.search=false;render();}});
 let gesture=null;
