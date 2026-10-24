@@ -7,7 +7,10 @@ const root={innerHTML:'',addEventListener:(n,fn)=>{(handlers[n]??=[]).push(fn)},
 const memory=new Map();
 globalThis.localStorage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
 globalThis.document={querySelector:s=>s==='#app'?root:null,addEventListener:()=>{},documentElement:{lang:'ar',dir:'rtl'},body:{dataset:{}}};
-globalThis.fetch=async()=>({ok:true,json:async()=>JSON.parse(await readFile(new URL('../web/data.json',import.meta.url),'utf8'))});
+// The unit smoke loader must serve the manifest AND its read-only packs,
+// not silently return data.json for every request.
+globalThis.fetch=async url=>({ok:true,json:async()=>JSON.parse(await readFile(
+ new URL('../web/'+String(url).replace(/^\\.\\//,''),import.meta.url),'utf8'))});
 await import('../web/app.js');
 for(let i=0;i<50&&!root.innerHTML;i++)await new Promise(r=>setTimeout(r,20));
 const has=s=>root.innerHTML.includes(s);
