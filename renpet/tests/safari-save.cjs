@@ -55,6 +55,21 @@ async function run(){
     await page.reload();
     const persists=await page.evaluate(title=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')||'null')?.items?.some(i=>i.title===title),title);
     if(!persists)throw Error('Lost saved '+lang+' appointment on WebKit reload');
+    // Save from the header while the localized time picker remains open.
+    // The first tap must commit its selection and persist the appointment.
+    const pickerTitle=title+' time';
+    await page.locator('header [data-new]').click();
+    const form2=page.locator('#event-editor');
+    await form2.locator('[name=title]').fill(pickerTitle);
+    await form2.locator('[data-time-open=start]').click();
+    await page.locator('.time-picker-host:not([hidden])').waitFor();
+    const startVal=await form2.locator('[name=start]').inputValue();
+    const endVal=await form2.locator('[name=end]').inputValue();
+    report(lang+'-picker-before',startVal+' / '+endVal);
+    await form2.locator('.save-button').click();
+    const savedPicker=await page.evaluate(name=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')||'null')?.items?.find(i=>i.title===name),pickerTitle);
+    if(await form2.count()||!savedPicker)throw Error(lang+' first Save tap from open picker did not persist');
+
    }catch(e){issues.push({width,lang,error:String(e.stack||e).slice(0,900)});await snap(lang+'-failed').catch(()=>{});}
   }
   await ctx.close();
