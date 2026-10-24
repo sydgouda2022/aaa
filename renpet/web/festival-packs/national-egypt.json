@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "sourceId": "national-egypt",
+  "scope": "Partial evidence-backed list; unverified dates intentionally omitted",
+  "events": [
+    {
+      "id": "revolution-police-day",
+      "ar": "ثورة ٢٥ يناير وعيد الشرطة",
+      "month": 1,
+      "day": 25,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "anniversary, not shifted public leave day"
+    },
+    {
+      "id": "sinai-liberation",
+      "ar": "عيد تحرير سيناء",
+      "month": 4,
+      "day": 25,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "anniversary, not shifted public leave day"
+    },
+    {
+      "id": "labour-day",
+      "ar": "عيد العمال",
+      "month": 5,
+      "day": 1,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "anniversary, not shifted public leave day"
+    },
+    {
+      "id": "june-30-revolution",
+      "ar": "ذكرى ثورة ٣٠ يونيو",
+      "month": 6,
+      "day": 30,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "anniversary, not shifted public leave day"
+    },
+    {
+      "id": "july-23-revolution",
+      "ar": "ذكرى ثورة ٢٣ يوليو",
+      "month": 7,
+      "day": 23,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "anniversary, not shifted public leave day"
+    },
+    {
+      "id": "armed-forces",
+      "ar": "عيد القوات المسلحة",
+      "month": 10,
+      "day": 6,
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/",
+      "dateMeaning": "anniversary, not shifted public leave day"
+    },
+    {
+      "id": "sham-el-nessim-2026",
+      "ar": "شم النسيم — ٢٠٢٦",
+      "date": "2026-04-13",
+      "calendarRule": "dated",
+      "sourceUrl": "https://www.presidency.eg/EN/%D9%85%D8%B5%D8%B1/%D8%A7%D9%84%D8%B9%D8%B7%D9%84%D8%A7%D8%AA-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9/"
+    }
+  ]
+}
