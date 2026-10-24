@@ -139,7 +139,7 @@ jobs:
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
               && curl -fsSL --max-time 20 "$BASE/lexicon/manifest.json" -o /tmp/renpet-egy-lexicon \
               && curl -fsSL --max-time 20 "$BASE/coptic-lexicon/manifest.json" -o /tmp/renpet-cop-lexicon \
-              && grep -q '"version":"7.0.0"' /tmp/renpet-data \
+              && python -c "import json; assert json.load(open('/tmp/renpet-data'))['version']=='7.0.0'" \
               && grep -Fq 'ui.css?v=7.0.0-' /tmp/renpet-index \
               && grep -q 'Single owner of #app' /tmp/renpet-app \
               && grep -q 'month-section' /tmp/renpet-css \
