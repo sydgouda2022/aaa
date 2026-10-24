@@ -12,6 +12,32 @@ const fetchManifest=async u=>({ok:true,json:async()=>
 });
 const catalog=await loadFestivalCatalog(data,fetchManifest);
 assert.equal(catalog.sources.length,6,'Six independently selectable source packs are loaded');
+
+// Every festival, including embedded Amun and all five external packs,
+// must contain its own native-script title and descriptive interpretation.
+// A missing localization must not show Arabic in Coptic/hieroglyphic screens.
+const arabic=/[\u0600-\u06ff]/u;
+const coptic=/[\u2c80-\u2cff]/u;
+const glyph=/[\u{13000}-\u{1345f}]/u;
+for(const source of catalog.sources){
+ for(const locale of ['cop','egy']){
+  const expression=locale==='cop'?coptic:glyph;
+  assert.ok(expression.test(source.name[locale]),'Native source title: '+source.id+' '+locale);
+  assert.ok(expression.test(source.description[locale]),'Native source description: '+source.id+' '+locale);
+  assert.ok(!arabic.test(source.name[locale]+source.description[locale]),'Arabic leaked into native source '+source.id);
+ }
+ for(const festival of source.events){
+  for(const locale of ['cop','egy']){
+   const expression=locale==='cop'?coptic:glyph;
+   const description=festival['description_'+locale];
+   assert.ok(typeof festival[locale]==='string'&&expression.test(festival[locale]),'Native event title missing '+festival.id+' '+locale);
+   assert.ok(typeof description==='string'&&description.length>=18&&expression.test(description),'Native description missing '+festival.id+' '+locale);
+   assert.ok(!arabic.test(festival[locale]+description),'Arabic leaked into festival '+festival.id+' '+locale);
+  }
+ }
+}
+assert.equal(catalog.sources.reduce((n,s)=>n+s.events.length,0),33,'All 33 festival titles and notes localized');
+
 assert.equal(catalog.sources[0].id,AMUN_SOURCE);
 assert.equal(catalog.sources[0].events.length,data.festivals.length,'Do not change attested Amun date list');
 assert.equal(enabledSourceIds(null,catalog).join(','),AMUN_SOURCE,'Amun enabled for existing users');

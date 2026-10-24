@@ -161,5 +161,27 @@ body[data-language=egy] .date-fields select[name=endEgyDay]{font-size:27px!impor
 .festival-sources-links{display:flex;flex-wrap:wrap;gap:9px}
 .festival-sources-links a{color:#176c59;text-decoration:underline;min-height:40px;padding:8px 0}
 
-/* Quick add from the selected month agenda */
-.agenda-add-action{min-height:44px;padding:9px 14px;border-radius:11px;border:1px solid #176c59;background:transparent;color:#176c59;font:700 14px system-ui;cursor:pointer;margin-top:9px}
+
+/* Script-localized festival titles and source notes (Renpet 7.1.1).
+   Avoid raw URLs and the mixed-script glyph fallback seen in the old modal. */
+.festival-detail-sheet{min-width:0;overflow-wrap:anywhere}
+.festival-detail-sheet .festival-evidence{white-space:pre-line;overflow-wrap:anywhere;word-break:normal}
+.festival-detail-sheet .festival-sources-links a{overflow-wrap:anywhere;max-width:100%}
+.festival-detail-sheet .festival-translation-note{font-size:12px;line-height:1.6;color:var(--muted)}
+body[data-language=cop] .festival-in-agenda strong,
+body[data-language=cop] .festival-detail-sheet h2,
+body[data-language=cop] .festival-detail-sheet .festival-evidence,
+body[data-language=cop] .festival-detail-sheet .festival-type{font-family:Coptic,system-ui,sans-serif}
+body[data-language=cop] .festival-detail-sheet .festival-evidence{font-size:18px;line-height:1.85}
+body[data-language=egy] .festival-in-agenda strong,
+body[data-language=egy] .festival-detail-sheet h2,
+body[data-language=egy] .festival-detail-sheet .festival-evidence,
+body[data-language=egy] .festival-detail-sheet .festival-type,
+body[data-language=egy] .festival-detail-sheet .festival-translation-note,
+body[data-language=egy] .festival-detail-sheet h3{font-family:RenpetEgyptian,system-ui,sans-serif;font-weight:700;-webkit-text-stroke:.24px currentColor;paint-order:stroke fill}
+body[data-language=egy] .festival-in-agenda strong{font-size:19px;line-height:1.6}
+body[data-language=egy] .festival-detail-sheet h2{font-size:28px;line-height:1.65}
+body[data-language=egy] .festival-detail-sheet .festival-evidence{font-size:25px;line-height:1.85}
+body[data-language=egy] .festival-detail-sheet .festival-type{font-size:23px;line-height:1.6}
+body[data-language=egy] .festival-detail-sheet .festival-sources-links a{font-size:20px}
+@media(max-width:580px){.festival-detail-sheet{padding:18px;max-height:90dvh}}

@@ -708,6 +708,37 @@ async function run(){
   await ctx.close();
   return {tested:cases.length,selectedDayPreserved:true,editorDraftPreserved:true};
  });
+ await step('iPad Coptic and Egyptian festivals have native titles, detail text and one Add action',async()=>{
+  const ctx=await b.newContext({viewport:{width:1280,height:800},serviceWorkers:'block',timezoneId:'Africa/Cairo'});
+  const q=await ctx.newPage();q.setDefaultTimeout(12000);
+  await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await q.locator('.month-section').waitFor();
+  if(await q.locator('.agenda-add-action,[data-new-date]').count())throw Error('Redundant agenda Add remains');
+  if(!(await q.locator('header [data-new]').count()))throw Error('Main header Add is missing');
+  const day=Math.floor(Date.parse('2026-11-05T00:00:00Z')/86400000),screens=[];
+  for(const [language,character]of [['cop',/[\u2c80-\u2cff]/u],['egy',/[\u{13000}-\u{1345f}]/u]]){
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[name=language]').selectOption(language);
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   await q.locator('[data-date="'+day+'"]').click();
+   const fest=q.locator('.month-agenda .festival-in-agenda[data-festival-open]').first();
+   await fest.waitFor();
+   const heading=await fest.locator('strong').innerText();
+   if(!character.test(heading)||/[\u0600-\u06ff]/u.test(heading))throw Error('Wrong script in agenda title '+language+': '+heading);
+   await fest.click();
+   const details=q.locator('.festival-detail-sheet');
+   await details.waitFor();
+   const words=await details.locator('h2,.festival-type,.festival-evidence,h3,.festival-translation-note').allInnerTexts();
+   if(words.some(t=>/[\u0600-\u06ff]/u.test(t)))throw Error('Arabic leaked into '+language+' detail');
+   if(!words.every(t=>character.test(t)))throw Error('Missing '+language+' translation: '+words.join(' / '));
+   if(!(await details.locator('.festival-sources-links a').count()))throw Error('Source links not shown');
+   if(await details.evaluate(el=>el.scrollWidth>el.clientWidth+3))throw Error('Festival detail has horizontal overflow');
+   await screenshot(q,'ipad-'+language+'-festival-localized');
+   screens.push({language,title:heading,sources:await details.locator('.festival-sources-links a').count()});
+   await q.locator('[data-close-festival]').click();
+  }
+  await ctx.close();return {screens,quickAddRemoved:true};
+ });
  await b.close();
 }
 (async()=>{try{await run()}catch(e){errors.push('FATAL '+String(e.stack||e))}
