@@ -125,7 +125,7 @@ jobs:
               && curl -fsS --max-time 25 "$base/runtime-status.json" -o /tmp/mdwnfr-public-status \
               && grep -q 'MdwNfr' /tmp/mdwnfr-public-index \
               && grep -q 'standalone' /tmp/mdwnfr-public-manifest \
-              && grep -q '"offline_ready": true' /tmp/mdwnfr-public-status; then
+              && python -c "import json; assert json.load(open('/tmp/mdwnfr-public-status'))['offline_ready']"; then
               echo 'Public PWA responding with complete runtime inventory'
               exit 0
             fi
