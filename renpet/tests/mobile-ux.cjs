@@ -377,6 +377,68 @@ async function run(){
    return {sharedPalette:rubric,palette};
   });
 
+
+  await step(name+' Year grids, Cairo, attested dictionaries and universal outside tap',async()=>{
+   const q=await ctx.newPage();
+   q.on('dialog',d=>d.accept());
+   await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+   await q.locator('.month-agenda').waitFor();
+   await q.locator('header [data-open-panel=settings]').click();
+   if(await q.locator('.ux-panel [data-close-panel]').count())throw Error('Settings close X still visible');
+   await q.locator('select[name=language]').selectOption('ar');
+   await q.locator('select[name=week]').selectOption('7');
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   if(await q.locator('.ux-panel').count())throw Error('Settings did not close on outside tap');
+   await q.evaluate(()=>document.fonts.load('16px CairoRenpet'));
+   if(!await q.evaluate(()=>document.fonts.check('16px CairoRenpet')))throw Error('Cairo font not bundled or loaded');
+   if(!await q.locator('body').evaluate(el=>getComputedStyle(el).fontFamily.includes('CairoRenpet')))throw Error('Arabic UI still uses system font');
+   await q.locator('[data-primary-view=today]').click();
+   await q.locator('[data-open-year]').click();
+   if((await q.locator('.year-month').count())!==12)throw Error('Year must display 12 months');
+   if((await q.locator('.year-mini-day').count())<360)throw Error('Year mini calendars missing numbered days');
+   if((await q.locator('.year-mini-today').count())!==1)throw Error('Today missing or multiply highlighted');
+   const todayColor=await q.locator('.year-mini-today').evaluate(el=>getComputedStyle(el).backgroundColor);
+   if(todayColor!=='rgb(246, 56, 65)')throw Error('Today is not marked red: '+todayColor);
+   await screenshot(q,name+'-arabic-cairo-year-with-today');
+   await q.locator('[data-primary-view=month]').click();
+   await q.locator('header [data-new]').click();
+   await q.locator('#event-editor').waitFor();
+   await q.locator('.sheet-overlay').click({position:{x:10,y:10}});
+   if(await q.locator('#event-editor').count())throw Error('Editor did not dismiss outside without saving');
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[data-backup]').click();
+   await q.locator('.renpet-backup-overlay').waitFor();
+   if(await q.locator('.renpet-backup-close').count())throw Error('Backup close X remains');
+   await q.locator('.renpet-backup-overlay').click({position:{x:10,y:10}});
+   if(await q.locator('.renpet-backup-overlay').count())throw Error('Backup did not dismiss on outside tap');
+   for(const language of ['cop','egy']){
+    await q.locator('header [data-open-panel=settings]').click();
+    await q.locator('select[name=language]').selectOption(language);
+    await q.locator('select[name=week]').selectOption('10');
+    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+    await q.locator('[data-primary-view=today]').click();
+    await q.locator('[data-open-year]').click();
+    const grid=q.locator('.year-mini-grid').first();
+    if((await grid.getAttribute('data-week'))!=='10')throw Error(language+' year month must show 10-day months');
+    if((await q.locator('.year-mini-today').count())!==1)throw Error(language+' today not marked');
+    await screenshot(q,name+'-'+language+'-year-with-today');
+    await q.locator('[data-primary-view=month]').click();
+   }
+   await q.locator('header [data-new]').click();
+   await q.locator('input[name=title]').focus();
+   const key=q.locator('.renpet-keyboard:not([hidden])');
+   await key.waitFor();
+   await q.locator('.kb-hiero [data-kb-insert="𓆓"]').first().click().catch(()=>q.locator('.kb-hiero .kb-sign').first().click());
+   await q.waitForTimeout(400);
+   const choices=await q.locator('.kb-suggestions [data-kb-pick]').count();
+   if(choices<2)throw Error('Real attested TLA hieroglyphic predictions are absent');
+   await screenshot(q,name+'-egyptian-dictionary-predictions');
+   await q.locator('.sheet-body').click({position:{x:6,y:160}});
+   if(await q.locator('.renpet-keyboard:not([hidden])').count())throw Error('Keyboard did not close when tapping outside');
+   await q.close();
+   return {arabicFont:'CairoRenpet',yearMonths:12,arabicTodayColor:todayColor,hieroglyphicCandidates:choices};
+  });
+
   await ctx.close();
  }
  await b.close();
