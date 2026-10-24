@@ -1,4 +1,4 @@
-/* MdwNfr 0.1.13: the application shell is cached as one consistent set.
+/* MdwNfr: the application shell is cached as one content-addressed release.
    An offline-ready installation requires ALL self-hosted Python/font assets.
    Incomplete updates never delete the previous working cache. */
 const PREFIX = 'mdwnfr-offline-';

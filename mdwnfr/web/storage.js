@@ -1,5 +1,5 @@
 /* One device-local IndexedDB. Library browsing never loads embedded image data.
-   Version 3 migrates names/metadata of old documents without changing content. */
+   No legacy migrations or old data conversion. */
 const DB='mdwnfr-canonical-v1';
 const STORE='documents';
 const PROFILE='writing-profile';

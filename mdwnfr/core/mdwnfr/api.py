@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from .document import new_document, transaction, assert_document
 from .layout import LayoutSession
-from .prediction import suggest, bundled_lexicon
+from .lexicon import suggest, bundled_lexicon
 from .quadrat import compose
 from .history import recorded_transaction
 from .session import DocumentSession

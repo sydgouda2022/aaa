@@ -143,12 +143,10 @@ def validate_image(obj: dict) -> None:
         if band is not None and (not isinstance(band,list) or len(band)!=2 or
              any(type(x) is not int for x in band) or not 0<=band[0]<band[1]<=10000):
             raise DocumentError('Invalid user-image silhouette band')
-    # New images include a real 2D alpha occupancy bitmap. Older documents
-    # with only a 128-band envelope remain readable until browser migration.
-    if obj.get('mask') is not None:
-        from .silhouette import validate_mask
-        if not validate_mask(obj['mask']):
-            raise DocumentError('Invalid imported image 2D silhouette mask')
+    # One canonical image format: 2D alpha mask is required.
+    from .silhouette import validate_mask
+    if not validate_mask(obj.get('mask')):
+        raise DocumentError('Invalid imported image 2D silhouette mask')
     # All page placement values share the same semantics as existing artwork.
     width=obj.get('width_mm')
     if type(width) not in (int,float) or not math.isfinite(width) or not 6<=width<=300:
