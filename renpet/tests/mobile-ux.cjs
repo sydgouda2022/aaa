@@ -22,7 +22,7 @@ async function run(){
   await step(name+' initial',async()=>{await p.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});await p.locator('.month-agenda').waitFor();await p.evaluate(()=>document.fonts.ready);await screenshot(p,name+'-month');return inspect(p,name+'-month');});
   await step(name+' Year picker',async()=>{await p.locator('[data-open-year]').click();await p.locator('.year-season').first().waitFor();await screenshot(p,name+'-year');return {seasonCount:await p.locator('.year-season').count(),monthCount:await p.locator('.year-month').count()};});
   await step(name+' month selection',async()=>{await p.locator('[data-open-month="1"]').click();await screenshot(p,name+'-month-from-year');return inspect(p,name+'-month-from-year');});
-  await step(name+' day tap',async()=>{const day=p.locator('[data-date]').nth(4);await day.click();await p.locator('[data-date][aria-pressed="true"]').click();await p.locator('.timeline-hour').first().waitFor();await screenshot(p,name+'-day');return await p.locator('.timeline-hour').count();});
+  await step(name+' day tap',async()=>{const day=p.locator('[data-date]').nth(4);await day.click();await p.locator('.timeline-hour').first().waitFor();await screenshot(p,name+'-day');return await p.locator('.timeline-hour').count();});
   await step(name+' Today goes to month',async()=>{await p.locator('[data-primary-view="today"]').click();await p.locator('.month-agenda').waitFor();return inspect(p,name+'-today');});
 
   await step(name+' localized Day clock and minute-accurate live red line',async()=>{
@@ -84,10 +84,10 @@ async function run(){
    await screenshot(p,name+'-new-event');
    await p.locator('#event-editor [name=title]').fill('RENPET QA TEMP EVENT');
    await p.locator('#event-editor [type=submit]').click();
-   await p.locator('.event-row:has-text("RENPET QA TEMP EVENT")').first().waitFor();
-   await p.locator('.event-row:has-text("RENPET QA TEMP EVENT")').first().click();
+   await p.locator('.timeline-event:has-text("RENPET QA TEMP EVENT")').first().waitFor();
+   await p.locator('.timeline-event:has-text("RENPET QA TEMP EVENT")').first().click();
    await p.locator('#event-editor [data-delete]').click();
-   return {advancedInitiallyClosed:closed,deleted:(await p.locator('.event-row:has-text("RENPET QA TEMP EVENT")').count())===0};
+   return {advancedInitiallyClosed:closed,deleted:(await p.locator('.timeline-event:has-text("RENPET QA TEMP EVENT")').count())===0};
   });
   await step(name+' settings compact and language',async()=>{
    await p.locator('[data-open-panel=settings]').first().click();
@@ -95,7 +95,7 @@ async function run(){
    const first=await inspect(p,name+'-settings');
    await p.locator('[name=language]').selectOption('cop');
    await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
-   await p.locator('[data-primary-view=month]').click();
+   await p.locator('[data-primary-view=today]').click();
    await screenshot(p,name+'-coptic');
    return {panelHeight:first.viewport.h,decades:await p.locator('.renpet-decade').count()};
   });
@@ -212,8 +212,8 @@ async function run(){
    await q.locator('[data-time-confirm]').click();
    await form.locator('input[name=title]').fill('RENPET LOCAL TIME QA');
    await form.locator('[type=submit]').click();
-   await q.locator('.event-row:has-text("RENPET LOCAL TIME QA")').waitFor();
-   await q.locator('.event-row:has-text("RENPET LOCAL TIME QA")').click();
+   await q.locator('.timeline-event:has-text("RENPET LOCAL TIME QA")').waitFor();
+   await q.locator('.timeline-event:has-text("RENPET LOCAL TIME QA")').click();
    if((await q.locator('#event-editor input[name=start]').inputValue())!=='14:37')throw Error('Saved start time not roundtripped');
    if((await q.locator('#event-editor input[name=end]').inputValue())!=='15:08')throw Error('Saved end time not roundtripped');
    await q.locator('#event-editor [data-delete]').click();
@@ -356,7 +356,7 @@ async function run(){
      const card=q.locator('.year-month-name').first();
      if(parseFloat(await card.evaluate(el=>getComputedStyle(el).fontSize))<22)throw Error('Egyptian year month title still tiny');
      await screenshot(q,name+'-hieroglyphic-readable-year');
-     await q.locator('[data-primary-view=month]').click();
+     await q.locator('[data-primary-view=today]').click();
      await q.locator('header [data-new]').click();
      await q.locator('input[name=title]').focus();
      await q.locator('.renpet-keyboard:not([hidden])').waitFor();
@@ -382,7 +382,7 @@ async function run(){
    const q=await ctx.newPage(); q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
-   await q.locator('[data-primary-view=month]').click();
+   await q.locator('[data-primary-view=today]').click();
    await q.locator('.month-agenda').waitFor();
    await q.locator('header [data-open-panel=settings]').click();
    if(await q.locator('.ux-panel [data-close-panel]').count())throw Error('Settings close X still visible');
@@ -401,7 +401,7 @@ async function run(){
    const todayColor=await q.locator('.year-mini-today').evaluate(el=>getComputedStyle(el).backgroundColor);
    if(todayColor!=='rgb(246, 56, 65)')throw Error('Today is not marked red: '+todayColor);
    await screenshot(q,name+'-arabic-cairo-year-with-today');
-   await q.locator('[data-primary-view=month]').click();
+   await q.locator('[data-primary-view=today]').click();
    await q.locator('header [data-new]').click();
    await q.locator('#event-editor').waitFor();
    await q.locator('.sheet-overlay').click({position:{x:10,y:10}});
@@ -423,7 +423,7 @@ async function run(){
     if((await grid.getAttribute('data-week'))!=='10')throw Error(language+' year month must show 10-day months');
     if((await q.locator('.year-mini-today').count())!==1)throw Error(language+' today not marked');
     await screenshot(q,name+'-'+language+'-year-with-today');
-    await q.locator('[data-primary-view=month]').click();
+    await q.locator('[data-primary-view=today]').click();
    }
    await q.locator('header [data-new]').click();
    await q.locator('input[name=title]').focus();
@@ -438,6 +438,58 @@ async function run(){
    if(await q.locator('.renpet-keyboard:not([hidden])').count())throw Error('Keyboard did not close when tapping outside');
    await q.close();
    return {arabicFont:'CairoRenpet',yearMonths:12,arabicTodayColor:todayColor,hieroglyphicCandidates:choices};
+  });
+
+
+  await step(name+' iPhone appointment Save survives keyboard in Arabic, Coptic and hieroglyphic',async()=>{
+    const q=await ctx.newPage();q.setDefaultTimeout(8000);
+    q.on('dialog',d=>d.accept());
+    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+    await q.locator('.month-section').waitFor();
+    const output=[];
+    for(const [language,title,sign] of [['ar','اختبار موعد عربي',null],['cop','ⲣⲉⲛⲡⲉⲧ','ⲣ'],['egy','𓆓𓏏','𓆓']]){
+      await q.locator('[data-open-panel=settings]').click();
+      await q.locator('select[name=language]').selectOption(language);
+      await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+      await q.locator('header [data-new]').click();
+      await q.locator('#event-editor').waitFor();
+      const input=q.locator('#event-editor [name=title]');
+      if(sign){
+        await input.focus();
+        await q.locator('.renpet-keyboard:not([hidden])').waitFor();
+        await q.locator('.kb-sign[data-kb-insert="'+sign+'"]').first().click();
+        await input.fill(title);
+        if(!(await q.locator('.renpet-keyboard:not([hidden])').count()))await input.focus();
+      }else await input.fill(title);
+      const valid=await q.locator('#event-editor').evaluate(f=>({valid:f.checkValidity(),title:f.elements.title.value, start:f.elements.start.value,end:f.elements.end.value}));
+      if(!valid.valid)throw Error(language+' editor fields invalid before save: '+JSON.stringify(valid));
+      const save=q.locator('#event-editor [type=submit]');
+      await save.scrollIntoViewIfNeeded();
+      if(sign&&!(await q.locator('.renpet-keyboard:not([hidden])').count()))await input.focus();
+      const rect=await save.boundingBox();
+      if(!rect)throw Error(language+' Save button missing');
+      await q.touchscreen.tap(rect.x+rect.width/2,rect.y+rect.height/2);
+      await q.locator('.day-page').waitFor({timeout:8000});
+      if(await q.locator('#event-editor').count())throw Error(language+' Save tap failed to dismiss editor');
+      if(!(await q.locator('.timeline-event:has-text("'+title+'")').count()))
+        throw Error(language+' appointment was not displayed after Save');
+      const storage=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')).items);
+      if(!storage.some(x=>x.title===title))throw Error(language+' appointment did not persist');
+      await q.reload({waitUntil:'domcontentloaded'});
+      await q.locator('.month-section').waitFor();
+      if(await q.locator('.day-page').count())throw Error('Month is not default on app relaunch');
+      const after=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')).items);
+      if(!after.some(x=>x.title===title))throw Error(language+' appointment lost after app reload');
+      output.push({language,title,stored:true});
+      await screenshot(q,name+'-'+language+'-saved-event');
+    }
+    // Deliberately invalid submission must explain what is missing, never silently fail.
+    await q.locator('header [data-new]').click();
+    await q.locator('#event-editor [type=submit]').click();
+    if(!(await q.locator('#event-editor .event-error[role=alert]').count()))throw Error('Blank title produced no visible validation feedback');
+    await q.locator('#event-editor [data-close]').click();
+    await q.close();
+    return output;
   });
 
   await ctx.close();
