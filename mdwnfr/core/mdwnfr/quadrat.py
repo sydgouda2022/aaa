@@ -1,150 +1,162 @@
-"""Pure, global-optimum (DP) whole-word sign composition.
+"""Silhouette-first, deterministic hieroglyphic column composition.
 
-No Unicode string is split or reordered. Metrics are dimensions of visible glyph
-outlines expressed in common units. Production metric source must be a pinned
-hieroglyphic font; normalized measurements may be injected by the rendering
-adapter. The fallback metric table is deliberately provisional for milestone 1.
+The document fixes ONE column width. Glyph proportions and bearings come from
+the actual outlines of the same verified font served to the browser. The
+horizontal gaps around ink silhouettes equal half their visible widths.
+Vertical gaps equal half each neighboring row's tallest silhouette height.
+The full row's height is determined by its tallest sign. No distortion.
 """
 from __future__ import annotations
 from dataclasses import dataclass, asdict
 from functools import lru_cache
+from pathlib import Path
 from typing import Mapping
+import json, math
+
+DATA_PATH=Path(__file__).resolve().parent/'data'/'glyph_geometry.json'
+NARROW_RATIO=.65
+PAIR_HEIGHT_PARITY=.60
+
 
 @dataclass(frozen=True)
 class SignBox:
-    sign: str
-    x: float
-    y: float
-    width: float
-    height: float
+    sign:str
+    x:float
+    y:float
+    width:float
+    height:float
+    font_size:float
+    text_x:float
+    text_y:float
+
 
 @dataclass(frozen=True)
 class Quadrat:
-    width: float
-    height: float
-    signs: tuple[SignBox, ...]
-    rows: tuple[tuple[int, ...], ...]
-    flexible_gaps: tuple[float, ...]
+    width:float
+    height:float
+    signs:tuple[SignBox,...]
+    rows:tuple[tuple[int,...],...]
+    flexible_gaps:tuple[float,...]
 
-    def payload(self) -> dict:
-        return {"width": self.width, "height": self.height,
-                "signs": [asdict(s) for s in self.signs],
-                "rows": [list(row) for row in self.rows],
-                "flexible_gaps": list(self.flexible_gaps)}
-
-# Starter proportions, NOT attested glyph geometry. Replaced by bundled-font
-# outline metrics in a dedicated font-integration milestone.
-PROVISIONAL_RATIOS = {
-    "𓅓": .68, "𓇋": .35, "𓏏": 1.34, "𓈖": 1.26,
-    "𓄿": .88, "𓅱": .63, "𓂋": .59, "𓊪": .96,
-    "𓏺": .25, "𓎡": 1.0, "𓁹": 1.1,
-}
+    def payload(self)->dict:
+        return {'width':self.width,'height':self.height,
+                'signs':[asdict(s) for s in self.signs],
+                'rows':[list(row) for row in self.rows],
+                'flexible_gaps':list(self.flexible_gaps)}
 
 
-def _shape_ratio(sign: str, glyph_metrics: Mapping[str, object] | None) -> float:
+@lru_cache(maxsize=1)
+def glyph_geometry()->dict:
+    source=json.loads(DATA_PATH.read_text(encoding='utf-8'))
+    if source.get('format')!='mdwnfr-glyph-ink-v1' or len(source.get('glyphs',{}))!=1071:
+        raise ValueError('Verified Egyptian glyph silhouettes are missing')
+    for sign,bounds in source['glyphs'].items():
+        if (len(sign)!=1 or len(bounds)!=4 or
+            not all(isinstance(v,(int,float)) and math.isfinite(v) for v in bounds) or
+            bounds[2]<=bounds[0] or bounds[3]<=bounds[1]):
+            raise ValueError('Invalid Egyptian glyph outline')
+    return source['glyphs']
+
+
+def _shape_ratio(sign:str,glyph_metrics:Mapping[str,object]|None=None)->float:
+    bounds=glyph_geometry().get(sign)
+    if bounds is None:
+        raise ValueError('This sign has no outline in the installed hieroglyphic font')
     if glyph_metrics and sign in glyph_metrics:
-        m = glyph_metrics[sign]
-        if isinstance(m, dict):
-            w, h = float(m.get("width", 1)), float(m.get("height", 1))
-            return max(.20, min(3.5, w / max(h, .01)))
-        return max(.20, min(3.5, float(m)))
-    return PROVISIONAL_RATIOS.get(sign, .83)
+        source=glyph_metrics[sign]
+        if isinstance(source,dict):
+            ratio=float(source['width'])/float(source['height'])
+        else:
+            ratio=float(source)
+        if not math.isfinite(ratio) or ratio<=0:
+            raise ValueError('Invalid requested glyph ratio')
+        return ratio
+    return (bounds[2]-bounds[0])/(bounds[3]-bounds[1])
 
 
-def compose(signs: list[str], column_width: float,
-            glyph_metrics: Mapping[str, object] | None = None) -> Quadrat:
-    """DP searches the complete word, with 1 or 2 consecutive signs per row.
+def compose(signs:list[str],column_width:float,
+            glyph_metrics:Mapping[str,object]|None=None)->Quadrat:
+    if (not signs or not isinstance(column_width,(int,float)) or
+        not math.isfinite(column_width) or column_width<=0):
+        raise ValueError('Nonempty signs and positive finite column width required')
+    width=float(column_width)
+    bounds=glyph_geometry()
+    ratios=[_shape_ratio(s,glyph_metrics) for s in signs]
 
-    Row pairing incurs a penalty: a single sign per row is preferable unless
-    pairing materially reduces total height. Individual glyph sizes vary; no
-    aspect ratio changes. Units match column_width (normally millimetres).
-    """
-    if not signs or column_width <= 0:
-        raise ValueError("Nonempty spelling and positive column width required")
-    width = float(column_width)
-    pad_x = .09 * width
-    usable = width - 2 * pad_x
-    gap = .055 * width
-    base_height = .60 * width
-    ratios = [_shape_ratio(s, glyph_metrics) for s in signs]
+    # A single ink silhouette occupies up to C/2 width. If two slender signs
+    # share a row, each has up to 2C/7 width. The actual silhouette can be
+    # narrower because no glyph may become taller than C. The unused width is
+    # centered column slack, not a distorted or artificially wider character.
+    def dimensions(ratio:float,limit:float)->tuple[float,float]:
+        h=min(width,limit/ratio)
+        return ratio*h,h
 
-    def single(i: int):
-        h = min(base_height, usable / ratios[i])
-        w = ratios[i] * h
-        return (h, ((w, h),), 0.0)
+    @lru_cache(maxsize=None)
+    def choose(index:int)->tuple[float,tuple[tuple[int,...],...]]:
+        if index==len(signs):return 0.0,()
+        _,single_h=dimensions(ratios[index],width/2)
+        rest,candidate=choose(index+1)
+        choices=[(single_h+rest,((index,),)+candidate)]
+        if (index+1<len(signs) and ratios[index]<=NARROW_RATIO and
+            ratios[index+1]<=NARROW_RATIO):
+            h1=dimensions(ratios[index],2*width/7)[1]
+            h2=dimensions(ratios[index+1],2*width/7)[1]
+            if min(h1,h2)/max(h1,h2)>=PAIR_HEIGHT_PARITY:
+                rest,candidate=choose(index+2)
+                choices.append((max(h1,h2)+rest,((index,index+1),)+candidate))
+        return min(choices,key=lambda choice:choice[0])
 
-    def pair(i: int):
-        # Two signs share a line only if each retains a readable fraction of
-        # nominal height. Both can be independently sized, never stretched.
-        left, right = ratios[i], ratios[i+1]
-        max_width = (usable - gap) / 2
-        h1 = min(base_height * .88, max_width / left)
-        h2 = min(base_height * .88, max_width / right)
-        if min(h1, h2) < .30 * width:
-            return None
-        row_h = max(h1, h2)
-        # Visual penalty discourages automatic pairing without spatial benefit.
-        penalty = .13 * width + abs(h1 - h2) * .12
-        return (row_h, ((left * h1, h1), (right * h2, h2)), penalty)
+    rows=choose(0)[1]
+    heights=[max(dimensions(ratios[i],width/2 if len(row)==1 else
+                            2*width/7)[1] for i in row) for row in rows]
+    gaps=[heights[0]/2]
+    gaps.extend((left+right)/2 for left,right in zip(heights,heights[1:]))
+    gaps.append(heights[-1]/2)
+    placed=[None]*len(signs)
+    y=gaps[0]
+    for row_number,row in enumerate(rows):
+        row_height=heights[row_number]
+        limit=width/2 if len(row)==1 else 2*width/7
+        dims=[dimensions(ratios[i],limit) for i in row]
+        if len(row)==1:
+            w=dims[0][0]
+            # Local left/right clearance is w/2. Distribute additional slack.
+            xs=[(width-2*w)/2+w/2]
+        else:
+            w1,w2=dims[0][0],dims[1][0]
+            # Space in between unequal silhouettes = (w1+w2)/4.
+            occupied=1.75*(w1+w2)
+            slack=(width-occupied)/2
+            xs=[slack+w1/2,slack+w1/2+w1+(w1+w2)/4]
+        for (w,h),x,index in zip(dims,xs,row):
+            ink_y=y+(row_height-h)/2
+            left,bottom,right,top=bounds[signs[index]]
+            em=h/(top-bottom)
+            placed[index]=SignBox(signs[index],x,ink_y,w,h,em,
+                                  x-left*em,ink_y+top*em)
+        if row_number+1<len(rows):
+            y+=row_height+gaps[row_number+1]
 
-    @lru_cache(None)
-    def best(i: int):
-        if i == len(signs):
-            return (0.0, ())
-        opts = []
-        h, wh, penalty = single(i)
-        tail_score, tail = best(i+1)
-        opts.append((h + penalty + tail_score, ((i,), wh, h) + (tail,)))
-        if i+1 < len(signs):
-            result = pair(i)
-            if result:
-                h, wh, penalty = result
-                tail_score, tail = best(i+2)
-                opts.append((h + penalty + tail_score, ((i, i+1), wh, h) + (tail,)))
-        return min(opts, key=lambda v: v[0])
-
-    # Decode nested DP decisions into consecutive rows.
-    result = best(0)[1]
-    rows: list[tuple[int, ...]] = []
-    signboxes: list[SignBox] = []
-    rowgap = .13 * width
-    y = .11 * width
-    while result:
-        indices, wh, row_h, result = result
-        rows.append(indices)
-        total_w = sum(w for w, _ in wh) + gap * (len(wh)-1)
-        x = (width - total_w) / 2
-        for idx, (w, h) in zip(indices, wh):
-            signboxes.append(SignBox(signs[idx], x, y + (row_h-h)/2, w, h))
-            x += w + gap
-        y += row_h + rowgap
-    h = y - rowgap + .11 * width
-    return Quadrat(width, h, tuple(signboxes), tuple(rows),
-                   tuple([.11 * width] + [rowgap] * max(0, len(rows)-1) + [.11 * width]))
+    # Half-height outer margins plus mean adjacent-row heights produce
+    # precisely twice the sum of the row's ink heights.
+    return Quadrat(width,2*sum(heights),tuple(placed),tuple(rows),tuple(gaps))
 
 
-def expand_internal(quadrat: Quadrat, additional_height: float) -> Quadrat:
-    """Expand ONLY internal whitespace, never visible sign geometry.
-
-    Proportional weight of each existing gap determines its share. Signs after
-    a gap are translated vertically; their width/height are unchanged.
-    """
-    if additional_height <= 0:
-        return quadrat
-    gaps = quadrat.flexible_gaps
-    total = sum(gaps)
-    if total <= 0:
-        return quadrat
-    increments = [additional_height * g / total for g in gaps]
-    translated: list[SignBox] = []
-    first_of_row = {}
-    for row_no, indices in enumerate(quadrat.rows):
-        for idx in indices:
-            first_of_row[idx] = row_no
-    for i, s in enumerate(quadrat.signs):
-        row = first_of_row[i]
-        delta = sum(increments[:row+1])
-        translated.append(SignBox(s.sign, s.x, s.y + delta, s.width, s.height))
-    return Quadrat(quadrat.width, quadrat.height + additional_height,
-                   tuple(translated), quadrat.rows,
-                   tuple(g+inc for g, inc in zip(gaps, increments)))
+def expand_internal(quadrat:Quadrat,additional_height:float)->Quadrat:
+    """Distribute column justification through whitespace only; do not scale ink."""
+    if additional_height<=0:return quadrat
+    gaps=quadrat.flexible_gaps
+    total=sum(gaps)
+    if total<=0:return quadrat
+    additions=[additional_height*g/total for g in gaps]
+    revised=[None]*len(quadrat.signs)
+    for row_number,indices in enumerate(quadrat.rows):
+        delta=sum(additions[:row_number+1])
+        for index in indices:
+            sign=quadrat.signs[index]
+            revised[index]=SignBox(sign.sign,sign.x,sign.y+delta,
+                                  sign.width,sign.height,sign.font_size,
+                                  sign.text_x,sign.text_y+delta)
+    return Quadrat(quadrat.width,quadrat.height+additional_height,
+                   tuple(revised),quadrat.rows,
+                   tuple(g+a for g,a in zip(gaps,additions)))
