@@ -594,6 +594,62 @@ async function run(){
   if(eg.scrollWidth>eg.viewport+2||eg.agenda.width<180)throw Error('iPad hieroglyphic agenda clipped: '+JSON.stringify(eg));
   await ctx.close();return {arabic:ar,egyptian:eg};
  });
+ await step('Viewport 700/1024 and 560 height rules preserve month and live editor',async()=>{
+  const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
+  const q=await ctx.newPage();q.setDefaultTimeout(8000);
+  await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await q.locator('.month-agenda').waitFor();
+  const selected=await q.locator('.date.chosen').getAttribute('data-date');
+  await q.evaluate(()=>globalThis.__responsiveMonthNode=document.querySelector('.app-shell'));
+  const measure=()=>q.evaluate(()=>{
+   const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width};};
+   return {layout:document.documentElement.dataset.renpetLayout,
+    shell:getComputedStyle(document.querySelector('.app-shell')).display,
+    month:getComputedStyle(document.querySelector('.month-scroll')).display,
+    focus:document.querySelector('.date.chosen')?.dataset.date,
+    sameDOM:globalThis.__responsiveMonthNode===document.querySelector('.app-shell'),
+    cal:rect('.month-section'),agenda:rect('.month-agenda'),rail:rect('.ux-bottom'),
+    scrollWidth:document.documentElement.scrollWidth,innerWidth};
+  });
+  const cases=[[390,844,'phone'],[844,390,'phone'],[699,900,'phone'],
+   [700,559,'phone'],[700,560,'tablet-stacked'],[744,1133,'tablet-stacked'],
+   [1023,768,'tablet-stacked'],[1024,559,'phone'],[1024,560,'tablet-split'],
+   [1024,768,'tablet-split'],[1440,900,'tablet-split'],[1200,500,'phone']];
+  for(const [width,height,expected] of cases){
+   await q.setViewportSize({width,height});
+   const m=await measure();
+   if(m.layout!==expected||m.shell!==(expected==='phone'?'flex':'grid')||m.month!==(expected==='tablet-split'?'grid':'flex'))
+    throw Error('Incorrect '+width+'x'+height+' responsive GUI '+JSON.stringify(m));
+   if(m.focus!==selected||!m.sameDOM)throw Error('Resizing reset the selected day or remounted the UI');
+   if(m.scrollWidth>m.innerWidth+2)throw Error('Layout horizontally overflows '+JSON.stringify(m));
+   if(expected==='tablet-stacked'&&(m.agenda.top<m.cal.bottom-2||Math.abs(m.agenda.width-m.cal.width)>3))
+    throw Error('Stacked iPad agenda not below the full-width month: '+JSON.stringify(m));
+   if(expected==='tablet-split'){
+    const overlap=(a,b)=>a.left<b.right-2&&b.left<a.right-2;
+    if(overlap(m.cal,m.agenda)||overlap(m.cal,m.rail)||overlap(m.agenda,m.rail))
+     throw Error('Split iPad panes overlap: '+JSON.stringify(m));
+   }
+  }
+  await q.setViewportSize({width:1024,height:768});
+  await q.locator('[data-new]').click();
+  const title=q.locator('#event-editor [name=title]');
+  await title.fill('Responsive draft preservation');
+  await title.focus();
+  await q.setViewportSize({width:1024,height:400});
+  if(await q.evaluate(()=>document.documentElement.dataset.renpetLayout)!=='tablet-split')
+   throw Error('Keyboard-like height shrink incorrectly switched GUI');
+  await q.setViewportSize({width:744,height:1133});
+  if(await q.evaluate(()=>document.documentElement.dataset.renpetLayout)!=='tablet-stacked')
+   throw Error('Actual viewport width change did not switch to stacked');
+  await q.setViewportSize({width:844,height:390});
+  if(await q.evaluate(()=>document.documentElement.dataset.renpetLayout)!=='phone')
+   throw Error('Short landscape did not use phone GUI');
+  if(await title.inputValue()!=='Responsive draft preservation')
+   throw Error('Unsaved editor text lost on GUI switch');
+  await q.locator('#event-editor [data-close]').click();
+  await ctx.close();
+  return {tested:cases.length,selectedDayPreserved:true,editorDraftPreserved:true};
+ });
  await b.close();
 }
 (async()=>{try{await run()}catch(e){errors.push('FATAL '+String(e.stack||e))}
