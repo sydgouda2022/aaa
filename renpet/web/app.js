@@ -211,6 +211,15 @@ function render(){
  }
  const main=root.querySelector('#main-content');
  if(main&&keepScroll)main.scrollTop=keepScroll;
+ if(state.view==='month'&&lang()==='egy'){
+  const region=root.querySelector('.month-section'),selected=region?.querySelector('.date.chosen');
+  if(region&&selected){
+   const outer=region.getBoundingClientRect(),inner=selected.getBoundingClientRect();
+   if(inner.top<outer.top||inner.bottom>outer.bottom){
+    region.scrollTop+=inner.top-outer.top-(region.clientHeight-selected.clientHeight)/2;
+   }
+  }
+ }
  if(main&&viewKey!==previousRenderKey&&state.view==='day'&&state.focus===today()){
   const marker=root.querySelector('[data-now-line]');
   if(marker){const relativeY=marker.getBoundingClientRect().top-main.getBoundingClientRect().top;main.scrollTop+=Math.max(0,relativeY-main.clientHeight*.35);}
