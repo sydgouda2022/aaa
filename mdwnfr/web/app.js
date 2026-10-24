@@ -1,5 +1,6 @@
 import {save,load,list,remove,loadProfile,saveProfile,listSnapshots,restoreSnapshot} from './storage.js';
 import {SIGN_CATALOG} from './keyboard_catalog.js';
+import {fitQuadrat} from './quadrat_preview.mjs';
 
 /* All document and typesetting decisions go through the Python RPC worker.
    JavaScript owns only interaction state, local persistence, and DOM drawing. */
@@ -43,7 +44,7 @@ function resetLayoutSynchronization(){
 const emptyProfile=()=>({id:'profile',global_choices:{},document_choices:{},personal_entries:[]});
 let writingProfile=emptyProfile(),profileSaveQueue=Promise.resolve();
 let lexiconMeta=null;
-let expanded=false, expandedOffset=0, latestSuggestions=[];
+let expanded=false, expandedOffset=0, expandedLoading=false, expandedGeneration=0;
 function docChoices(){return doc?.id?(writingProfile.document_choices[doc.id]||{}):{};}
 function queueProfileSave(){
  const snapshot=structuredClone(writingProfile);
@@ -1626,8 +1627,8 @@ function drawKeys(){
  keys.scrollTop=0;
 }
 
-function typeSign(sign){buffer.push(sign);renderComposer();}
-let predVersion=0;
+function typeSign(sign){if(commitPending)return;buffer.push(sign);renderComposer();}
+let predVersion=0,previewTimer=null,commitPending=false;
 function predictionRequest(offset=0,limit=8){
  return {prefix:buffer,offset,limit,
    personal_entries:writingProfile.personal_entries,
@@ -1640,21 +1641,43 @@ function renderComposer(){
   ? `Compose table cell ${String.fromCharCode(65+selectedTableCell.column)}${selectedTableCell.row+1}`
   : editingId?'Edit selected word':'Compose a word';
  const area=$('composer');area.replaceChildren();
+ const preview=$('quadrat-preview');preview.hidden=true;preview.replaceChildren();
+ if(previewTimer!==null){clearTimeout(previewTimer);previewTimer=null;}
  if(buffer.length)for(const ch of buffer){const span=document.createElement('span');span.textContent=ch;area.append(span);}
  $('suggestion-toolbar').hidden=!buffer.length;
  $('suggestions').hidden=!buffer.length;
  $('save-personal-word').disabled=!buffer.length;
  $('expand-predictions').disabled=!buffer.length;
  $('expand-predictions').textContent='All suggestions';
- expanded=false;expandedOffset=0;
+ expanded=false;expandedOffset=0;expandedLoading=false;expandedGeneration++;
+ $('expanded-results').replaceChildren();$('more-predictions').hidden=true;
  $('expanded-predictions').hidden=true;
  $('expand-predictions').setAttribute('aria-expanded','false');
  showSuggestions([{signs:buffer,source:'user'}].filter(x=>x.signs.length));
  const current=++predVersion;
  if(!buffer.length)return;
+ // The preview ONLY renders the coordinates produced by Python compose().
+ if(buffer.length>1&&buffer.length<=64){
+  const signs=buffer.slice();
+  previewTimer=setTimeout(()=>{
+   previewTimer=null;
+   rpc('compose',{signs,width:20}).then(answer=>{
+    if(current!==predVersion||!doc)return;
+    const geometry=fitQuadrat(answer.quadrat);
+    const word=document.createElement('div');word.className='quadrat-preview-word';
+    word.style.width=geometry.width+'px';word.style.height=geometry.height+'px';
+    for(const g of geometry.signs){
+     const glyph=document.createElement('span');glyph.className='quadrat-preview-sign';glyph.textContent=g.sign;
+     glyph.style.left=g.x+'px';glyph.style.top=g.y+'px';
+     glyph.style.width=g.width+'px';glyph.style.height=g.height+'px';
+     glyph.style.fontSize=g.fontSize+'px';word.append(glyph);
+    }
+    preview.replaceChildren(word);preview.hidden=false;
+   }).catch(error=>{if(current===predVersion)status('Word preview: '+error.message,true);});
+  },90);
+ }
  rpc('suggest',predictionRequest(0,8)).then(answer=>{
   if(current!==predVersion)return;
-  latestSuggestions=answer.suggestions;
   showSuggestions(answer.suggestions);
   $('expand-predictions').textContent='All suggestions ('+answer.total+')';
  }).catch(e=>{if(current===predVersion)status('Prediction: '+e.message,true);});
@@ -1675,21 +1698,26 @@ function showSuggestions(candidates){
  for(const c of candidates)wrap.append(suggestionButton(c));
 }
 async function loadExpanded(reset){
- if(!buffer.length)return;
- const current=predVersion;
+ if(!buffer.length||!expanded||expandedLoading)return;
+ const current=predVersion,epoch=expandedGeneration;
  const offset=reset?0:expandedOffset;
+ expandedLoading=true;$('more-predictions').disabled=true;
  try{
   const answer=await rpc('suggest',predictionRequest(offset,40));
-  if(current!==predVersion||!expanded)return;
+  if(current!==predVersion||epoch!==expandedGeneration||!expanded)return;
   const wrap=$('expanded-results');if(reset)wrap.replaceChildren();
-  for(const c of answer.suggestions)wrap.append(suggestionButton(c));
+  for(const candidate of answer.suggestions)wrap.append(suggestionButton(candidate));
   expandedOffset=offset+answer.suggestions.length;
   $('more-predictions').hidden=!answer.has_more;
- }catch(e){if(current===predVersion)status('Expanded predictions: '+e.message,true);}
+ }catch(e){
+  if(current===predVersion&&epoch===expandedGeneration)status('Expanded predictions: '+e.message,true);
+ }finally{
+  if(epoch===expandedGeneration){expandedLoading=false;$('more-predictions').disabled=false;}
+ }
 }
 $('expand-predictions').onclick=()=>{
  if(!buffer.length)return;
- expanded=!expanded;
+ expanded=!expanded;expandedGeneration++;expandedLoading=false;
  $('expanded-predictions').hidden=!expanded;
  $('expand-predictions').setAttribute('aria-expanded',String(expanded));
  if(expanded)loadExpanded(true);
@@ -1706,7 +1734,9 @@ $('save-personal-word').onclick=async()=>{
  renderComposer();
 };
 async function commit(candidate){
- if(!candidate.signs.length)return;
+ if(commitPending||!doc||!candidate?.signs?.length)return;
+ commitPending=true;
+ try{
  const cart=selectedCartoucheObject();
  if(cart){
   const success=await apply({op:'set_cartouche_words',id:cart.id,
@@ -1737,9 +1767,10 @@ async function commit(candidate){
  // Preference updates never change the chosen spelling or lexicon contents.
  await rememberChoice(candidate);
  editingId=null;buffer=[];renderComposer();
+ }finally{commitPending=false;}
 }
-$('clear').onclick=()=>{buffer=[];editingId=null;renderComposer();};
-$('backspace').onclick=()=>{buffer.pop();renderComposer();};
+$('clear').onclick=()=>{if(commitPending)return;buffer=[];editingId=null;renderComposer();};
+$('backspace').onclick=()=>{if(commitPending)return;buffer.pop();renderComposer();};
 for(const tab of document.querySelectorAll('.tab'))tab.onclick=()=>{activeGroup=tab.dataset.tab;drawKeys();};
 $('zoom').onchange=e=>{zoomChoice=e.target.value;repaintCurrentLayout();};
 window.addEventListener('resize',()=>{if(!editorScreen.hidden&&zoomChoice.startsWith('fit-'))repaintCurrentLayout();});

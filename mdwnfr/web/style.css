@@ -292,3 +292,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
 /* Single approved square icon. */
 .library-logo,.editor-app-icon{border:0!important;box-shadow:none!important;background:transparent!important;object-fit:cover}
 [hidden]{display:none!important}
+
+/* The composed preview draws Python-provided sign rectangles without reflow. */
+.quadrat-preview{display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:44px;max-height:96px;margin:4px 0;padding:4px 0;border:1px solid #e2e9f0;border-radius:9px;background:#fff}
+.quadrat-preview-word{position:relative;flex:0 0 auto;overflow:hidden}
+.quadrat-preview-sign{position:absolute;display:flex;align-items:center;justify-content:center;font-family:var(--gfont);line-height:1;white-space:nowrap;color:#153f70;pointer-events:none}
