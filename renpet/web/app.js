@@ -81,7 +81,7 @@ function hiddenCalendarNotice(day){
  return '<div class="hidden-calendar-notice" role="status"><span>'+safe(prefix)+' · '+safe(N(hidden.length))+'</span><button type="button" data-show-all-calendars>'+safe(T().manage)+'</button></div>';
 }
 function festivalMarkup(events,day=state.focus){
- return events.map(f=>'<button type="button" class="festival-in-agenda" data-festival-open="'+safe(f.id)+'" data-festival-day="'+day+'" aria-label="'+safe(f.ar)+'"><span aria-hidden="true">✦</span><span class="festival-title"><strong>'+safe(f.ar)+'</strong><small>'+safe(festivalSourceName({name:f.sourceName},lang()))+(f.duration>1?' · '+safe(N(f.duration))+' '+safe(T().day):'')+'</small></span><span aria-hidden="true">›</span></button>').join('');
+ return events.map(f=>'<button type="button" class="festival-in-agenda" data-festival-source="'+safe(f.sourceId)+'" data-festival-open="'+safe(f.id)+'" data-festival-day="'+day+'" aria-label="'+safe(f.ar)+'"><span aria-hidden="true">✦</span><span class="festival-title"><strong>'+safe(f.ar)+'</strong><small>'+safe(festivalSourceName({name:f.sourceName},lang()))+(f.duration>1?' · '+safe(N(f.duration))+' '+safe(T().day):'')+'</small></span><span aria-hidden="true">›</span></button>').join('');
 }
 function festivalDetails(){
  if(!state.festivalDetail)return '';
