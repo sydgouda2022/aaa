@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {dayNumber} from '../web/calendar.js';
-import {emptyState,createItem,upsertItem,removeItem,itemsForDay,saveScheduler,loadScheduler,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from '../web/scheduler.js';
+import {emptyState,createItem,upsertItem,removeItem,itemsForDay,saveScheduler,loadScheduler,ensureSavedItemVisible,hiddenItemsForDay,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from '../web/scheduler.js';
 const years=[{year:6282,start:'2026-09-11',days:365},{year:6283,start:'2027-09-11',days:365}];
 const day=dayNumber('2026-10-14');
 const state=emptyState();
@@ -27,4 +27,19 @@ const memory=new Map();
 const storage={getItem:key=>memory.get(key)||null,setItem:(key,value)=>memory.set(key,value)};
 assert.ok(saveScheduler(state,storage));
 assert.equal(loadScheduler(storage).items.length,state.items.length);
+// Regression: previously hidden calendars accepted appointments which were
+// stored in localStorage yet disappeared from Month, Day and upcoming List.
+const historical=emptyState();
+historical.calendars.find(c=>c.id==='personal').visible=false;
+const nov5=dayNumber('2026-11-05');
+const missing=createItem({kind:'event',title:'ميعاد السعادة',startDay:nov5,endDay:nov5,startMinutes:540,endMinutes:600,calendarId:'personal'});
+upsertItem(historical,missing);
+assert.equal(itemsForDay(historical,nov5,years).length,0,'Replicate stored-but-hidden event');
+assert.equal(hiddenItemsForDay(historical,nov5,years).length,1,'Detect the hidden event');
+ensureSavedItemVisible(historical,missing);
+assert.equal(itemsForDay(historical,nov5,years)[0].id,missing.id,'Saving unhides its calendar so the appointment appears');
+assert.equal(historical.calendars.find(c=>c.id==='personal').visible,true);
+const orphan=createItem({title:'Old calendar',startDay:nov5,calendarId:'deleted-id'});
+ensureSavedItemVisible(historical,orphan);
+assert.equal(orphan.calendarId,'personal','Orphaned calendar IDs are moved to an existing visible calendar');
 console.log('Scheduler compatibility and CRUD OK');
