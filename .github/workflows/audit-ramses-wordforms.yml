@@ -1,0 +1,44 @@
+name: Audit Ramses Late Egyptian word-form source
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-ramses-wordforms.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Read pinned CC-BY-4 model and segmented word forms
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ramses
+          base=https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels
+          rev=$(git ls-remote https://github.com/MaReTEgyptologists/TranslitModels.git refs/heads/main | cut -f1)
+          echo "RAMSES_UPSTREAM_REV=$rev"
+          curl -fLsS --max-time 90 --retry 3 "$base/$rev/Models/RamsesTrainingSetModel.json" -o /tmp/ramses/model.json
+          curl -fLsS --max-time 90 --retry 3 "$base/$rev/Output/WordLists/words_ramsesTrainingSet" -o /tmp/ramses/words
+          python - <<'PY'
+          import collections,hashlib,json,re,pathlib
+          root=pathlib.Path('/tmp/ramses')
+          for p in (root/'model.json',root/'words'):
+            raw=p.read_bytes()
+            print('SOURCE',p.name,'size',len(raw),'sha256',hashlib.sha256(raw).hexdigest())
+            print('RAW_PREFIX',repr(raw[:600]))
+          obj=json.loads((root/'model.json').read_text())
+          print('MODEL_TOP_TYPE',type(obj).__name__,'ROWS',len(obj))
+          if isinstance(obj,dict):
+            for k,v in list(obj.items())[:6]:print('MODEL_SAMPLE',repr(k)[:250],repr(v)[:950])
+          elif isinstance(obj,list):
+            for v in obj[:5]:print('MODEL_SAMPLE',repr(v)[:1200])
+          raw=(root/'words').read_text(errors='replace').splitlines()
+          print('WORDS_LINES',len(raw))
+          for s in raw[:10]:print('WORDS_SAMPLE',repr(s[:700]))
+          PY
