@@ -29,6 +29,7 @@ jobs:
           curl -fLsS --retry 3 --max-time 120 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-Earlier_Egyptian_original-v18-premium/resolve/main/train.jsonl?download=true' -o /tmp/renpet-tla-v18.jsonl
           test "$(wc -c </tmp/renpet-tla-v18.jsonl)" -gt 5000000
           python renpet/tools/build_egyptian_words.py /tmp/renpet-tla-v18.jsonl
+          python renpet/tools/build_csp.py
           python renpet/tools/build_service_worker.py
           python renpet/tests/test_service_worker_source.py
           if ! command -v google-chrome >/dev/null; then /tmp/renpet-pw/node_modules/.bin/playwright install chromium; fi
