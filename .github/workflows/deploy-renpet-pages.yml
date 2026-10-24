@@ -131,7 +131,7 @@ jobs:
           ! grep -q 'MutationObserver\|year-grid\|year-tile' renpet/web/app.js
           grep -q 'Single owner of #app' renpet/web/app.js
           grep -q 'openBackup' renpet/web/backup.js
-          grep -q 'ui.css?v=20261024-bold-hiero' renpet/web/index.html
+          grep -q 'ui.css?v=20261024-large-hiero-nums' renpet/web/index.html
           python - <<'PY'
           import json
           from pathlib import Path
@@ -166,14 +166,14 @@ jobs:
             if curl -fsSL --max-time 20 "$BASE/?v=6.6.0" -o /tmp/renpet-index \
               && curl -fsSL --max-time 20 "$BASE/data.json" -o /tmp/renpet-data \
               && curl -fsSL --max-time 20 "$BASE/app.js?v=6.6.0" -o /tmp/renpet-app \
-              && curl -fsSL --max-time 20 "$BASE/ui.css?v=20261024-bold-hiero" -o /tmp/renpet-css \
+              && curl -fsSL --max-time 20 "$BASE/ui.css?v=20261024-large-hiero-nums" -o /tmp/renpet-css \
               && curl -fsSL --max-time 20 "$BASE/festival-sources.json" -o /tmp/renpet-festival-sources \
               && curl -fsSL --max-time 20 "$BASE/festival-catalog.js?v=6.6.0" -o /tmp/renpet-festival-code \
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
               && curl -fsSL --max-time 20 "$BASE/lexicon/manifest.json" -o /tmp/renpet-egy-lexicon \
               && curl -fsSL --max-time 20 "$BASE/coptic-lexicon/manifest.json" -o /tmp/renpet-cop-lexicon \
               && grep -q '"version":"6.6.0"' /tmp/renpet-data \
-              && grep -q 'ui.css?v=20261024-bold-hiero' /tmp/renpet-index \
+              && grep -q 'ui.css?v=20261024-large-hiero-nums' /tmp/renpet-index \
               && grep -q 'Single owner of #app' /tmp/renpet-app \
               && grep -q 'month-section' /tmp/renpet-css \
               && grep -q 'itemsForDay' /tmp/renpet-scheduler \

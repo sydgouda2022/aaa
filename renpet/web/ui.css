@@ -503,18 +503,21 @@ body[data-language=egy] .month-scroll{overflow:visible}
 body[data-language=egy] .month-section{flex:0 0 auto;min-height:0;overflow:visible}
 body[data-language=egy] .month-agenda{flex:1 1 auto;min-height:112px;max-height:none;overflow-y:auto}
 body[data-language=egy] .month-section.ten-day .decades{gap:0}
-body[data-language=egy] .month-section.ten-day .decade-days .date{min-height:68px}
+body[data-language=egy] .month-section.ten-day .decade-days .date{min-height:90px}
 body[data-language=egy] .month-section.ten-day .decade-days .date .day-number{
- width:100%;min-width:0;min-height:48px;height:48px;max-height:none;
+ width:100%;min-width:0;min-height:76px;height:76px;max-height:none;
  padding:2px 0;font-size:14px;line-height:1;letter-spacing:normal;
  overflow:visible;overflow-wrap:normal;word-break:normal;white-space:nowrap
 }
 body[data-language=egy] .month-section.ten-day .date.chosen .day-number{padding:2px 0}
-.egy-day-ink{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;width:100%;height:100%;white-space:nowrap}
-.egy-date-tens{display:flex;justify-content:center;white-space:nowrap;font-size:clamp(12px,3.5vw,17px);line-height:1.1;letter-spacing:-2px}
-.egy-date-ones{display:grid;grid-template-columns:repeat(3,minmax(0,7px));justify-content:center;gap:0;line-height:10px;font-size:11px;letter-spacing:-1px}
-.egy-date-ones>span{display:block;width:7px;height:10px;line-height:10px;text-align:center}
-body[data-language=egy] .seven-day .date .day-number{min-height:42px;height:44px;font-size:20px}
+/* Egyptian numeral groups: large enough to read, never a single long row.
+   3 columns × 9px preserves the 10-column month even on a 320px iPhone.
+   Give all nine unit signs their own full-height rows (3×16px). */
+.egy-day-ink{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;width:100%;height:100%;white-space:nowrap;font-weight:800}
+.egy-date-tens{display:flex;justify-content:center;white-space:nowrap;font-size:clamp(17px,4.8vw,21px);line-height:1.12;letter-spacing:-2px;font-weight:800;-webkit-text-stroke:.32px currentColor;paint-order:stroke fill}
+.egy-date-ones{display:grid;grid-template-columns:repeat(3,9px);justify-content:center;gap:0;line-height:16px;font-size:16px;letter-spacing:0;font-weight:800;-webkit-text-stroke:.30px currentColor;paint-order:stroke fill}
+.egy-date-ones>span{display:block;width:9px;height:16px;line-height:16px;text-align:center}
+body[data-language=egy] .seven-day .date .day-number{min-height:76px;height:76px;font-size:26px}
 body[data-language=egy] .month-section .date.chosen .day-number{background:var(--green);color:#fff;border-radius:12px}
 @media(max-width:390px){
  body[data-language=egy] .month-section.ten-day .decade-days .date .day-number{font-size:14px}
@@ -545,11 +548,12 @@ html[data-renpet-layout^="tablet"] .month-scroll{
 }
 html[data-renpet-layout^="tablet"] .week-band{padding:10px 0 12px}
 html[data-renpet-layout^="tablet"] .month-section.ten-day .decade-days .date{min-height:80px}
-html[data-renpet-layout^="tablet"] body[data-language=egy] .month-section.ten-day .decade-days .date{min-height:86px}
+html[data-renpet-layout^="tablet"] body[data-language=egy] .month-section.ten-day .decade-days .date{min-height:116px}
 html[data-renpet-layout^="tablet"] .month-section.ten-day .decade-days .date .day-number{font-size:18px}
-html[data-renpet-layout^="tablet"] .egy-date-tens{font-size:19px}
-html[data-renpet-layout^="tablet"] .egy-date-ones{grid-template-columns:repeat(3,8px);font-size:13px;line-height:12px}
-html[data-renpet-layout^="tablet"] .egy-date-ones>span{width:8px;height:12px;line-height:12px}
+html[data-renpet-layout^="tablet"] body[data-language=egy] .month-section.ten-day .date .day-number{min-height:102px;height:102px}
+html[data-renpet-layout^="tablet"] .egy-date-tens{font-size:26px}
+html[data-renpet-layout^="tablet"] .egy-date-ones{grid-template-columns:repeat(3,12px);font-size:21px;line-height:21px}
+html[data-renpet-layout^="tablet"] .egy-date-ones>span{width:12px;height:21px;line-height:21px}
 
 /* iPad portrait and constrained windows: full-width weeks above the agenda. */
 html[data-renpet-layout="tablet-stacked"] .month-scroll{
@@ -600,4 +604,15 @@ html[data-renpet-layout="phone"] .month-agenda,
 html[data-renpet-layout="phone"] body[data-language=egy] .month-agenda{
  flex:0 0 clamp(126px,28%,170px);min-height:126px;max-height:38%;
  overflow-y:auto;overscroll-behavior:contain
+}
+
+/* 6.10 — prominent, bold native numerals in date selectors and year overview.
+   Avoid enlarging Gregorian overlays or forcing all 9 unit signs into one line. */
+body[data-language=egy] .year-mini-day{font-size:22px;font-weight:800;-webkit-text-stroke:.24px currentColor;paint-order:stroke fill}
+body[data-language=egy] .year-month-index{font-size:19px;font-weight:800}
+body[data-language=egy] .year-shortcut-value .glyph{height:48px;max-width:185px;object-fit:contain}
+body[data-language=egy] .date-fields select[name=egyMonth],
+body[data-language=egy] .date-fields select[name=egyDay]{font-size:27px!important;font-weight:800;-webkit-text-stroke:.26px currentColor}
+@media(max-width:390px){
+ body[data-language=egy] .year-shortcut-value .glyph{height:42px;max-width:150px}
 }
