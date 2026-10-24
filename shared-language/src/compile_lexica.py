@@ -152,7 +152,7 @@ def build_egyptian(tla_path,aed_path,out):
         for at in evidence[(lemma,form)]:
             ref='line:'+str(at)
             att_id=hashlib.sha256((record_id+ref).encode()).hexdigest()[:24]
-            db.execute('INSERT INTO attestation VALUES (?,?,?,?,?)',(att_id,record_id,'TLA-LE19',ref,sha_tla))
+            db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',(att_id,record_id,'TLA-LE19',ref,sha_tla))
         entries.append({'ref':record_id,'signs':form,'lemma':lexical_id,
                         'source':'TLA-LE19','primary':True,'attestations':frequency})
     db.commit()
