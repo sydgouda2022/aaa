@@ -17,6 +17,7 @@ import re
 import sqlite3
 import unicodedata
 import xml.etree.ElementTree as ET
+from hieroglyphic_unicode import native_word,has_format_controls
 
 TEI='{http://www.tei-c.org/ns/1.0}'
 XML='{http://www.w3.org/XML/1998/namespace}'
@@ -31,7 +32,7 @@ def digest(path):
 
 
 def hieroglyphic(s):
-    return isinstance(s,str) and bool(s) and len(s)<=256 and all(0x13000<=ord(c)<=0x1342F or 0x13460<=ord(c)<=0x143FF for c in s)
+    return native_word(s)
 
 
 def coptic(s):
@@ -97,6 +98,7 @@ def source_rows(path):
                 lemma=(mapped[i] if aligned else 'unresolved')
                 key=(lemma,unicodedata.normalize('NFC',spelling))
                 counts[key]+=1
+                if has_format_controls(spelling):stats['formatted_word_tokens']+=1
                 # Bound evidence per spelling so corpus references remain compact.
                 if len(evidence[key])<24:evidence[key].append(line_number)
                 stats['encoded_word_tokens']+=1

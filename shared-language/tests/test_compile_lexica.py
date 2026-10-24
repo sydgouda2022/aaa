@@ -47,6 +47,15 @@ class Tests(unittest.TestCase):
    self.assertEqual(p['popularity']['ⲡⲉ'],15)
    db=sqlite3.connect(t/'result/lexicon.sqlite3')
    self.assertEqual(db.execute('PRAGMA integrity_check').fetchone()[0],'ok')
+ def test_complete_grouped_unicode_word_is_preserved(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   p=Path(tmp)/'tla.jsonl'
+   p.write_text(json.dumps({'hieroglyphs':'𓀀𓐱𓀁 𓀀𓐱 𓑃',
+                             'lemmatization':'123|one 124|bad 125|damage'},ensure_ascii=False))
+   records,_,stats=source_rows(p)
+   self.assertIn(('123','𓀀𓐱𓀁'),records)
+   self.assertEqual(stats['formatted_word_tokens'],1)
+   self.assertEqual(stats['unencoded_word_tokens'],2)
  def test_no_invented_transliteration(self):
   with tempfile.TemporaryDirectory() as tmp:
    p=Path(tmp)/'tla';p.write_text(json.dumps({'hieroglyphs':'nfr ⲁ','lemmatization':'1|nfr 2|a'}))

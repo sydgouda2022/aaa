@@ -8,7 +8,7 @@ export const EGY_NUMBERS=[
 ];
 export const COP_NUMBERS=[...Array.from({length:9},(_,i)=>i+1),10,100,1000].map(value=>({value,text:nativeNumber(value,'cop')}));
 const cop=/[\p{Script=Coptic}\p{Script=Greek}\p{Mark}]+$/u;
-const egy=/[\u{13000}-\u{1342f}\u{13460}-\u{143ff}]+$/u;
+const egy=/[\u{13000}-\u{1345f}\u{13460}-\u{143ff}]+$/u;
 export function wordRange(input, caret, lang){
  const left=input.slice(0,caret);
  const matched=left.match(lang==='cop'?cop:egy);

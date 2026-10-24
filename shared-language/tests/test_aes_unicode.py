@@ -15,6 +15,11 @@ class TestAESUnicode(unittest.TestCase):
         for x in ['&#x131d3','&#x131d3; ...','[𓇓]','&#xZZZZ;','&#x131d3;<i>','𓇓?','𓇓 ','','&#x41;','hiero']:
             with self.subTest(x=x):
                 self.assertIsNone(module.decode_aes_hiero(x))
+    def test_exact_html_encoded_format_controls(self):
+        self.assertEqual(module.decode_aes_hiero('&#x13000;&#x13431;&#x13001;'),'𓀀𓐱𓀁')
+        self.assertEqual(module.decode_aes_hiero('&#x13437;&#x13000;&#x13438;'),'𓐷𓀀𓐸')
+        self.assertIsNone(module.decode_aes_hiero('&#x13000;&#x13431;'))
+        self.assertIsNone(module.decode_aes_hiero('&#x13000;&#x13443;'))
     def test_length_limit(self):
         self.assertIsNone(module.decode_aes_hiero('𓇓'*257))
     def test_decimal_entities(self):
