@@ -148,6 +148,7 @@ jobs:
           ! test -e dist/lexicon/lexicon.sqlite3
           node --check dist/storage.js
           node --check dist/sw.js
+          node overrides/test_service_worker_cache.mjs
           node tools/test_recovery_storage.mjs
           python -m compileall -q core/mdwnfr
           python - <<'PY'
