@@ -1,50 +1,55 @@
-# Late Egyptian source register and ingestion policy
+# Late Egyptian — approved open-data-only research inputs
 
-**Registered != acquired != normalized != verified != distributable.**
+**Active source list:** `late_egyptian_registry.json`.
 
-Inspect: `python src/source_registry.py status` from the platform root.
+The source list is intentionally limited to the datasets that do **not** require
+individual copyright permission, a negotiated research license or a paid bulk
+export. Ingestion is performed once at build time, after verifying actual file
+terms, revisions and SHA-256 hashes. The applications only use a canonical
+`lexicon.sqlite3` release and derived indexes, with no source-server requests.
 
-The machine-readable registry lists every approved source edition and its
-precedence, contributor/provenance family, expected value and current
-acquisition/publication constraints. All entries target Late Egyptian.
-The registry is a source of *governance*, not an archive of copyrighted data.
+## Approved editions
 
-### Acquisition gates
+1. **TLA Late Egyptian v19 premium extract:** openly published CC BY-SA 4.0,
+   3,606 filtered sentences. This is a limited subset, not all of TLA.
+   https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium
+2. **AED v1.0:** open CC BY-SA 4.0 dataset. https://zenodo.org/records/3581069
+3. **AES:** GitHub corpus under CC BY-SA 4.0. https://github.com/simondschweitzer/aes
+4. **ORAEC:** only files with explicitly published CC BY-SA 4.0 or CC0
+   terms; file-level verification is mandatory.
+   https://github.com/oraec/corpus_raw_data
 
-1. Locate a real corpus release or licensed export (and separately record
-   direct URL/DOI, release/tag, authors and exact selected file license).
-2. Pin a content SHA-256 digest from its local bytes.
-3. Run the appropriate reviewed per-source adapter. Keep original IDs and
-   original script spellings, stage evidence, date and contextual citations.
-4. Compare shared lineage (AED/AES/ORAEC vs TLA release overlap) before
-   counting corpus coverage; distinguish cross-references from new attestations.
-5. `verified_source_manifest` creates a local evidence manifest for eligible
-   sources only, then the pack compiler validates native-script attestation.
-6. Verify prefix search, raw-first behavior, physical device reading, and
-   PWA offline activation before enabling the pack in either app.
+## Excluded from all active builds
 
-Ramsès: do not scrape/download complete restricted material via a web GUI.
-Lesko: do not OCR/copy a copyrighted reference to assemble a redistributable
-dataset. If permission is later obtained, review and update the gate explicitly.
+- **Projet Ramsès:** no verified open bulk-data reuse permission.
+- **Lesko's Dictionary of Late Egyptian:** copyrighted specialist dictionary,
+  without an openly redistributable bulk dataset.
+- **Full TLA Corpus 20:** its web interface is not an automatically reusable
+  bulk data release. A separately published open-data extract would require a
+  new explicit registry change after confirming its public license.
 
-### Authoritative source landing pages
+These are exclusions, not lower-ranked fallback sources. Reintroducing them
+requires a separately approved policy change and tests.
 
-- TLA: https://tla.digital/home?lang=en
-- TLA raw release inventory: https://aaew.bbaw.de/daten-veroeffentlichungen
-- TLA Late Egyptian v19 filtered: https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium
-- Ramsès: https://ramses.ulg.ac.be/site/corpus
-- AED: https://zenodo.org/records/3581069
-- AES: https://github.com/simondschweitzer/aes
-- ORAEC: https://github.com/oraec/corpus_raw_data
-- Lesko 2nd ed. catalog: https://search.worldcat.org/title/A-dictionary-of-Late-Egyptian/oclc/706029298
+## Open licensing is still licensing
 
-## Source use boundary
+CC BY-SA 4.0 requires appropriate attribution and compliance with ShareAlike
+for adaptations; CC0 does not impose those license obligations. Keep source and
+selected-file attribution/provenance with the master and distribute required
+license information with applicable releases. Merely using sources at build
+rather than runtime does not automatically remove obligations for derived data.
 
-**All seven editions are build-time evidence inputs only.** The applications
-never call their servers, parse their original files, or ship source PDFs/corpora.
-Build one canonical Late Egyptian `lexicon.sqlite3` with spelling and lemma
-records; attach source references/lineage for auditing. Cross-source word identity
-is not inferred from matching glyphs alone. Renpet and MdwNfr receive generated
-indexes from the same SQLite release, never parallel hand-curated dictionaries.
-A private local build may use legitimately obtained source materials without
-turning those materials into a public downloadable app asset.
+## Process
+
+1. Download the specific public release and pin version/hash.
+2. Verify exact source or per-file open license and attribution.
+3. Normalize native hieroglyphic spellings and Late Egyptian stage evidence.
+4. Reconcile shared 2018 lineage across AED, AES and ORAEC; preserve distinct
+   lemmas and historical spelling variants.
+5. Use `verified_source_manifest()` to pass only approved source files into
+   `build_master.py`; unapproved IDs are blocked even by the production builder.
+6. Generate the versioned runtime indexes for Renpet and MdwNfr from the same
+   canonical database and verify reproducibility, offline use and credits.
+
+**Registered does not mean acquired or imported.** The comprehensive dictionary
+has not yet been compiled from these editions.

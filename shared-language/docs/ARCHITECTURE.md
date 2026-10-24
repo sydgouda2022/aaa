@@ -12,7 +12,7 @@ D. MdwNfr: Late Egyptian hieroglyphic editing only, with Python 3.12 document mo
 
 ## Source acquisition and dictionary publication
 
-- Egyptian: prioritize pinned TLA Late -> AED -> AES -> ORAEC. A corpus of Earlier Egyptian spelling forms is not evidence for an entry labelled Late Egyptian. Preserve lemma, source document and original spelling provenance separately. Report measured source counts, accepted entries, rejected records, unattested/missing Unicode spellings, per-edition coverage and copyright/redistribution decisions. The historic target (~44,980 forms, 123,939 spellings, ~910k references) is a recovery target, not a verified count for the current v0.1.42 distribution.
+- Egyptian: prioritize pinned openly reusable TLA Late Egyptian v19 -> AED -> AES -> verified open-file ORAEC. A corpus of Earlier Egyptian spelling forms is not evidence for an entry labelled Late Egyptian. Preserve lemma, source document and original spelling provenance separately. Report measured source counts, accepted entries, rejected records, unattested/missing Unicode spellings, per-edition coverage and copyright/redistribution decisions. The historic target (~44,980 forms, 123,939 spellings, ~910k references) is a recovery target, not a verified count for the current v0.1.42 distribution.
 - Coptic: start with the TEI/XML Comprehensive Coptic Lexicon (KELLIA/BBAW and DDGLC), then independently licensed Sahidic and Bohairic corpus forms from Coptic SCRIPTORIUM. Preserve dialect, lemma, written form, morphosyntax, contextual frequency and original orthography; separately license-check SCRIPTORIUM-derived word tables.
 - Published packs: deterministic rebuild from pinned inputs; explicit SHA-256 manifest, individual source licenses and citation metadata, stable cross-version mapping, immutable version, integrity verification before IndexedDB activation, rollback and no failure-triggered deletion of existing offline packs.
 
@@ -57,40 +57,27 @@ Stage W3: unify screen, hit testing, selection, reflow, paper/papyrus, export an
 
 These steps are engineering requirements, not a claim that the completed dictionaries, iPhone UX, or advanced historical compositor already exist.
 
-## Late Egyptian corpus expansion (approved 2026-10-24)
+## Late Egyptian active open-data sources (updated 2026-10-24)
 
-The Late Egyptian acquisition authority is now
-`sources/late_egyptian_registry.json` (seven *editions*, six project names):
+Only these four approved, publicly reusable source editions can feed the
+canonical lexicon build: TLA Late Egyptian v19 filtered premium data, AED,
+AES, and ORAEC **only for individual files verified CC0 or CC BY-SA**.
 
-1. **TLA Corpus 20**: primary lexical reference; only individual raw editions
-   with verified open-data permissions may be distributed. A web interface is
-   not equivalent to a bulk-data license.
-2. **TLA Late Egyptian v19 premium**: attested, filtered, downloadable baseline;
-   a subset, not the entire Corpus 20. Its overlapping TLA editorial lineage
-   must not be double-counted.
-3. **Projet Ramsès**: preferred Late Egyptian contextual supplement, blocked from
-   bulk ingestion and redistribution until authorized machine-readable access
-   and a license are documented. Historical project size is not a current export.
-4. **AED**: open CC BY-SA lexicon, needs an edition pin and stage filtering.
-5. **AES**: open CC BY-SA sentence data, needs an edition pin, complete-sign
-   checks, stage filtering and source-level identity preservation.
-6. **ORAEC**: per-file CC BY-SA or CC0, source text lineage overlaps AED/AES,
-   and only eligible files with proven rights may be ingested.
-7. **Lesko, _A Dictionary of Late Egyptian_, 2nd ed.**: specialist scholarly
-   comparison only; no automatic transcription of the copyrighted dictionary.
+Permission-dependent or copyright-only sources (full TLA Corpus 20 absent an
+independent open dataset license, Projet Ramsès, and Lesko) are **excluded**,
+not merely lower-priority references. This is enforced in source registry
+validation and in the production SQLite master build. Any future newly open
+edition must be explicitly approved, not silently auto-detected.
 
-Priority ranks are not evidence weights or independent-vote counts. Only
-wordforms demonstrably from Late Egyptian records qualify as primary Late
-Egyptian predictions; unknown-stage and earlier/other Egyptian material must
-remain separately tagged and must not be silently promoted. This registry is
-for all future writing apps; no change is made to MdwNfr's existing pinned
-four-source lexicon or current PWA until replacement data has passed the
-independent checksum, provenance, overlap, publication and compatibility gates.
+AED/AES/ORAEC share an upstream editorial lineage; overlapping attestations
+are not additional independent confirmation. Only entries actually marked
+Late Egyptian qualify for the Late Egyptian runtime pack. These source inputs
+are used at **build time only**, not fetched by either app.
 
 ## 2026-10-24 — Single-use source corpora, one Late Egyptian runtime database
 
 This requirement **supersedes** wording elsewhere that could imply the apps
-query TLA/Ramsès/AED/AES/ORAEC/Lesko at runtime or independently ingest them.
+query external research sites at runtime or independently ingest them.
 Each external source is a build-time evidence input. Import only after the source
 can legitimately be accessed and normalized. Review known cross-source lemma
 identities; merge spelling rows by reviewed lemma + exact Unicode surface +
@@ -107,14 +94,12 @@ or a reason to ship original source corpora. The same lexical data must be
 available offline. Renpet has ordinary inline Unicode presentation; MdwNfr owns
 its historically informed quadrat compositor.
 
-Local private research build and distributing corpus-derived data publicly are
-different policies. GitHub and Cloudflare are currently public platforms: no
-assumption that 'noncommercial' means those endpoints may expose restricted
-bulk content. Verification of lawful acquisition and publication permissions
-remains a narrowly scoped deployment check, not a reason to avoid a personal
-local lexicon build.
+Private and public production builds both use the same open-only source policy.
+Open CC BY-SA licenses are permitted without individual negotiation, but
+attribution and ShareAlike compliance still apply. Source file identity,
+checksums, and per-file rights verification remain mandatory.
 
 `src/build_master.py` and `src/export_runtime.py` implement the initial working
 SQLite and release-index contracts on synthetic test fixtures. Completion is
-not achieved until licensed/authorized source adapters populate the actual
+not achieved until approved open-data source adapters populate the actual
 Late Egyptian master and both application integrations pass end-to-end tests.

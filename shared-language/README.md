@@ -25,13 +25,12 @@ Run `node --test tests/predict.test.mjs` and
 
 ## Next required implementations
 
-1. Source-specific, legally permitted importers for the approved Late Egyptian
-   registry (`sources/late_egyptian_registry.json`): TLA Corpus 20, TLA v19
-   filtered extract, Projet Ramsès, AED, AES, ORAEC, and Lesko as a reference-only
-   gap checker; separately KELLIA/Scriptorium Coptic resources when that track
-   resumes. Preserve source IDs and
-   per-source reproducible coverage reports. Recover and validate the original
-   full MdwNfr lexicon, **not** the 665/728-record development pack.
+1. Source-specific importers for approved *open* Late Egyptian data only:
+   TLA Late Egyptian v19 filtered extract, AED, AES and individually verified
+   CC BY-SA/CC0 ORAEC files. Ramsès, Lesko and the full TLA Corpus 20 are
+   excluded from all active source builds. Pin each actual file and audit
+   spelling provenance, stage and overlaps. Recover and validate the original
+   full MdwNfr lexicon only when its underlying records satisfy this policy.
 2. Morphological inference limited to documented grammatical paradigms,
    non-destructive fuzzy correction, per-language contextual models from licensed
    corpora and an efficient install/download/verify/rollback protocol.
@@ -54,22 +53,15 @@ physical iPhone keyboard input, save/reload behavior and airplane mode.
 TEI), Coptic SCRIPTORIUM NLP and corpus resources (per-dataset license), TLA and
 user-pinned AED/AES/ORAEC editions (rights and source-format verification).
 
-## Late Egyptian expanded source registry (2026-10-24)
+## Late Egyptian open-only registry (2026-10-24)
 
-The seven **source editions** from six named projects are now registered in
-`sources/late_egyptian_registry.json` (TLA has two distinct corpus editions).
-Run `python src/source_registry.py status` to inspect priorities and ingestion
-rights. `src/source_registry.py:verified_source_manifest()` verifies locally
-acquired bytes and licenses before creating a manifest accepted by the existing
-pack builder. Tests prove that rights-limited sources cannot be automatically
-packaged. AED, AES and ORAEC share one historical source lineage.
-
-**Registry membership does not mean the contents have been downloaded,**
-**converted or included in either app.** TLA Corpus 20 requires identification
-of specifically open/licensed raw releases; Ramsès needs a verified bulk export
-and permission; Lesko remains a bibliographic reference only unless a separate
-license is secured. This is the first integration gate, not a comprehensive
-Late Egyptian dictionary release. No Coptic modifications were made.
+The active registry contains **four openly reusable source editions**:
+TLA v19 Late Egyptian, AED, AES and selected ORAEC files. Restricted or
+permission-only material has been **removed from the registry and rejected by
+the production canonical builder**. These open editions still have attribution
+and, for CC BY-SA, ShareAlike requirements. The registry is not an archive and
+no full source corpus has yet been imported. Run
+`python src/source_registry.py status` for the active list.
 
 ## Canonical single-database design (2026-10-24 decision)
 
@@ -93,7 +85,7 @@ fetch to TLA, Ramsès, AED, AES, ORAEC or Lesko is ever required.
 personal, noncommercial project lowers distribution needs but does not erase
 copyright, website access rules, or permission requirements. The local builder
 accepts legitimately obtained research input and records its provenance; the
-separate `--distribution public` export refuses restricted inputs until reviewed.
+separate `--distribution public` export refuses any non-open input.
 The current GitHub repository and Cloudflare PWA are public, so full restricted
 lexical datasets must not be pushed there as part of a private workflow.
 

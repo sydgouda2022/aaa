@@ -21,7 +21,7 @@ class BuildMasterTests(unittest.TestCase):
     def _build(self,rows):
         t=tempfile.TemporaryDirectory()
         path=Path(t.name)/'lexicon.sqlite3'
-        summary=build_master(rows,MANIFEST,path)
+        summary=build_master(rows,MANIFEST,path,allow_test_sources=True)
         return t,path,summary
     def test_shared_spelling_is_one_form_with_all_source_evidence(self):
         t,path,summary=self._build([row('a','TLA'),row('b','AED'),row('c','AES')])
@@ -48,13 +48,33 @@ class BuildMasterTests(unittest.TestCase):
                   row('x','TLA',surface='nfr')):
             with self.subTest(x=x),tempfile.TemporaryDirectory() as t:
                 output=Path(t)/'db.sqlite3'
-                with self.assertRaises(ValueError):build_master([x],MANIFEST,output)
+                with self.assertRaises(ValueError):build_master([x],MANIFEST,output,allow_test_sources=True)
                 self.assertFalse(output.exists())
     def test_idempotent_source_repeats_and_safe_no_overwrite(self):
         t,path,summary=self._build([row('1','TLA'),row('1','TLA')])
         try:
             self.assertEqual(summary['evidence'],1)
-            with self.assertRaises(FileExistsError):build_master([row('1','TLA')],MANIFEST,path)
+            with self.assertRaises(FileExistsError):build_master([row('1','TLA')],MANIFEST,path,allow_test_sources=True)
         finally:t.cleanup()
+
+    def test_production_accepts_approved_open_manifest(self):
+        manifest={'schema':1,'sources':[{'id':'AES','version':'test-pinned',
+            'license':'CC-BY-SA-4.0','sha256':'a'*64,
+            'attribution':'Test editors','url':'https://github.com/simondschweitzer/aes',
+            'lineage':'BBAW-2018-EXTRACT'}]}
+        with tempfile.TemporaryDirectory() as t:
+            path=Path(t)/'lexicon.sqlite3'
+            summary=build_master([row('a','AES')],manifest,path)
+            self.assertEqual((summary['lemmas'],summary['evidence']),(1,1))
+        manifest['sources'][0]['license']='copyrighted'
+        with tempfile.TemporaryDirectory() as t,self.assertRaises(PermissionError):
+            build_master([row('a','AES')],manifest,Path(t)/'lexicon.sqlite3')
+
+    def test_production_rejects_permissioned_and_unknown_manifest(self):
+        for sid in ('RAMSES','LESKO-2ED','TLA-C20','PRIVATE'):
+            restricted={'schema':1,'sources':[{'id':sid,'version':'1','license':'research-only','sha256':'a'*64}]}
+            with self.subTest(sid=sid),tempfile.TemporaryDirectory() as t:
+                with self.assertRaises(PermissionError):
+                    build_master([row('a',sid)],restricted,Path(t)/'db.sqlite3')
 
 if __name__=='__main__':unittest.main()

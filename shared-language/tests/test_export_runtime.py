@@ -13,7 +13,7 @@ class ExportRuntimeTests(unittest.TestCase):
    db=Path(t)/'db.sqlite3'
    m={'schema':1,'sources':[{'id':'S1','version':'1','license':'CC-BY-SA-4.0','sha256':'a'*64,'lineage':'G1'}]}
    r=[dict(id='1',language='egy',stage='Late Egyptian',surface='𓄿',sourceId='S1',sourceRef='text1:p1',attested=True,lemmaId='L1')]
-   build_master(r,m,db)
+   build_master(r,m,db,allow_test_sources=True)
    a=make_runtime_pack(db)
    b=make_runtime_pack(db)
    self.assertEqual(a,b)
@@ -27,7 +27,7 @@ class ExportRuntimeTests(unittest.TestCase):
    db=Path(t)/'db.sqlite3'
    m={'schema':1,'sources':[{'id':'PRIVATE','version':'1','license':'research-only','sha256':'a'*64}]}
    r=[dict(id='1',language='egy',stage='Late Egyptian',surface='𓄿',sourceId='PRIVATE',sourceRef='p1',attested=True,lemmaId='L1')]
-   build_master(r,m,db)
+   build_master(r,m,db,allow_test_sources=True)
    self.assertEqual(make_runtime_pack(db)['sourceEditions'],1)
    with self.assertRaises(PermissionError):make_runtime_pack(db,distribution='public')
 

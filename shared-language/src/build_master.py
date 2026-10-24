@@ -68,7 +68,7 @@ def _schema(conn: sqlite3.Connection) -> None:
     ''')
 
 
-def _validated_sources(manifest: dict) -> dict:
+def _validated_sources(manifest: dict, *, allow_test_sources: bool = False) -> dict:
     if manifest.get('schema') != 1 or not isinstance(manifest.get('sources'), list):
         raise ValueError('Invalid source manifest')
     sources = {}
@@ -80,6 +80,17 @@ def _validated_sources(manifest: dict) -> dict:
         if s['id'] in sources:
             raise ValueError('Duplicate source edition')
         sources[s['id']] = s
+    if not allow_test_sources:
+        from source_registry import read_registry, source_by_id, compatible_license
+        active = read_registry()
+        for source_id, record in sources.items():
+            approved = source_by_id(active, source_id)
+            if approved is None:
+                raise PermissionError('Excluded source cannot enter canonical lexicon: ' + source_id)
+            if not compatible_license(approved, record['license']):
+                raise PermissionError('Open-data license mismatch for: ' + source_id)
+            if not record.get('attribution') or not record.get('url'):
+                raise ValueError('Production source manifest needs attribution and publication URL')
     return sources
 
 
@@ -94,8 +105,8 @@ def _canonical_lemma(row: dict) -> str:
     return 'isolated:' + row['sourceId'] + ':' + str(local)
 
 
-def build_master(records: list[dict], manifest: dict, output: Path) -> dict:
-    sources = _validated_sources(manifest)
+def build_master(records: list[dict], manifest: dict, output: Path, *, allow_test_sources: bool = False) -> dict:
+    sources = _validated_sources(manifest, allow_test_sources=allow_test_sources)
     if not records:
         raise ValueError('No normalized records')
     output = Path(output)
