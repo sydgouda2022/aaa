@@ -159,6 +159,9 @@ export function initKeyboard(getLanguage){
  // Changing the viewport on pointerdown can move the Save button before
  // iOS dispatches click/submit, silently losing taps. Dismiss only after click.
  document.addEventListener('click',e=>{
+  // The Add/Edit click creates and focuses a new editor before this event
+  // bubbles to document. Never immediately hide that newly opened keyboard.
+  if(e.target.closest('[data-new],[data-edit],[data-hour]'))return;
   if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target))hide();
  });
  document.addEventListener('keydown',e=>{
