@@ -1,32 +1,26 @@
-name: Build and deploy MdwNfr iPhone PWA
+name: Build and deploy MdwNfr
 on:
   push:
     branches: [main]
     paths:
-      - 'mdwnfr/.source/**'
-      - 'mdwnfr/overrides/**'
-      - 'shared-language/src/lexicon_install.mjs'
-      - 'shared-language/src/publish_release.py'
-      - 'shared-language/src/compile_lexica.py'
-      - 'shared-language/src/ramses_unicode.py'
-      - 'shared-language/src/aes_unicode.py'
-      - 'shared-language/src/aes_late_adapter.py'
-      - 'shared-language/sources/aes_late_documents.json'
-      - 'shared-language/adapters/mdwnfr-worker.js'
-      - 'shared-language/adapters/mdwnfr-offline-publication.py'
-      - 'shared-language/releases/dev-late-egyptian/**'
-      - 'mdwnfr/wrangler.toml'
+      - 'mdwnfr/core/**'
+      - 'mdwnfr/web/**'
+      - 'mdwnfr/data/**'
+      - 'mdwnfr/tools/**'
+      - 'mdwnfr/qa/**'
+      - 'mdwnfr/pyproject.toml'
       - 'mdwnfr/worker.mjs'
+      - 'mdwnfr/wrangler.toml'
       - '.github/workflows/deploy-mdwnfr.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: mdwnfr-production
   cancel-in-progress: false
 jobs:
   build-deploy:
-    name: Build Python 3.12 PWA and publish
+    name: Verify direct Python source and publish
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -37,69 +31,40 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-      - name: Recover pinned MdwNfr 0.1.42 source archive
+      - name: Validate one application and one 41K lexicon
         shell: bash
         run: |
           set -euo pipefail
-          cat mdwnfr/.source/part*.b64.txt | base64 --decode > /tmp/mdwnfr-source.tar.gz
-          echo '893615ce164747ca9baf7a673f179d88ad3714281009b13b5380c11ecf21d322  /tmp/mdwnfr-source.tar.gz' | sha256sum -c -
-          tar -tzf /tmp/mdwnfr-source.tar.gz > /tmp/mdwnfr-source.lst
-          grep -q '^core/mdwnfr/api.py$' /tmp/mdwnfr-source.lst
-          tar -xzf /tmp/mdwnfr-source.tar.gz -C mdwnfr
+          test -s mdwnfr/core/mdwnfr/api.py
           test -s mdwnfr/web/app.js
-          test -s mdwnfr/core/mdwnfr/data/lexicon.json
-      - name: Install source-aware MdwNfr keyboard upgrades
-        shell: bash
-        run: |
-          set -euo pipefail
-          python mdwnfr/overrides/patch_keyboard.py mdwnfr
-          python -m py_compile mdwnfr/core/mdwnfr/lexicon.py
-          node --check mdwnfr/web/app.js
-      - name: Apply MdwNfr composer and brand update
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --disable-pip-version-check Pillow
-          python mdwnfr/overrides/patch_ui_046.py mdwnfr
-          node --check mdwnfr/web/app.js
-          node --check mdwnfr/web/sw.js
-          python -m py_compile mdwnfr/overrides/patch_ui_046.py
-      - name: Attach independent verified lexicon installer
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/lexicon-sources
-          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/lexicon-sources/tla.jsonl
-          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexicon-sources/aed.xml
-          echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexicon-sources/tla.jsonl' | sha256sum -c -
-          echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
-          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-sources/aes_sawlit.json
-          echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-sources/aes_sawlit.json' | sha256sum -c -
-          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels/c612a91407bddf8d546beedaf46edd5190a67eef/Models/RamsesTrainingSetModel.json' -o /tmp/lexicon-sources/ramses.json
-          echo 'b399acfef9462c76f4df97794a97369c24f33dc6d87269f315e41a5d16103691  /tmp/lexicon-sources/ramses.json' | sha256sum -c -
-          cp shared-language/src/lexicon_install.mjs mdwnfr/web/lexicon-install.mjs
-          cp shared-language/adapters/mdwnfr-worker.js mdwnfr/web/worker.js
-          cp shared-language/adapters/mdwnfr-offline-publication.py mdwnfr/tools/offline_publication.py
-          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --ramses /tmp/lexicon-sources/ramses.json --out mdwnfr/web/lexicon
-          python shared-language/src/publish_release.py --catalog mdwnfr/web/lexicon/lexicon.json --out mdwnfr/web/lexicon
-          cp mdwnfr/web/lexicon/lexicon.json mdwnfr/core/mdwnfr/data/lexicon.json
+          test -s mdwnfr/data/lexicon.sqlite3
+          test ! -e mdwnfr/.source
+          test ! -e mdwnfr/overrides
+          test ! -e mdwnfr/dictionary
+          test ! -e mdwnfr/main.py
           python - <<'PY'
-          import json,sqlite3
+          import hashlib,json,sqlite3
           from pathlib import Path
-          dest=Path('mdwnfr/web/lexicon')
-          data=json.loads((dest/'manifest.json').read_text())
-          assert data['spelling_records']>=30000 and data['complete'] is False
-          db=sqlite3.connect(dest/'lexicon.sqlite3')
-          assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
-          db.close()
+          base=Path('mdwnfr')
+          web=(base/'web/lexicon/lexicon.json').read_bytes()
+          core=(base/'core/mdwnfr/data/lexicon.json').read_bytes()
+          manifest=json.loads((base/'web/lexicon/manifest.json').read_text())
+          assert web==core, 'Competing runtime catalogues'
+          assert hashlib.sha256(web).hexdigest()==manifest['sha256']
+          assert manifest['spelling_records']==41330
+          with sqlite3.connect(base/'data/lexicon.sqlite3') as con:
+              assert con.execute('pragma integrity_check').fetchone()[0]=='ok'
+              assert len(con.execute("select name from sqlite_master where type='table'").fetchall())>2
+          print('MdwNfr canonical Python+browser lexicon and SQLite verified')
           PY
-          # Keep SQLite in the canonical corpus build artifact, but ship only
-          # the browser runtime JSON projection (Cloudflare 25-MiB asset cap).
-          mkdir -p mdwnfr/data
-          mv mdwnfr/web/lexicon/lexicon.sqlite3 mdwnfr/data/lexicon.sqlite3
-          python mdwnfr/overrides/test_keyboard_current.py -v
+          python -m compileall -q mdwnfr/core/mdwnfr
+          python mdwnfr/qa/test_keyboard.py -v
+          node --check mdwnfr/web/app.js
+          node --check mdwnfr/web/worker.js
+          node --check mdwnfr/web/storage.js
+          node --check mdwnfr/web/sw.js
           node --test shared-language/tests/lexicon_install.test.mjs
-      - name: Install redistributable Egyptian font
+      - name: Install licensed Egyptian hieroglyphic font
         shell: bash
         run: |
           set -euo pipefail
@@ -110,20 +75,16 @@ jobs:
           python - <<'PY'
           from fontTools.ttLib import TTFont
           from pathlib import Path
-          target=Path('mdwnfr/web/assets/fonts/hieroglyphs.woff2')
-          source='/tmp/mdwnfr-hieroglyphs.ttf'
-          f=TTFont(source)
-          required={0x13000,0x13080,0x13100,0x13200,0x13300,0x1342F}
-          cmap=set().union(*(t.cmap.keys() for t in f['cmap'].tables))
-          if not required<=cmap:raise SystemExit('Missing core hieroglyph glyphs')
+          f=TTFont('/tmp/mdwnfr-hieroglyphs.ttf')
+          chars=set().union(*(t.cmap.keys() for t in f['cmap'].tables))
+          assert {0x13000,0x13080,0x13100,0x13200,0x13300,0x1342f}<=chars
           f.flavor='woff2'
-          f.save(target)
-          assert target.stat().st_size>100000 and target.read_bytes()[:4]==b'wOF2'
-          print('Licensed Noto Egyptian hieroglyph font verified and packaged')
+          out=Path('mdwnfr/web/assets/fonts/hieroglyphs.woff2')
+          f.save(out)
+          assert out.stat().st_size>100000 and out.read_bytes()[:4]==b'wOF2'
           PY
-      - name: Download and validate self-hosted Python 3.12 / Pyodide runtime
+      - name: Vendor and verify self-hosted Pyodide 0.27.8
         working-directory: mdwnfr
-        shell: bash
         run: |
           set -euo pipefail
           python tools/vendor_runtime.py
@@ -131,172 +92,62 @@ jobs:
           import sys
           sys.path.insert(0,'tools')
           from runtime_assets import inspect
-          r=inspect()
-          assert r['offline_ready'],r
-          print('Offline browser runtime ready:',r)
+          assert inspect()['offline_ready']
           PY
-      - name: Build verified PWA and run source checks
+      - name: Build and test offline PWA
         working-directory: mdwnfr
-        shell: bash
         run: |
           set -euo pipefail
           python tools/build_static.py
           node --check dist/app.js
           node --check dist/worker.js
-          node --check dist/lexicon-install.mjs
-          test -s dist/lexicon/manifest.json
-          test -s dist/lexicon/lexicon.json
-          ! test -e dist/lexicon/lexicon.sqlite3
           node --check dist/storage.js
           node --check dist/sw.js
-          node overrides/test_service_worker_cache.mjs
+          node --check dist/lexicon-install.mjs
+          node qa/test_service_worker_cache.mjs
           node tools/test_recovery_storage.mjs
-          python -m compileall -q core/mdwnfr
           python - <<'PY'
           import json
           from pathlib import Path
           root=Path('dist')
           status=json.loads((root/'runtime-status.json').read_text())
-          publication=json.loads((root/'offline-assets.json').read_text())
-          assert status['offline_ready'] and publication['complete']
-          assert all((root/x['path'].lstrip('/')).is_file() for x in publication['assets'])
-          assert len(publication['assets'])>=100
-          print('Verified complete local PWA asset manifest:',len(publication['assets']))
+          assets=json.loads((root/'offline-assets.json').read_text())
+          assert status['offline_ready'] and assets['complete']
+          assert len(assets['assets'])>=100
+          assert all((root/x['path'].lstrip('/')).is_file() for x in assets['assets'])
+          html=(root/'index.html').read_text()
+          assert '/icons/app-192.png' in html and 'app_icon.svg' not in html
+          assert not (root/'lexicon/lexicon.sqlite3').exists()
+          print('Offline bundle complete:',len(assets['assets']),'verified assets')
           PY
-      - name: Validate Cloudflare publishing access
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: bash
-        run: |
-          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo '::error::Cloudflare account secret missing'; exit 1; }
-          test -n "$CLOUDFLARE_API_TOKEN" || { echo '::error::Cloudflare token secret missing'; exit 1; }
-      - name: Publish independent MdwNfr Worker
+      - name: Deploy Cloudflare Worker
         working-directory: mdwnfr
         env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: bash
+          CLOUDFLARE_ACCOUNT_ID: {{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: {{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
           npm install --global wrangler@4
           for attempt in 1 2 3; do
             if wrangler deploy --config wrangler.toml; then break; fi
             if [ "$attempt" -eq 3 ]; then exit 1; fi
             sleep $((attempt * 10))
           done
-      - name: Public PWA smoke test
-        shell: bash
+      - name: Verify public Cloudflare app
         run: |
           set -euo pipefail
           base='https://mdwnfr.sydgouda.workers.dev'
           for attempt in $(seq 1 12); do
-            if curl -fsS --max-time 25 "$base/" -o /tmp/mdwnfr-public-index \
-              && curl -fsS --max-time 25 "$base/manifest.webmanifest" -o /tmp/mdwnfr-public-manifest \
-              && curl -fsS --max-time 25 "$base/runtime-status.json" -o /tmp/mdwnfr-public-status \
-              && curl -fsS --max-time 25 "$base/lexicon/manifest.json" -o /tmp/mdwnfr-public-lexicon \
-              && grep -q 'MdwNfr' /tmp/mdwnfr-public-index \
-              && grep -q 'standalone' /tmp/mdwnfr-public-manifest \
-              && python -c "import json; assert json.load(open('/tmp/mdwnfr-public-status'))['offline_ready']; assert json.load(open('/tmp/mdwnfr-public-lexicon'))['spelling_records']>=30000"; then
-              echo 'Public PWA responding with complete runtime inventory'
-              exit 0
+            if curl -fsS --max-time 25 "$base/" -o /tmp/mdwnfr-index \
+              && curl -fsS --max-time 25 "$base/manifest.webmanifest" -o /tmp/mdwnfr-manifest \
+              && curl -fsS --max-time 25 "$base/lexicon/manifest.json" -o /tmp/mdwnfr-lexicon \
+              && curl -fsS --max-time 25 "$base/icons/app-192.png" -o /tmp/mdwnfr-icon \
+              && python -c "import json; p=json.load(open('/tmp/mdwnfr-manifest')); d=json.load(open('/tmp/mdwnfr-lexicon')); assert p['icons'][0]['src']=='/icons/app-192.png' and d['spelling_records']==41330"; then
+                echo 'Canonical MdwNfr online with approved icon and 41,330 spellings'
+                exit 0
             fi
             sleep 8
           done
-          echo '::error::Public PWA smoke failed'
           exit 1
-      - name: Promote verified MdwNfr source to canonical repository files
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p mdwnfr/qa
-          cp mdwnfr/overrides/test_keyboard_current.py mdwnfr/qa/test_keyboard.py
-          cp mdwnfr/overrides/test_service_worker_cache.mjs mdwnfr/qa/test_service_worker_cache.mjs
-          python - <<'PY'
-          from pathlib import Path
-          import json, sqlite3
-          root=Path('mdwnfr')
-          manifest=json.loads((root/'web/lexicon/manifest.json').read_text())
-          assert manifest['spelling_records']==41330
-          with sqlite3.connect(root/'data/lexicon.sqlite3') as con:
-              assert con.execute('pragma integrity_check').fetchone()[0]=='ok'
-          # New storage: no data migrations or backwards compatibility.
-          p=root/'web/storage.js'
-          s=p.read_text()
-          assert "const DB='mdwnfr-foundation-v1';" in s
-          s=s.replace("const DB='mdwnfr-foundation-v1';","const DB='mdwnfr-canonical-v1';")
-          s=s.replace('indexedDB.open(DB,4)','indexedDB.open(DB,1)')
-          a=s.index('   if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE')
-          b=s.index('\n  };\n  req.onsuccess=',a)
-          s=s[:a]+"""   db.createObjectStore(STORE,{keyPath:'id'});
-             db.createObjectStore(PROFILE,{keyPath:'id'});
-             db.createObjectStore(INDEX,{keyPath:'id'});
-             db.createObjectStore(SNAPSHOTS,{keyPath:'key'});
-             const m=db.createObjectStore(SNAPSHOT_META,{keyPath:'key'});
-             m.createIndex('by_document','document_id',{unique:false});"""+s[b:]
-          p.write_text(s)
-          # Image migration is obsolete; new images already carry alpha masks.
-          p=root/'web/app.js';s=p.read_text()
-          a=s.index('// One-time local migration for images saved before 2D silhouettes existed.')
-          b=s.index('// Table data is a nested word list.',a)
-          s=s[:a]+s[b:]
-          assert s.count('restoreLegacyImageMasks(await load(id))')==1
-          s=s.replace('restoreLegacyImageMasks(await load(id))','load(id)')
-          p.write_text(s)
-          p=root/'core/mdwnfr/document.py';s=p.read_text()
-          old="""    if obj.get('mask') is not None:
-              from .silhouette import validate_mask
-              if not validate_mask(obj['mask']):
-                  raise DocumentError('Invalid imported image 2D silhouette mask')"""
-          new="""    from .silhouette import validate_mask
-              if not validate_mask(obj.get('mask')):
-                  raise DocumentError('Invalid imported image 2D silhouette mask')"""
-          if old in s:s=s.replace(old,new)
-          p.write_text(s)
-          p=root/'pyproject.toml';s=p.read_text()
-          import re
-          s,n=re.subn(r'version\s*=\s*"[^"]+"','version = "0.2.0"',s,count=1)
-          assert n==1
-          p.write_text(s)
-          icons=root/'web/icons'
-          for p in icons.iterdir():
-              if p.is_file() and p.name not in ('brand-v046-192.png','brand-v046-512.png','brand-v046-apple-touch.png','keyboard_icon.svg'):p.unlink()
-          PY
-          node --check mdwnfr/web/app.js
-          node --check mdwnfr/web/storage.js
-          python mdwnfr/qa/test_keyboard.py -v
-          git rm -rf mdwnfr/.source mdwnfr/overrides
-          rm -rf mdwnfr/dist mdwnfr/dictionary mdwnfr/tests mdwnfr/web/vendor/pyodide
-          rm -f mdwnfr/web/assets/fonts/hieroglyphs.woff2
-          find mdwnfr -type d -name __pycache__ -prune -exec rm -rf {} +
-          for f in mdwnfr/tools/*; do
-            test -f "$f" || continue
-            case "$(basename "$f")" in
-              build_static.py|runtime_assets.py|vendor_runtime.py|catalog_integrity.py|offline_publication.py|test_recovery_storage.mjs|test_layout_detail_guard.mjs) ;;
-              *) rm -f "$f" ;;
-            esac
-          done
-          cat > mdwnfr/.gitignore <<'EOF'
-          dist/
-          web/vendor/pyodide/
-          web/assets/fonts/hieroglyphs.woff2
-          __pycache__/
-          *.pyc
-          .pytest_cache/
-          EOF
-          cat > mdwnfr/README.md <<'EOF'
-          # MdwNfr — canonical Python editor
-          One source tree: Python engine in core/mdwnfr/, app in web/, and
-          canonical 41,330-spelling SQLite in data/lexicon.sqlite3.
-          Published JSON is pinned under web/lexicon/ for direct browser load.
-          Build using tools/build_static.py after vendoring the Python 3.12
-          runtime and licensed Noto font. QA lives in qa/.
-          No archived source, compatibility layer or legacy document migration.
-          The new browser document store is mdwnfr-canonical-v1.
-          EOF
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A mdwnfr
-          git diff --cached --stat | tail -35
-          git commit -m "MdwNfr: promote live source to canonical 0.2, remove archival code and old data paths"
-          git push origin HEAD:main
