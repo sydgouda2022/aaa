@@ -78,7 +78,7 @@ jobs:
           node renpet/tests/scheduler.test.mjs
           node renpet/tests/backup.test.mjs
           node renpet/tests/ics.test.mjs
-          test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 333
+          test "$(find renpet/web/assets/numerals -name '*.svg' | wc -l)" -eq 362
           test "$(grep -o 'type="module"' renpet/web/index.html | wc -l)" -eq 1
           ! grep -q 'views.js\|style.css\|scheduler.css' renpet/web/index.html
           ! grep -q 'MutationObserver\|year-grid\|year-tile' renpet/web/app.js
