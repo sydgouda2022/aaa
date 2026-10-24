@@ -162,7 +162,11 @@ export function initKeyboard(getLanguage){
   // The Add/Edit click creates and focuses a new editor before this event
   // bubbles to document. Never immediately hide that newly opened keyboard.
   if(e.target.closest('[data-new],[data-edit],[data-hour]'))return;
-  if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target))hide();
+  // Key input immediately rebuilds keyboard.innerHTML. The original key
+  // may already be detached by the time click reaches document; the event's
+  // composed path still reliably identifies it as an inside-keyboard tap.
+  const keyboardTap=e.composedPath?.().includes(keyboard)||keyboard.contains(e.target);
+  if(!keyboard.hidden&&!keyboardTap&&e.target!==active&&!eligible(e.target))hide();
  });
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!keyboard.hidden)hide();
