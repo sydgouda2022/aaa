@@ -10,6 +10,7 @@ from collections import Counter,defaultdict
 from pathlib import Path
 import argparse,json,hashlib
 from aes_unicode import decode_aes_hiero
+from gardiner_unicode import decoded_aes_token
 from aes_late_adapter import AES_SAWLIT_SHA
 
 def get_baseline(path):
@@ -35,7 +36,7 @@ def benchmark(aes_path,whitelist_path,tla_path):
             excluded[(docid,'wrong_date')]+=1
             continue
         for token in s.get('token') or []:
-            surface=decode_aes_hiero(token.get('hiero_unicode'))
+            surface,_encoding=decoded_aes_token(token)
             lemma=str(token.get('lemmaID') or '')
             if not surface or not lemma.isdigit():
                 excluded[(docid,'unscorable')]+=1

@@ -10,6 +10,7 @@ from collections import Counter,defaultdict
 from pathlib import Path
 import hashlib,json
 from aes_unicode import decode_aes_hiero
+from gardiner_unicode import decoded_aes_token
 
 AES_SAWLIT_SHA='b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4'
 
@@ -47,9 +48,9 @@ def curated_aes_rows(aes_path,whitelist_path):
         stats['selected_sentences']+=1
         for token in s.get('token') or []:
             if not isinstance(token,dict):continue
-            word=decode_aes_hiero(token.get('hiero_unicode'))
+            word,encoding=decoded_aes_token(token)
             if not word:
-                stats['rejected_missing_or_incomplete_unicode']+=1
+                stats['rejected_missing_or_incomplete_signs']+=1
                 continue
             lemma=str(token.get('lemmaID') or '')
             if not lemma.isdigit():
@@ -61,9 +62,10 @@ def curated_aes_rows(aes_path,whitelist_path):
                 stats['rejected_missing_token_id']+=1
                 continue
             counter[key]+=1
-            if len(references[key])<24:references[key].append(f'{text_id}/{sid}/{ref}')
+            if len(references[key])<24:references[key].append(f'{text_id}/{sid}/{ref}/{encoding}')
             used_documents.add(text_id)
             stats['qualified_tokens']+=1
+            stats['qualified_'+encoding+'_tokens']+=1
     stats['curated_documents_with_unicode']=len(used_documents)
     stats['distinct_lemma_spellings']=len(counter)
     return counter,references,dict(stats),fingerprint
