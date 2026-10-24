@@ -146,7 +146,7 @@ function listView(){
  if(!groups.length){
   for(let d=hiddenStart;d<=hiddenEnd;d++)if(hiddenItemsForDay(schedule,d,data.years).length){hiddenDays.push(d);break;}
  }
- return '<div class="list-page">'+(groups.join('')||hiddenDays.length
+ return '<div class="list-page">'+(groups.length ? groups.join('') : hiddenDays.length
   ?hiddenCalendarNotice(hiddenDays[0])
   :'<div class="schedule-empty"><div class="empty-art" aria-hidden="true">▤</div><h2>'+safe(T().noUpcoming)+'</h2><p>'+safe(T().noEvents)+'</p><button class="primary" data-new>'+safe(T().addFirst)+'</button></div>')+'</div>';
 }
