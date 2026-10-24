@@ -156,11 +156,10 @@ export function initKeyboard(getLanguage){
    active=e.target;void load(keyboardLanguage());draw();
   }
  });
- document.addEventListener('pointerdown',e=>{
-  if(e.target.closest('[data-time-open]'))return; // Delay hiding until click; prevents iPhone layout shifts before time picker opens.
- if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target)){
-   hide();
-  }
+ // Changing the viewport on pointerdown can move the Save button before
+ // iOS dispatches click/submit, silently losing taps. Dismiss only after click.
+ document.addEventListener('click',e=>{
+  if(!keyboard.hidden&&!keyboard.contains(e.target)&&e.target!==active&&!eligible(e.target))hide();
  });
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!keyboard.hidden)hide();
