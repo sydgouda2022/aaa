@@ -428,8 +428,8 @@ async function run(){
    await q.locator('input[name=title]').focus();
    const key=q.locator('.renpet-keyboard:not([hidden])');
    await key.waitFor();
-   await q.locator('.kb-hiero [data-kb-insert="𓆓"]').first().click().catch(()=>q.locator('.kb-hiero .kb-sign').first().click());
-   await q.waitForTimeout(400);
+   await q.locator('input[name=title]').fill('𓆓');
+   await q.waitForFunction(()=>document.querySelectorAll('.kb-suggestions [data-kb-pick]').length>=2,{timeout:8000});
    const choices=await q.locator('.kb-suggestions [data-kb-pick]').count();
    if(choices<2)throw Error('Real attested TLA hieroglyphic predictions are absent');
    await screenshot(q,name+'-egyptian-dictionary-predictions');
