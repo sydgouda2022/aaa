@@ -1,12 +1,12 @@
-/* RENPET 2.1 — one design system, one calendar shell.
-   No legacy Apple 1.x navigation or cascading version overlays.
-   Egyptian date arithmetic and saved events live in JS, never CSS. */
+/* RENPET 5 — one shared rubrical palette and calendar layout for every language.
+   Script size may vary, but colors and navigation semantics never do. */
 
 @font-face{font-family:Coptic;src:url('assets/fonts/Coptic.ttf') format('truetype');font-display:swap}
 :root{
  color-scheme:light;
  --green:#176c59;--deep-green:#114d40;--mint:#e5f2ea;--gold:#c4a165;
- --ink:#1b2924;--muted:#728078;--line:#e3e8e2;--soft:#f2f4ef;
+ --ink:#202a25;--muted:#657168;--line:#e3e8e2;--soft:#f2f4ef;
+ --rubric:#96372e;--rubric-soft:#f5e9e6;
  --surface:#fff;--bg:#f9faf6;--gold-soft:#f5eddc;
 }
 *{box-sizing:border-box}
@@ -177,8 +177,8 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 
 /* Compact, readable daily navigation and selected-day preview. */
 .year-brand{display:inline-flex;align-items:center;min-height:44px;color:var(--green);font-size:15px;font-weight:650}
-.year-shortcut{min-height:44px;display:inline-flex;align-items:center;gap:5px;max-width:180px;padding:0;border:0;background:transparent;color:var(--green);font-size:14px}
-.year-shortcut .glyph{height:15px}
+.year-shortcut{min-height:44px;display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:0;border:0;background:transparent;color:var(--ink);font-size:14px}
+.year-shortcut .glyph{height:22px;max-width:100%}
 .agenda-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}
 .agenda-heading h3{font-size:17px;line-height:1.3;flex-shrink:0}
 .agenda-heading .subtle{flex:1;text-align:end}
@@ -262,5 +262,93 @@ body[data-language=egy] .timeline-hour .clock-glyph{height:16px;max-width:23px}
 /* Date editor: script-aware year selector, with native numeric values only under the hood. */
 .date-fields select[name=egyYear]{width:100%;min-width:0;text-overflow:ellipsis;font-variant-numeric:normal}
 body[data-language=cop] .date-fields select[name=egyYear]{font-family:Coptic,system-ui,sans-serif;font-size:14px!important}
-body[data-language=egy] .date-fields{grid-template-columns:minmax(0,1.5fr) minmax(0,1.15fr) minmax(0,.78fr)}
-body[data-language=egy] .date-fields select[name=egyYear]{font-family:RenpetEgyptian,system-ui,sans-serif;font-size:11px!important;letter-spacing:-1px}
+body[data-language=egy] .date-fields{grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:9px}
+body[data-language=egy] .date-fields select[name=egyYear]{grid-column:1/-1;min-height:64px;font-family:RenpetEgyptian,system-ui,sans-serif;font-size:20px!important;letter-spacing:normal;overflow:visible;text-overflow:clip}
+body[data-language=egy] .date-fields select[name=egyMonth],body[data-language=egy] .date-fields select[name=egyDay]{min-height:57px;font-size:23px!important;font-family:RenpetEgyptian,system-ui,sans-serif}
+
+
+/* Rubrication is shared across all three scripts: headings and labels in
+   Egyptian red, values in dark ink, selection/actions in Nile green. */
+.ux-heading p,.month-section .date-range,.decade-label,.year-season h2,
+.year-month-name,.settings-group>label,.sheet-body>label,.sheet-body .check-row,
+.kind-toggle label,.advanced-fields>label,.ux-panel-head strong,
+.advanced-fields>summary,.agenda-heading h3,.year-shortcut-label{
+ color:var(--rubric);
+}
+.year-shortcut-value,.year-shortcut-value .glyph{color:var(--ink)}
+.year-shortcut-label{font-size:14px;font-weight:680}
+.year-shortcut-value{display:inline-flex;align-items:center;min-width:0}
+.ux-bottom .ux-nav-item:not(.active) span{color:var(--rubric)}
+.ux-bottom .ux-nav-item.active span{color:var(--green)}
+.year-season h2{color:var(--rubric)}
+.year-month.active-month .year-month-name{color:var(--green)}
+.sheet-body input,.sheet-body select,.sheet-body textarea{color:var(--ink)}
+.date-preview,.date small{color:var(--muted)}
+/* Hieroglyphs have narrow sign contours and tall complexes. Allocate physical
+   space rather than downscaling them into alphabetic control dimensions. */
+body[data-language=egy] .ux-toolbar-top{min-height:61px}
+body[data-language=egy] .year-shortcut{gap:7px;min-height:55px}
+body[data-language=egy] .year-shortcut-label{font-size:23px;line-height:1.15}
+body[data-language=egy] .year-shortcut-value .glyph{height:43px;max-width:170px;object-fit:contain}
+body[data-language=egy] .year-brand{font-size:26px}
+body[data-language=egy] .ux-heading h1{font-size:37px;line-height:1.25;min-height:44px}
+body[data-language=egy] .ux-heading h1 .glyph{height:43px;max-width:100%}
+body[data-language=egy] .ux-heading p{font-size:22px;line-height:1.4}
+body[data-language=egy] .ux-bottom{min-height:87px}
+body[data-language=egy] .ux-bottom .ux-nav-item{min-height:72px;gap:1px}
+body[data-language=egy] .ux-bottom .ux-nav-item span{font-size:23px;line-height:1.25;min-height:28px}
+body[data-language=egy] .ux-bottom .ux-nav-item svg{width:27px;height:27px}
+body[data-language=egy] .month-section .date-range{font-size:15px;line-height:1.4}
+body[data-language=egy] .decade-label{font-size:21px;line-height:1.4;margin:1px 0 3px}
+body[data-language=egy] .month-section.ten-day .decades{gap:7px}
+body[data-language=egy] .decade-days .date{min-height:50px}
+body[data-language=egy] .decade-days .date .day-number{
+ min-height:43px;height:auto;max-height:49px;min-width:43px;max-width:100%;
+ padding:4px 2px;font-size:28px;line-height:1.05;letter-spacing:-.3px;
+ overflow-wrap:anywhere;white-space:normal;word-break:break-all;text-align:center;
+}
+body[data-language=egy] .decade-days .date .glyph{height:31px;max-width:100%}
+body[data-language=egy] .date.chosen .day-number{padding-inline:3px}
+body[data-language=egy] .agenda-heading h3{font-size:27px;line-height:1.3}
+body[data-language=egy] .agenda-empty{font-size:19px;line-height:1.4}
+body[data-language=egy] .year-season h2{font-size:25px;line-height:1.4}
+body[data-language=egy] .year-month{min-height:78px}
+body[data-language=egy] .year-month-name{font-size:30px;line-height:1.25}
+body[data-language=egy] .year-month-index{font-size:23px}
+body[data-language=egy] .year-month-index .glyph{height:25px}
+body[data-language=egy] .epagomenal-tile strong{font-size:25px}
+body[data-language=egy] .day-heading{font-size:29px;line-height:1.3}
+body[data-language=egy] .timeline-hour .clock-glyph{height:22px;max-width:36px}
+body[data-language=egy] .timeline-hour>span{flex-basis:65px}
+body[data-language=egy] .timeline-events{inset-inline-start:84px}
+body[data-language=egy] .sheet-body>label,
+body[data-language=egy] .sheet-body .check-row,
+body[data-language=egy] .kind-toggle label,
+body[data-language=egy] .advanced-fields>summary,
+body[data-language=egy] .advanced-fields>label{font-size:23px;line-height:1.5}
+body[data-language=egy] .sheet-body{gap:15px}
+body[data-language=egy] .sheet-body input:not([type=checkbox]):not([type=radio]),
+body[data-language=egy] .sheet-body select,
+body[data-language=egy] .sheet-body textarea{min-height:53px}
+body[data-language=egy] .kind-toggle label{padding-block:12px}
+body[data-language=egy] .date-preview{font:12px/1.5 system-ui,sans-serif}
+/* Keep the selected-day agenda visible even on the smallest iPhone. The
+   six rows of 10-day signs scroll independently; glyphs remain full size. */
+body[data-language=egy] .month-scroll{overflow:hidden}
+body[data-language=egy] .month-section{
+ flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ scrollbar-width:none;
+}
+body[data-language=egy] .month-section::-webkit-scrollbar{display:none}
+body[data-language=egy] .month-agenda{
+ flex:0 0 122px;min-height:115px;max-height:31%;margin-top:6px;
+ overflow-y:auto;
+}
+/* Compact iPhones: preserve sign size; allow the calendar or form to scroll. */
+@media(max-width:390px){
+ body[data-language=egy] .year-shortcut-value .glyph{height:38px;max-width:145px}
+ body[data-language=egy] .year-shortcut-label{font-size:22px}
+ body[data-language=egy] .decade-days .date .day-number{font-size:27px}
+ body[data-language=egy] .ux-heading h1{font-size:33px}
+ body[data-language=egy] .date-fields select[name=egyYear]{font-size:19px!important}
+}

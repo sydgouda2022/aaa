@@ -30,7 +30,7 @@ function pageButtons(lang){
  if(lang!=='egy')return '';
  return '<div class="kb-tabs" role="tablist" aria-label="Hieroglyphic sign classes">'+[
   ['uni','𓄿','Uniliterals'],['bi','𓉐','Biliterals'],['tri','𓆣','Triliterals']
- ].map(([p,icon,label])=>'<button type="button" role="tab" aria-selected="'+(tab===p)+'" class="'+(p===tab?'selected':'')+'" data-kb-tab="'+p+'" aria-label="'+label+'"><span>'+icon+'</span><small>'+(p==='uni'?'Ⅰ':p==='bi'?'Ⅱ':'Ⅲ')+'</small></button>').join('')+'</div>';
+ ].map(([p,icon,label])=>'<button type="button" role="tab" aria-selected="'+(tab===p)+'" class="'+(p===tab?'selected':'')+'" data-kb-tab="'+p+'" aria-label="'+label+'"><span>'+icon+'</span><small>'+(p==='uni'?'𓏺':p==='bi'?'𓏺𓏺':'𓏺𓏺𓏺')+'</small></button>').join('')+'</div>';
 }
 function numberButtons(lang){
  const values=lang==='cop'?COP_NUMBERS:EGY_NUMBERS;
