@@ -32,10 +32,10 @@ async function run(){
    if(!hourLabel.includes('٠٩'))throw Error('Arabic timeline hour still uses Latin digits: '+hourLabel);
    const current=await p.locator('[data-now-line]').getAttribute('aria-label');
    if(!current.includes('٠٩:٣٠'))throw Error('Live red time marker wrong: '+current);
-   const first=Number.parseFloat((await p.locator('[data-now-line]').getAttribute('style')).match(/top:([0-9.]+)px/)[1]);
+   const first=Number.parseFloat((await p.locator('[data-now-line]').getAttribute('style')).match(/top:\s*([0-9.]+)px/)[1]);
    await screenshot(p,name+'-arabic-live-red-line');
    await p.clock.fastForward(65000);
-   const next=Number.parseFloat((await p.locator('[data-now-line]').getAttribute('style')).match(/top:([0-9.]+)px/)[1]);
+   const next=Number.parseFloat((await p.locator('[data-now-line]').getAttribute('style')).match(/top:\s*([0-9.]+)px/)[1]);
    if(!(next>first+0.5))throw Error('Red line did not move as time advanced: '+first+' → '+next);
    await p.locator('[data-next]').click();
    if(await p.locator('[data-now-line]').count())throw Error('Red time line appears on future date');
