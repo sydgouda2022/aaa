@@ -74,8 +74,13 @@ self.addEventListener('fetch', event => {
  event.respondWith((async () => {
   const cache = await caches.open(CACHE);
   // Critical: HTML requests app.js?v=6.x but precache stored ./app.js.
-  // Ignore only the URL search for static same-origin assets.
-  const cached = await cache.match(event.request, {ignoreSearch: true});
+  // Strip version queries to their canonical cache key first. Explicit keys
+  // work on WebKit versions that implement ignoreSearch inconsistently.
+  const canonical = new URL(event.request.url);
+  canonical.search = '';
+  canonical.hash = '';
+  const cached = await cache.match(canonical.href) ||
+    await cache.match(event.request, {ignoreSearch: true});
   if (cached) return cached;
   try {
    const response = await fetch(event.request);
