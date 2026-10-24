@@ -39,10 +39,14 @@ const adjacent=(e,delta)=>{let m=e.month+delta,y=e.year;while(m>13){m-=13;y++;}w
 const calName=c=>c.name?.[lang()]||c.name?.ar||c.id;
 const items=d=>itemsForDay(schedule,d,data.years);
 const icon=name=>{const p={back:'<path d="m15 5-7 7 7 7"/>',search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',plus:'<path d="M12 4v16M4 12h16"/>',list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',settings:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',star:'<path d="m12 2 3 7 7 .5-5.5 5 1.5 7L12 18l-6 3.5 1.5-7L2 9.5 9 9Z"/>',check:'<path d="m4 12 5 5L20 6"/>'};return '<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p[name]+'</svg>';};
+function quickDeleteButton(item,extraClass=''){
+ return '<button type="button" class="event-delete-action '+extraClass+'" data-quick-delete="'+safe(item.id)+'" aria-label="'+safe(T().delete)+' · '+safe(item.title)+'" title="'+safe(T().delete)+'">'+
+ '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6"/></svg></button>';
+}
 function eventRow(i,day=state.focus){
  const cal=schedule.calendars.find(c=>c.id===i.calendarId),color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
  const clock=i.allDay?safe(T().allDay):timeHtml(i.startMinutes,lang());
- return '<button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+clock+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>';
+ return '<div class="event-row-shell"><button class="event-row" data-edit="'+safe(i.id)+'" style="--event:'+color+'"><span class="event-clock">'+clock+'</span><span class="event-copy"><strong>'+safe(i.title)+'</strong>'+(i.location?'<small>'+safe(i.location)+'</small>':'')+'</span>'+(i.kind==='reminder'?'<span class="reminder-box" data-complete="'+safe(i.id)+'">'+icon('check')+'</span>':'')+'</button>'+quickDeleteButton(i)+'</div>';
 }
 // Existing appointments in hidden calendars are never silently represented
 // as "no events". Offer one action to show them all without losing data.
@@ -132,7 +136,8 @@ function dayView(){
   const cal=schedule.calendars.find(c=>c.id===i.calendarId);
   const color=/^#[0-9a-f]{6}$/i.test(cal?.color)?cal.color:'#187568';
   const pos=layout.get(i.id)||{col:0,cols:1},width=100/pos.cols;
-  return '<div class="timeline-event" role="button" tabindex="0" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(27,(end-start)/60*64-3)+'px;left:calc('+width*pos.col+'% + 1px);width:calc('+width+'% - 3px)" data-edit="'+safe(i.id)+'"><span class="event-drag" aria-label="Move event"><strong>'+safe(i.title)+'</strong><small>'+timeHtml(start,lang())+' – '+timeHtml(end,lang())+'</small></span><span class="event-resize" aria-label="Resize event"></span></div>';
+  const resizable=i.repeat==='none';
+  return '<div class="timeline-event" role="group" style="--event:'+color+';top:'+(start/60*64)+'px;height:'+Math.max(46,(end-start)/60*64-3)+'px;left:calc('+width*pos.col+'% + 1px);width:calc('+width+'% - 3px)" data-edit="'+safe(i.id)+'"><span class="event-drag" role="button" tabindex="0" aria-label="'+safe(i.title)+'"><strong>'+safe(i.title)+'</strong><small>'+timeHtml(start,lang())+' – '+timeHtml(end,lang())+'</small></span>'+quickDeleteButton(i,'event-delete-timeline')+(resizable?'<button type="button" class="event-resize" aria-label="'+safe(T().end)+' · '+safe(i.title)+'" title="'+safe(T().end)+'"><span aria-hidden="true"></span></button>':'')+'</div>';
  }).join('');
  const hours=Array.from({length:24},(_,h)=>'<div class="timeline-hour"><span>'+timeHtml(h*60,lang())+'</span><button class="timeline-slot" data-hour="'+h+'" aria-label="'+safe(T().add)+' '+safe(timeText(h*60,lang()))+'"></button></div>').join('');
  return '<div class="day-page"><div class="day-heading">'+numHtml(egy(state.focus).day)+' '+safe(monthName(egy(state.focus).month))+(prefs.gregorian?'<small>'+safe(greg(state.focus,{weekday:'long',day:'numeric',month:'long'}))+'</small>':'')+'</div>'+hiddenCalendarNotice(state.focus)+(all.length?'<div class="all-day">'+all.map(i=>eventRow(i)).join('')+'</div>':'')+'<div class="timeline"><div class="timeline-hours">'+hours+'</div><div class="timeline-events">'+blocks+'</div>'+(state.focus===today()?nowLineMarkup():'')+'</div></div>';
@@ -152,7 +157,7 @@ function listView(){
 }
 
 function settingsView(){
- return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 6.3.0</p></section>';
+ return '<section class="page preferences-page"><div class="settings-group"><label>'+safe(T().language)+'<select name="language">'+Object.entries(LOCALES).map(([id,v])=>'<option value="'+id+'" '+(id===lang()?'selected':'')+'>'+safe(v.name)+'</option>').join('')+'</select></label><label>'+safe(T().gregorian)+'<input type="checkbox" name="gregorian" '+(prefs.gregorian?'checked':'')+'></label><label>'+safe(T().festivalSetting)+'<input type="checkbox" name="festivals" '+(prefs.festivals?'checked':'')+'></label><label>'+safe(T().weekLength)+'<select name="week">'+[7,10].map(n=>'<option value="'+n+'" '+(n===week()?'selected':'')+'>'+N(n)+'</option>').join('')+'</select></label></div><div class="settings-actions"><button data-open-panel="calendars">'+safe(T().manage)+' <span>›</span></button><button data-backup>'+safe(T().dataAndBackup)+' <span>›</span></button></div><p class="build-label">'+safe(T().version)+' 6.4.0</p></section>';
 }
 function managerView(){
  const a=schedule;
@@ -337,11 +342,23 @@ root.addEventListener('click',ev=>{
  const show=ev.target.closest('[data-show-all-calendars]');
  if(show){const sched=loadScheduler();revealSavedCalendars(sched);
   saveScheduler(sched);render();return;}
+ const quickDelete=ev.target.closest('[data-quick-delete]');
+ if(quickDelete){
+  ev.preventDefault();
+  const sched=loadScheduler(),item=sched.items.find(x=>x.id===quickDelete.dataset.quickDelete);
+  if(!item)return;
+  if(!confirm(T().confirm))return;
+  removeItem(sched,item.id);
+  if(!saveScheduler(sched)||loadScheduler().items.some(x=>x.id===item.id)){
+   alert(lang()==='ar'?'تعذر حذف الموعد':lang()==='cop'?'Ⲃⲱⲗ: !':'𓏞: !');return;
+  }
+  state.saveNotice=false;state.dialog=null;render();return;
+ }
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
  // Timeline events are accessible divs, not buttons. Open them directly.
  const timelineEvent=ev.target.closest('.timeline-event[data-edit]');
- if(timelineEvent){
+ if(timelineEvent&&!ev.target.closest('.event-resize')){
   state.dialog={id:timelineEvent.dataset.edit};
   render();return;
  }
@@ -428,44 +445,76 @@ root.addEventListener('submit',ev=>{
  if(ev.target.id==='event-editor'){ev.preventDefault();try{submitEvent(ev.target);}catch(e){console.error('Renpet submit error',e);showEditorError(ev.target,lang()==='ar'?'تعذر حفظ الموعد':lang()==='cop'?'Ⲥⲱⲛϩ':'𓏞');}}
  if(ev.target.id==='new-calendar'){ev.preventDefault();const f=new FormData(ev.target),s=loadScheduler();if(createCalendar(s,f.get('name'),f.get('color'))){saveScheduler(s);render();}}
 });
-// Pointer-based 15-minute drag and resize; commit only on pointer release.
+// One gesture owner: drag from event body to move; stretch bottom grip to
+// resize in 15-minute increments. iOS pointer capture prevents the page swipe
+// handler from stealing the gesture; regular scroll works outside events.
 let activeDrag=null,suppressEditUntil=0;
 const snap=n=>Math.round(n/15)*15;
 root.addEventListener('pointerdown',ev=>{
- const block=ev.target.closest('.timeline-event');
- if(!block||ev.button!==0)return;
+ const block=ev.target.closest('.timeline-event[data-edit]');
+ if(!block||ev.button!==0||ev.target.closest('.event-delete-action'))return;
  const item=loadScheduler().items.find(i=>i.id===block.dataset.edit);
  if(!item||item.allDay||item.repeat!=='none')return;
  const mode=ev.target.closest('.event-resize')?'resize':'move';
- activeDrag={id:item.id,mode,y:ev.clientY,start:item.startMinutes,end:item.endMinutes||item.startMinutes+60,block,moved:false};
- block.setPointerCapture?.(ev.pointerId);
+ const main=root.querySelector('#main-content');
+ activeDrag={id:item.id,pointerId:ev.pointerId,mode,y:ev.clientY,scrollAtStart:main?.scrollTop||0,start:item.startMinutes,
+  end:item.endMinutes||item.startMinutes+60,block,moved:false};
+ try{block.setPointerCapture?.(ev.pointerId);}catch{}
 });
 root.addEventListener('pointermove',ev=>{
- const drag=activeDrag;if(!drag)return;
- const delta=snap((ev.clientY-drag.y)/64*60);
- if(Math.abs(ev.clientY-drag.y)>6)drag.moved=true;
+ const drag=activeDrag;if(!drag||ev.pointerId!==drag.pointerId)return;
+ const main=root.querySelector('#main-content');
+ if(main&&drag.moved){
+  const bounds=main.getBoundingClientRect();
+  if(ev.clientY>bounds.bottom-42)main.scrollTop+=16;
+  else if(ev.clientY<bounds.top+42)main.scrollTop-=16;
+ }
+ const pixels=ev.clientY-drag.y+(main?.scrollTop||0)-drag.scrollAtStart;
+ if(Math.abs(pixels)>6)drag.moved=true;
  if(!drag.moved)return;
+ ev.preventDefault();
+ const delta=snap(pixels/64*60);
  const duration=Math.max(15,drag.end-drag.start);
  const start=drag.mode==='move'?Math.max(0,Math.min(1440-duration,drag.start+delta)):drag.start;
  const end=drag.mode==='resize'?Math.max(start+15,Math.min(1440,drag.end+delta)):start+duration;
  drag.next={start,end};
  drag.block.style.top=(start/60*64)+'px';
- drag.block.style.height=Math.max(27,(end-start)/60*64-3)+'px';
- const label=drag.block.querySelector('small');if(label)label.innerHTML=timeHtml(start,lang())+' – '+timeHtml(end,lang());
+ drag.block.style.height=Math.max(46,(end-start)/60*64-3)+'px';
+ const label=drag.block.querySelector('.event-drag small');
+ if(label)label.innerHTML=timeHtml(start,lang())+' – '+timeHtml(end,lang());
 });
 function finishDrag(ev,cancel=false){
- const drag=activeDrag;if(!drag)return;
+ const drag=activeDrag;if(!drag||ev.pointerId!==drag.pointerId)return;
  activeDrag=null;
  if(!drag.moved||cancel){if(drag.moved)render();return;}
- suppressEditUntil=Date.now()+450;
+ suppressEditUntil=Date.now()+550;
  if(!drag.next){render();return;}
  const sched=loadScheduler(),item=sched.items.find(i=>i.id===drag.id);
- if(item){item.startMinutes=drag.next.start;item.endMinutes=drag.next.end;item.updatedAt=new Date().toISOString();saveScheduler(sched);}
+ if(item){
+  const previous={start:item.startMinutes,end:item.endMinutes};
+  item.startMinutes=drag.next.start;item.endMinutes=drag.next.end;
+  item.updatedAt=new Date().toISOString();
+  if(!saveScheduler(sched)){
+   item.startMinutes=previous.start;item.endMinutes=previous.end;
+   alert(lang()==='ar'?'تعذر تعديل مدة الموعد':lang()==='cop'?'Ⲑⲁⲏ: !':'𓏞: !');
+  }
+ }
  render();
 }
 root.addEventListener('pointerup',ev=>finishDrag(ev));
 root.addEventListener('pointercancel',ev=>finishDrag(ev,true));
-root.addEventListener('click',ev=>{if(Date.now()<suppressEditUntil&&ev.target.closest('[data-edit]')){ev.stopImmediatePropagation();ev.preventDefault();}},true);
+root.addEventListener('lostpointercapture',ev=>finishDrag(ev,true),true);
+root.addEventListener('click',ev=>{
+ if(Date.now()<suppressEditUntil&&ev.target.closest('[data-edit]')){
+  ev.stopImmediatePropagation();ev.preventDefault();
+ }
+},true);
+root.addEventListener('keydown',ev=>{
+ const edit=ev.target.closest('.event-drag[role=button]');
+ if(edit&&(ev.key==='Enter'||ev.key===' ')){
+  ev.preventDefault();state.dialog={id:edit.closest('[data-edit]').dataset.edit};render();
+ }
+});
 document.addEventListener('click',ev=>{
  // Single click-away convention for inline search; dialogs and keyboard
  // have their own backdrops and should not conflict with this handler.
