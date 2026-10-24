@@ -61,7 +61,7 @@ export async function loadFestivalCatalog(data,fetcher=fetch){
  }
  // Never allow an unreachable registry to erase the existing Amun catalog.
  if(!sources.length&&Array.isArray(data?.festivals)){
-  return {sources:[{...fallback[0],events:data.festivals.map(x=>({...x,sourceId:AMUN_SOURCE,duration:duration(x)}))}]};
+  return {sources:[{...fallback[0],events:data.festivals.map(x=>({...x,sourceId:AMUN_SOURCE,calendarRule:'egyptian-fixed',duration:duration(x)}))}]};
  }
  return {sources};
 }
@@ -100,8 +100,10 @@ export function festivalHitsForDay(day,years,catalog,selection){
  const results=[];
  for(const source of catalog?.sources||[]){
   if(!allowed.has(source.id))continue;
-  const hits=source.events.flatMap(e=>e.calendarRule==='egyptian-fixed'
-   ?festivalHits(day,years,[e]):hitGregorian(day,e,e.calendarRule)||[]);
+  const hits=source.events.flatMap(e=>{
+   const rule=e.calendarRule||source.calendarRule;
+   return rule==='egyptian-fixed'?festivalHits(day,years,[e]):hitGregorian(day,e,rule)||[];
+  });
   for(const hit of hits)results.push({...hit,sourceId:source.id,
    sourceName:source.name,category:source.category,calendarRule:source.calendarRule});
  }
