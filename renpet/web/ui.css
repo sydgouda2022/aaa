@@ -216,6 +216,29 @@ body[data-language=egy] .decade-days .date .glyph{height:21px;max-width:95%}
 .advanced-fields input,.advanced-fields select,.advanced-fields textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;font-size:16px;color:var(--ink)}
 @font-face{font-family:RenpetEgyptian;src:url('assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
 body[data-language=egy] {font-family:RenpetEgyptian,-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+/* Bold native hieroglyphs consistently. Noto Egyptian Hieroglyphs is provided
+   only in Regular; allow synthetic bold and use a restrained hairline contour
+   for browsers (notably WebKit) that render its fine sign strokes too lightly.
+   Restrict this to script labels, numeric signs, and form date selectors;
+   Gregorian captions, user-written appointments, and other languages stay normal. */
+body[data-language=egy]{font-synthesis:weight}
+body[data-language=egy] :is(
+ .year-shortcut-label,.year-brand,.ux-heading h1,.ux-heading p,
+ .ux-bottom .ux-nav-item span,.month-section .day-number,.decade-label,
+ .agenda-heading h3,.day-heading,.year-season h2,.year-month-name,
+ .year-month-index,.epagomenal-tile strong,.date-fields select,
+ .sheet-head strong,.kind-toggle label,.advanced-fields>summary
+){
+ font-weight:700;
+ -webkit-text-stroke:.24px currentColor;
+ paint-order:stroke fill;
+}
+body[data-language=egy] :is(
+ .ux-heading h1,.agenda-heading h3,.day-heading,.year-season h2,.year-month-name
+){-webkit-text-stroke:.32px currentColor}
+/* Ten-column phone months need a finer outline to keep grouped unit signs open. */
+body[data-language=egy] .month-section .day-number{-webkit-text-stroke:.16px currentColor}
+
 body[data-language=egy] .ux-bottom .ux-nav-item{font-size:15px}
 body[data-language=egy] .year-month-name{font-size:19px}
 body[data-language=egy] .year-shortcut{font-size:16px}

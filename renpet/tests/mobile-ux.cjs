@@ -114,8 +114,13 @@ async function run(){
    await p.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    const n=await p.locator('.seven-day').count();
    const hidden=(await p.locator('.greg-day').count())===0;
+   const ink=await p.locator('.month-section .date .day-number').first().evaluate(el=>({
+    weight:Number(getComputedStyle(el).fontWeight),
+    stroke:Number.parseFloat(getComputedStyle(el).webkitTextStrokeWidth)
+   }));
+   if(ink.weight<700||ink.stroke<.1)throw Error('Hieroglyphic dates lack bold ink: '+JSON.stringify(ink));
    await screenshot(p,name+'-hieroglyphic-7');
-   return {seven:n,gregorianHidden:hidden};
+   return {seven:n,gregorianHidden:hidden,boldInk:ink};
   });
   await step(name+' calendar management and backup',async()=>{
    await p.locator('[data-open-panel=settings]').first().click();
@@ -177,6 +182,11 @@ async function run(){
    const actual=await k.locator('input[name="title"]').inputValue();
    if(actual!==sign)throw Error('Unicode sign input did not preserve the chosen hieroglyph');
    if(!(await k.locator('.kb-suggestions [data-kb-pick="0"]').count()))throw Error('Raw input not first hieroglyphic suggestion');
+   const signInk=await first.evaluate(el=>({
+    weight:Number(getComputedStyle(el).fontWeight),
+    stroke:Number.parseFloat(getComputedStyle(el).webkitTextStrokeWidth)
+   }));
+   if(signInk.weight<700||signInk.stroke<.2)throw Error('Keyboard hieroglyphs are not bold: '+JSON.stringify(signInk));
    await screenshot(k,name+'-hieroglyphic-keyboard');
    await k.close();
    return {copticKeys:ckeys,copticPredictions:suggestions,bothDialectLabels:labels,uniliterals,biliterals,triliterals,numerals:numeric};

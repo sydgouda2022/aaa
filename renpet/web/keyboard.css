@@ -70,6 +70,16 @@ body[data-language=egy] .kb-num{font:25px/1.1 RenpetEgyptian,system-ui,sans-seri
 body[data-language=egy] .kb-numbers{min-height:52px}
 body[data-language=egy] .kb-hiero .kb-sign{font-size:38px;min-height:51px}
 body[data-language=egy] .kb-suggestions button span{font:23px/1.2 RenpetEgyptian,system-ui,sans-serif}
+/* Explicitly override the font shorthand used by sign keys and prediction
+   chips; a 700 weight alone must not get reset to Regular in the keyboard. */
+body[data-language=egy] :is(
+ .kb-hiero .kb-sign,.kb-tabs button>span,.kb-num,.kb-suggestions button span,.kb-name
+){
+ font-weight:700;
+ -webkit-text-stroke:.28px currentColor;
+ paint-order:stroke fill;
+}
+
 body[data-language=cop] .kb-num{font-family:Coptic,system-ui,sans-serif}
 @media(min-width:550px){.kb-hiero{grid-template-columns:repeat(7,minmax(0,1fr))}}
 
