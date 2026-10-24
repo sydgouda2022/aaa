@@ -1,4 +1,4 @@
-"""Release checks for the Khepri scarab PWA icon family (stdlib only)."""
+"""Release checks for the user-supplied gold rope PWA icon family."""
 from __future__ import annotations
 
 import json
@@ -9,9 +9,9 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 WEB=ROOT/'web'
-ICON=WEB/'assets/khepri-scarab.svg'
-BLUE=(4,69,141)
-GOLD=(237,188,64)
+ICON=WEB/'assets/shen-rope.svg'
+BLUE=(13,121,106)
+GOLD=(255,226,35)
 EXPECTED={'favicon-32.png':32,'icon-180.png':180,'icon-192.png':192,
           'icon-512.png':512,'icon-maskable-512.png':512}
 
@@ -42,8 +42,8 @@ def pixels(path,required):
 
 def main():
     source=ICON.read_text(encoding='utf-8')
-    assert re.search(r'fill="#04458D"',source)
-    assert re.search(r'fill="#EDBC40"',source)
+    assert re.search(r'fill="#0d796a"',source)
+    assert re.search(r'fill="#ffe223"',source)
     assert 'gradient' not in source.lower() and 'filter=' not in source
     manifest=json.loads((WEB/'manifest.webmanifest').read_text())
     for entry in manifest['icons']:
@@ -51,22 +51,24 @@ def main():
         assert (WEB/src).is_file(),src
     assert any('maskable' in x['purpose'] and 'maskable-512' in x['src'] for x in manifest['icons'])
     html=(WEB/'index.html').read_text()
-    assert 'apple-touch-icon' in html and 'khepri-scarab.svg' in html
+    assert 'apple-touch-icon' in html and 'shen-rope.svg' in html
     for name,dimension in EXPECTED.items():
         im=pixels(WEB/'assets'/name,dimension)
         assert im[0][0]==BLUE and im[-1][-1]==BLUE,'No white corners: '+name
-        # The disk and beetle remain distinct gold figures.
-        assert im[round(dimension*.2)][dimension//2]==GOLD,'Missing solar disk: '+name
-        assert im[round(dimension*.7)][round(dimension*.44)]==GOLD,'Missing beetle: '+name
-        gold=sum(1 for row in im for r,g,b in row if r>180 and 105<g<215 and b<100)
-        assert gold>dimension*dimension*.07,('Unrecognizable icon',name,gold)
+        # The supplied icon must show the loop above the knotted rope closure.
+        upper=round(dimension*(.25 if 'maskable' in name else .16))
+        lower=round(dimension*(.70 if 'maskable' in name else .82))
+        assert im[upper][dimension//2]==GOLD,'Missing gold loop: '+name
+        assert im[lower][dimension//2]==GOLD,'Missing gold rope knot: '+name
+        gold=sum(1 for row in im for r,g,b in row if r>180 and 180<g<250 and b<100)
+        assert gold>dimension*dimension*.05,('Unrecognizable icon',name,gold)
         if 'maskable' in name:
-            points=[(x,y) for y,row in enumerate(im) for x,(r,g,b) in enumerate(row) if r>180 and b<100]
+            points=[(x,y) for y,row in enumerate(im) for x,(r,g,b) in enumerate(row) if r>180 and g>180 and b<100]
             assert min(x for x,y in points)>dimension*.18
             assert max(x for x,y in points)<dimension*.82
             assert min(y for x,y in points)>dimension*.15
             assert max(y for x,y in points)<dimension*.85
-    print('Khepri SVG, iOS, Android, maskable and browser icons verified')
+    print('Gold rope/shen icon, iOS, Android, maskable and browser assets verified')
 
 
 if __name__=='__main__':
