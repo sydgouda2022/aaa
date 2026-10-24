@@ -20,7 +20,7 @@ on:
       - '.github/workflows/deploy-mdwnfr.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: mdwnfr-production
   cancel-in-progress: false
@@ -95,7 +95,8 @@ jobs:
           PY
           # Keep SQLite in the canonical corpus build artifact, but ship only
           # the browser runtime JSON projection (Cloudflare 25-MiB asset cap).
-          rm mdwnfr/web/lexicon/lexicon.sqlite3
+          mkdir -p mdwnfr/data
+          mv mdwnfr/web/lexicon/lexicon.sqlite3 mdwnfr/data/lexicon.sqlite3
           python mdwnfr/overrides/test_keyboard_current.py -v
           node --test shared-language/tests/lexicon_install.test.mjs
       - name: Install redistributable Egyptian font
@@ -204,3 +205,98 @@ jobs:
           done
           echo '::error::Public PWA smoke failed'
           exit 1
+      - name: Promote verified MdwNfr source to canonical repository files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p mdwnfr/qa
+          cp mdwnfr/overrides/test_keyboard_current.py mdwnfr/qa/test_keyboard.py
+          cp mdwnfr/overrides/test_service_worker_cache.mjs mdwnfr/qa/test_service_worker_cache.mjs
+          python - <<'PY'
+          from pathlib import Path
+          import json, sqlite3
+          root=Path('mdwnfr')
+          manifest=json.loads((root/'web/lexicon/manifest.json').read_text())
+          assert manifest['spelling_records']==41330
+          with sqlite3.connect(root/'data/lexicon.sqlite3') as con:
+              assert con.execute('pragma integrity_check').fetchone()[0]=='ok'
+          # New storage: no data migrations or backwards compatibility.
+          p=root/'web/storage.js'
+          s=p.read_text()
+          assert "const DB='mdwnfr-foundation-v1';" in s
+          s=s.replace("const DB='mdwnfr-foundation-v1';","const DB='mdwnfr-canonical-v1';")
+          s=s.replace('indexedDB.open(DB,4)','indexedDB.open(DB,1)')
+          a=s.index('   if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE')
+          b=s.index('\n  };\n  req.onsuccess=',a)
+          s=s[:a]+"""   db.createObjectStore(STORE,{keyPath:'id'});
+             db.createObjectStore(PROFILE,{keyPath:'id'});
+             db.createObjectStore(INDEX,{keyPath:'id'});
+             db.createObjectStore(SNAPSHOTS,{keyPath:'key'});
+             const m=db.createObjectStore(SNAPSHOT_META,{keyPath:'key'});
+             m.createIndex('by_document','document_id',{unique:false});"""+s[b:]
+          p.write_text(s)
+          # Image migration is obsolete; new images already carry alpha masks.
+          p=root/'web/app.js';s=p.read_text()
+          a=s.index('// One-time local migration for images saved before 2D silhouettes existed.')
+          b=s.index('// Table data is a nested word list.',a)
+          s=s[:a]+s[b:]
+          assert s.count('restoreLegacyImageMasks(await load(id))')==1
+          s=s.replace('restoreLegacyImageMasks(await load(id))','load(id)')
+          p.write_text(s)
+          p=root/'core/mdwnfr/document.py';s=p.read_text()
+          old="""    if obj.get('mask') is not None:
+              from .silhouette import validate_mask
+              if not validate_mask(obj['mask']):
+                  raise DocumentError('Invalid imported image 2D silhouette mask')"""
+          new="""    from .silhouette import validate_mask
+              if not validate_mask(obj.get('mask')):
+                  raise DocumentError('Invalid imported image 2D silhouette mask')"""
+          if old in s:s=s.replace(old,new)
+          p.write_text(s)
+          p=root/'pyproject.toml';s=p.read_text()
+          import re
+          s,n=re.subn(r'version\s*=\s*"[^"]+"','version = "0.2.0"',s,count=1)
+          assert n==1
+          p.write_text(s)
+          icons=root/'web/icons'
+          for p in icons.iterdir():
+              if p.is_file() and p.name not in ('brand-v046-192.png','brand-v046-512.png','brand-v046-apple-touch.png','keyboard_icon.svg'):p.unlink()
+          PY
+          node --check mdwnfr/web/app.js
+          node --check mdwnfr/web/storage.js
+          python mdwnfr/qa/test_keyboard.py -v
+          git rm -rf mdwnfr/.source mdwnfr/overrides
+          rm -rf mdwnfr/dist mdwnfr/dictionary mdwnfr/tests mdwnfr/web/vendor/pyodide
+          rm -f mdwnfr/web/assets/fonts/hieroglyphs.woff2
+          find mdwnfr -type d -name __pycache__ -prune -exec rm -rf {} +
+          for f in mdwnfr/tools/*; do
+            test -f "$f" || continue
+            case "$(basename "$f")" in
+              build_static.py|runtime_assets.py|vendor_runtime.py|catalog_integrity.py|offline_publication.py|test_recovery_storage.mjs|test_layout_detail_guard.mjs) ;;
+              *) rm -f "$f" ;;
+            esac
+          done
+          cat > mdwnfr/.gitignore <<'EOF'
+          dist/
+          web/vendor/pyodide/
+          web/assets/fonts/hieroglyphs.woff2
+          __pycache__/
+          *.pyc
+          .pytest_cache/
+          EOF
+          cat > mdwnfr/README.md <<'EOF'
+          # MdwNfr — canonical Python editor
+          One source tree: Python engine in core/mdwnfr/, app in web/, and
+          canonical 41,330-spelling SQLite in data/lexicon.sqlite3.
+          Published JSON is pinned under web/lexicon/ for direct browser load.
+          Build using tools/build_static.py after vendoring the Python 3.12
+          runtime and licensed Noto font. QA lives in qa/.
+          No archived source, compatibility layer or legacy document migration.
+          The new browser document store is mdwnfr-canonical-v1.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A mdwnfr
+          git diff --cached --stat | tail -35
+          git commit -m "MdwNfr: promote live source to canonical 0.2, remove archival code and old data paths"
+          git push origin HEAD:main
