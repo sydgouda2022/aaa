@@ -298,23 +298,25 @@ root.addEventListener('click',ev=>{
   if(picker){closeTimeEditor(root.querySelector('#event-editor'),false,lang());return;}
   closeKeyboard();state.dialog=null;render();return;
  }
+ // Save from the header is always a one-tap action, even if the time
+ // picker is currently open. Commit its selected hour/minute first.
+ const saveButton=ev.target.closest('#event-editor .save-button');
+ if(saveButton){
+  ev.preventDefault();
+  const form=saveButton.form;
+  const pendingPicker=form?.querySelector('.time-picker-host:not([hidden])');
+  if(pendingPicker)closeTimeEditor(form,true,lang());
+  try{submitEvent(form);}catch(error){
+   console.error('Renpet save exception',error);
+   showEditorError(form,lang()==='ar'?'حدث خطأ أثناء حفظ الموعد':lang()==='cop'?'Ⲥⲱⲛϩ: !':'𓏞: !');
+  }
+  return;
+ }
  // Time picker is an overlay within the event form. Touching its backdrop
  // cancels the picker and never accidentally commits a hidden selection.
  const openPicker=root.querySelector('.time-picker-host:not([hidden])');
  if(openPicker&&!openPicker.contains(ev.target)&&!ev.target.closest('[data-time-open]')){
   closeTimeEditor(root.querySelector('#event-editor'),false,lang());return;
- }
- // A direct Save click handler avoids relying on iOS's implicit submit
- // event while the custom text keyboard owns focus. This is the sole save
- // entry point for tapping the header button; submit remains for Enter.
- const saveButton=ev.target.closest('#event-editor .save-button');
- if(saveButton){
-  ev.preventDefault();
-  try{submitEvent(saveButton.form);}catch(error){
-   console.error('Renpet save exception',error);
-   showEditorError(saveButton.form,lang()==='ar'?'حدث خطأ أثناء حفظ الموعد':lang()==='cop'?'Ⲥⲱⲛϩ: !':'𓏞: !');
-  }
-  return;
  }
  const complete=ev.target.closest('[data-complete]');
  if(complete){const sched=loadScheduler(),item=sched.items.find(i=>i.id===complete.dataset.complete);if(item){toggleCompleted(item,state.focus);saveScheduler(sched);render();}return;}
