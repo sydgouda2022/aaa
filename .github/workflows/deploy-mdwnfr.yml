@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths:
       - 'mdwnfr/.source/**'
+      - 'shared-language/src/lexicon_install.mjs'
+      - 'shared-language/src/publish_release.py'
+      - 'shared-language/adapters/mdwnfr-worker.js'
+      - 'shared-language/adapters/mdwnfr-offline-publication.py'
+      - 'shared-language/releases/dev-late-egyptian/**'
       - 'mdwnfr/wrangler.toml'
       - 'mdwnfr/worker.mjs'
       - '.github/workflows/deploy-mdwnfr.yml'
@@ -37,6 +42,16 @@ jobs:
           tar -xzf /tmp/mdwnfr-source.tar.gz -C mdwnfr
           test -s mdwnfr/web/app.js
           test -s mdwnfr/core/mdwnfr/data/lexicon.json
+      - name: Attach independent verified lexicon installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp shared-language/src/lexicon_install.mjs mdwnfr/web/lexicon-install.mjs
+          cp shared-language/adapters/mdwnfr-worker.js mdwnfr/web/worker.js
+          cp shared-language/adapters/mdwnfr-offline-publication.py mdwnfr/tools/offline_publication.py
+          python shared-language/src/publish_release.py --catalog mdwnfr/core/mdwnfr/data/lexicon.json --out mdwnfr/web/lexicon
+          cmp mdwnfr/web/lexicon/lexicon.json shared-language/releases/dev-late-egyptian/lexicon.json
+          node --test shared-language/tests/lexicon_install.test.mjs
       - name: Install redistributable Egyptian font
         shell: bash
         run: |
@@ -81,6 +96,9 @@ jobs:
           python tools/build_static.py
           node --check dist/app.js
           node --check dist/worker.js
+          node --check dist/lexicon-install.mjs
+          test -s dist/lexicon/manifest.json
+          test -s dist/lexicon/lexicon.json
           node --check dist/storage.js
           node --check dist/sw.js
           node tools/test_recovery_storage.mjs
