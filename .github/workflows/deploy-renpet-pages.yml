@@ -40,6 +40,9 @@ jobs:
           test "$(wc -c <renpet/web/assets/fonts/Cairo-VF.ttf)" -gt 100000
           python renpet/tools/make_numerals.py
           python renpet/tools/build_keyboard_signs.py
+          curl -fLsS --retry 3 --max-time 120 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-Earlier_Egyptian_original-v18-premium/resolve/main/train.jsonl?download=true' -o /tmp/renpet-tla-v18.jsonl
+          test "$(wc -c </tmp/renpet-tla-v18.jsonl)" -gt 5000000
+          python renpet/tools/build_egyptian_words.py /tmp/renpet-tla-v18.jsonl
           python - <<'PY'
           from pathlib import Path
           import hashlib,json
@@ -86,6 +89,8 @@ jobs:
           test -s renpet/web/assets/fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
           test -s renpet/web/assets/dictionaries/signs.json
           test -s renpet/web/assets/dictionaries/coptic.json
+          test -s renpet/web/assets/dictionaries/egyptian-wordforms.json
+          test -s renpet/web/assets/dictionaries/coptic-popular.json
           node renpet/tests/scheduler.test.mjs
           node renpet/tests/backup.test.mjs
           node renpet/tests/ics.test.mjs
