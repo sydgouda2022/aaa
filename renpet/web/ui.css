@@ -258,3 +258,9 @@ body[data-language=egy] .timeline-hour .clock-glyph{height:16px;max-width:23px}
 .timeline-now-clock .clock-zero,.timeline-now-clock .clock-separator{color:white}
 .timeline-now-rule{position:relative;flex:1;min-width:0;height:2px;background:#cf343b}
 .timeline-now-rule::before{position:absolute;content:'';inset-inline-start:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:#cf343b}
+
+/* Date editor: script-aware year selector, with native numeric values only under the hood. */
+.date-fields select[name=egyYear]{width:100%;min-width:0;text-overflow:ellipsis;font-variant-numeric:normal}
+body[data-language=cop] .date-fields select[name=egyYear]{font-family:Coptic,system-ui,sans-serif;font-size:14px!important}
+body[data-language=egy] .date-fields{grid-template-columns:minmax(0,1.5fr) minmax(0,1.15fr) minmax(0,.78fr)}
+body[data-language=egy] .date-fields select[name=egyYear]{font-family:RenpetEgyptian,system-ui,sans-serif;font-size:11px!important;letter-spacing:-1px}
