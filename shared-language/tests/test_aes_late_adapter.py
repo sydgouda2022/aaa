@@ -33,7 +33,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(counts[('200','𓀀𓇓')],2)
         self.assertEqual(len(refs[('200','𓀀𓇓')]),2)
         self.assertEqual(stats['rejected_wrong_date'],1)
-        self.assertEqual(stats['rejected_missing_or_incomplete_unicode'],1)
+        self.assertEqual(stats['rejected_missing_or_incomplete_signs'],1)
         self.assertEqual(stats['qualified_tokens'],2)
     def test_rejects_unpinned_source(self):
         with tempfile.TemporaryDirectory() as tmp:
