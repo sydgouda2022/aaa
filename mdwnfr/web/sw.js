@@ -2,7 +2,7 @@
    An offline-ready installation requires ALL self-hosted Python/font assets.
    Incomplete updates never delete the previous working cache. */
 const PREFIX = 'mdwnfr-offline-';
-const CACHE = 'mdwnfr-offline-0.1.47';
+const CACHE = 'mdwnfr-offline-source';
 const MANIFEST = '/offline-assets.json';
 
 async function verifiedResponse(record) {
