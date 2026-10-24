@@ -29,3 +29,22 @@
 - Local learning is saved in `localStorage` at `renpet.keyboard.personal.v1` and is capped to 1500 forms.
 - No app text or usage information is sent to external suggestion services.
 - Missing dictionaries fail safely: the user can continue typing Unicode, accept raw input and save events without prediction.
+
+## Renpet 6 offline word dictionaries
+
+### Coptic frequency and supplements
+Renpet augments the pinned Sahidic/Bohairic surface-form lexicon with common forms and corpus-frequency hints from KELLIA's Coptic Dictionary Online `data/supplemental_entries.tab`, extracted on 2026-10-24 (CC BY-SA 4.0). The `coptic-popular.json` pack retains these rankings; independent dialect metadata is **not invented** for forms absent from the primary Scriptorium lexicon. Search ignores combining overbars for matching but inserts the original written form.
+
+Source: https://github.com/KELLIA/dictionary; license https://creativecommons.org/licenses/by-sa/4.0/.
+
+### Attested hieroglyphic words
+Release 6 generates `egyptian-wordforms.json` from the Thesaurus Linguae Aegyptiae **Original Earlier Egyptian v18 premium** data (12,773 sentence records) without transliterating, inventing spellings or treating it as a Late Egyptian dictionary. The `hieroglyphs` field contains space-delimited Unicode word forms; predictions preserve each original sequence, attach a corpus-use count, and where aligned retain a TLA lemma ID. These attestations are **Earlier Egyptian**, not the complete MDWNFR Late Egyptian lexicon.
+
+Source: https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-Earlier_Egyptian_original-v18-premium . Dataset: CC BY-SA 4.0. Cite as: Thesaurus Linguae Aegyptiae, Original Earlier Egyptian sentences, corpus v18, premium, v1.1, 16 February 2024, edited by T. S. Richter, D. A. Werning, H.-W. Fischer-Elfert, and P. Dils on behalf of BBAW and SAW.
+
+Reproduction: `python renpet/tools/build_egyptian_words.py train.jsonl`. CI downloads the pinned corpus edition and compiles a compact local vocabulary; personal events and text are never uploaded.
+
+**Remaining gap:** importing the 123,939 written spellings from the user's own `D:\Python Projects\MdwNfr\dictionary\lexicon.sqlite3` still requires access to that actual SQLite database and source redistribution rights. TLA Earlier Egyptian word forms must not be reported as replacement Late Egyptian evidence.
+
+## Arabic interface font
+Cairo variable font is bundled in `assets/fonts/Cairo-VF.ttf` during the verified build from https://github.com/google/fonts/tree/main/ofl/cairo under SIL Open Font License 1.1; licensing notice is included as `OFL-Cairo.txt`. Arabic calendar UI and inputs use Cairo. The operating system's keyboard UI remains controlled by iOS.
