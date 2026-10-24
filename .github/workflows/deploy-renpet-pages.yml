@@ -8,6 +8,9 @@ on:
       - 'shared-language/src/lexicon_install.mjs'
       - 'shared-language/src/publish_release.py'
       - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/aes_unicode.py'
+      - 'shared-language/src/aes_late_adapter.py'
+      - 'shared-language/sources/aes_late_documents.json'
       - 'shared-language/src/publish_compiled_coptic.py'
       - 'shared-language/src/coptic_install.mjs'
       - 'shared-language/src/publish_coptic_release.py'
@@ -53,12 +56,14 @@ jobs:
           curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexicon-sources/aed.xml
           echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexicon-sources/tla.jsonl' | sha256sum -c -
           echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexicon-sources/aed.xml' | sha256sum -c -
+          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-sources/aes_sawlit.json
+          echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-sources/aes_sawlit.json' | sha256sum -c -
           curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/f365e2d239bd12b6897f3a761487e40d384b2b24/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/lexicon-sources/coptic.xml
           echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexicon-sources/coptic.xml' | sha256sum -c -
           cp shared-language/src/keyboard_search.mjs renpet/web/keyboard-search.mjs
           cp shared-language/src/lexicon_install.mjs renpet/web/lexicon-install.mjs
           cp shared-language/src/coptic_install.mjs renpet/web/coptic-install.mjs
-          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --out renpet/web/lexicon
+          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexicon-sources/tla.jsonl --aed /tmp/lexicon-sources/aed.xml --aes /tmp/lexicon-sources/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --out renpet/web/lexicon
           python shared-language/src/publish_release.py --catalog renpet/web/lexicon/lexicon.json --out renpet/web/lexicon
           python shared-language/src/compile_lexica.py coptic --tei /tmp/lexicon-sources/coptic.xml --forms renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out renpet/web/coptic-lexicon
           python shared-language/src/publish_compiled_coptic.py --out renpet/web/coptic-lexicon
@@ -67,7 +72,7 @@ jobs:
           python - <<'PY'
           import json, sqlite3
           from pathlib import Path
-          for name,minimum in [('lexicon',6000),('coptic-lexicon',20000)]:
+          for name,minimum in [('lexicon',6800),('coptic-lexicon',20000)]:
               root=Path('renpet/web')/name
               release=json.loads((root/'manifest.json').read_text())
               assert release['spelling_records']>=minimum and release['complete'] is False

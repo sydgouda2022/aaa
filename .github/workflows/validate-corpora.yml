@@ -5,6 +5,9 @@ on:
     paths:
       - 'shared-language/tests/test_compile_lexica.py'
       - 'shared-language/src/compile_lexica.py'
+      - 'shared-language/src/aes_unicode.py'
+      - 'shared-language/src/aes_late_adapter.py'
+      - 'shared-language/sources/aes_late_documents.json'
       - 'shared-language/src/publish_compiled_coptic.py'
       - '.github/workflows/validate-corpora.yml'
   workflow_dispatch:
@@ -20,7 +23,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Native compiler regression
-        run: python -m unittest discover -s shared-language/tests -p 'test_compile_lexica.py' -v
+        run: |
+          python -m unittest discover -s shared-language/tests -p 'test_compile_lexica.py' -v
+          python -m unittest discover -s shared-language/tests -p 'test_aes*.py' -v
       - name: Fetch pinned open editions
         shell: bash
         run: |
@@ -32,13 +37,15 @@ jobs:
           test "$(wc -c </tmp/lexicon-raw/tla.jsonl)" -gt 1000000
           test "$(wc -c </tmp/lexicon-raw/aed.xml)" -gt 10000000
           test "$(wc -c </tmp/lexicon-raw/coptic.xml)" -gt 10000000
+          curl -fLsS --retry 3 --max-time 180 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexicon-raw/aes_sawlit.json
+          echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexicon-raw/aes_sawlit.json' | sha256sum -c -
           sha256sum /tmp/lexicon-raw/*
       - name: Compile two canonical SQLite masters and derived prediction releases
         shell: bash
         run: |
           set -euo pipefail
           python shared-language/src/compile_lexica.py egyptian \
-            --tla /tmp/lexicon-raw/tla.jsonl --aed /tmp/lexicon-raw/aed.xml --out /tmp/lexicon-build/egy
+            --tla /tmp/lexicon-raw/tla.jsonl --aed /tmp/lexicon-raw/aed.xml --aes /tmp/lexicon-raw/aes_sawlit.json --aes-whitelist shared-language/sources/aes_late_documents.json --out /tmp/lexicon-build/egy
           python shared-language/src/compile_lexica.py coptic \
             --tei /tmp/lexicon-raw/coptic.xml \
             --forms renpet/web/assets/dictionaries/coptic.json \
@@ -56,7 +63,7 @@ jobs:
               manifest=json.loads((p/'manifest.json').read_text())
               db=sqlite3.connect(p/'lexicon.sqlite3')
               assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
-              assert manifest['spelling_records'] > 0
+              assert manifest['spelling_records'] >= (6800 if name=='egy' else 20000)
               assert manifest['complete'] is False
               assert report['unique_spellings' if name=='egy' else 'unique_written_forms'] == manifest['spelling_records']
               print('VERIFIED',name, json.dumps(report,ensure_ascii=False))

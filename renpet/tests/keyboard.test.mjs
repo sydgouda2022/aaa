@@ -32,7 +32,7 @@ const release=JSON.parse(await readFile(new URL('../web/lexicon/manifest.json',i
 assert.equal(release.stage,'Late Egyptian','Dictionary is only Late Egyptian');
 assert.equal(late.format,'mdwnfr-predict-v1','Same verified lexicon format as MdwNfr');
 assert.equal(late.entries.length,release.spelling_records);
-assert.ok(late.entries.length>=6000,'TLA Late Egyptian v19 native attestations incorporated');
+assert.ok(late.entries.length>=6800,'TLA Late Egyptian and approved AES narratives incorporated');
 assert.equal(late.metadata.complete,false,'Current development seed is never declared full');
 const lateRows={rows:late.entries.map(r=>[r.signs,r.attestations||1,r.lemma||r.ref])};
 const example=late.entries.find(r=>r.signs.length>2);
