@@ -25,7 +25,11 @@ async function scenario(engine,name) {
       navigator.serviceWorker.controller.state==='activated',null,{timeout:100000});
     const cacheNames=await p.evaluate(()=>caches.keys());
     if(!cacheNames.some(s=>s.startsWith('renpet-6.5.0-')))throw Error('6.5 service worker did not precache all assets');
-    await ctx.setOffline(true);
+    // Linux Playwright WebKit's context.setOffline() rejects even cache-hit
+    // fetches before their active SW can respond. Simulate a disconnected
+    // origin with network route aborts in WebKit; Chromium uses true offline.
+    if(name==='webkit')await p.route('**/*',route=>route.abort('failed'));
+    else await ctx.setOffline(true);
     const asset=await p.evaluate(async()=>{
      const cacheKeys=await caches.keys();
      const fullUrl=new URL('./app.js',location.href).href;
