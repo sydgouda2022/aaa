@@ -66,8 +66,8 @@ body[data-language=egy] .kb-top{min-height:36px}
 body[data-language=egy] .kb-tabs button{min-height:45px}
 body[data-language=egy] .kb-tabs button>span{font:30px/1 RenpetEgyptian,system-ui,sans-serif}
 body[data-language=egy] .kb-tabs button small{font-size:13px}
-body[data-language=egy] .kb-num{font:25px/1.1 RenpetEgyptian,system-ui,sans-serif;min-height:48px;min-width:54px}
-body[data-language=egy] .kb-numbers{min-height:52px}
+body[data-language=egy] .kb-num{font:800 31px/1.12 RenpetEgyptian,system-ui,sans-serif;min-height:56px;min-width:60px;-webkit-text-stroke:.32px currentColor;paint-order:stroke fill}
+body[data-language=egy] .kb-numbers{min-height:62px}
 body[data-language=egy] .kb-hiero .kb-sign{font-size:38px;min-height:51px}
 body[data-language=egy] .kb-suggestions button span{font:23px/1.2 RenpetEgyptian,system-ui,sans-serif}
 /* Explicitly override the font shorthand used by sign keys and prediction
