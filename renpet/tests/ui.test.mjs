@@ -31,7 +31,7 @@ assert.ok([5,6].includes((root.innerHTML.match(/class="date /g)||[]).length),'Ep
 click('data-primary-view','today');
 assert.ok(has('month-agenda'),'Today returns to selected-day agenda rather than switching to Day');
 click('data-primary-view','list');
-assert.ok(has('schedule-empty'),'No appointments: helpful Schedule empty state');
+assert.ok(has('class="list-page"'),'List view displays the selected festival sources and user appointments');
 assert.ok(has('data-new'),'Empty Schedule has new-event action');
 click('data-primary-view','today');
 const d=dayNumber('2026-10-17');
