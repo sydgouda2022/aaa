@@ -70,7 +70,7 @@ function open() {
   dialog = document.createElement('div');
   dialog.className = 'renpet-backup-overlay';
   dialog.innerHTML = `<section class="renpet-backup-panel" role="dialog" aria-modal="true" aria-labelledby="renpet-backup-heading">
-    <div class="renpet-backup-head"><h2 id="renpet-backup-heading"></h2><button type="button" data-backup="close" class="renpet-backup-close" aria-label=""></button></div>
+    <div class="renpet-backup-head"><h2 id="renpet-backup-heading"></h2></div>
     <p class="renpet-backup-info"></p>
     <button type="button" data-backup="export" class="renpet-backup-action"></button>
     <button type="button" data-backup="ics" class="renpet-backup-action secondary"></button>
@@ -78,21 +78,19 @@ function open() {
   </section>`;
   dialog.querySelector('h2').textContent = t.title;
   dialog.querySelector('.renpet-backup-info').textContent = t.info;
-  dialog.querySelector('[data-backup="close"]').textContent = '×';
-  dialog.querySelector('[data-backup="close"]').setAttribute('aria-label', t.close);
   dialog.querySelector('[data-backup="export"]').textContent = t.export;
   dialog.querySelector('[data-backup="import"]').textContent = t.import;
   dialog.querySelector('[data-backup="ics"]').textContent = t.ics;
   dialog.dir = lang() === 'ar' ? 'rtl' : 'ltr';
   dialog.addEventListener('click', event => {
     const action = event.target.closest('[data-backup]')?.dataset.backup;
-    if (action === 'close' || event.target === dialog) close();
+    if (event.target === dialog) close();
     else if (action === 'export') exportData();
     else if (action === 'import') importData();
     else if (action === 'ics') exportCalendar();
   });
   document.body.append(dialog);
-  dialog.querySelector('[data-backup="close"]').focus();
+  dialog.querySelector('[data-backup="export"]')?.focus();
 }
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && dialog) close(); });
 export function openBackup(){open();}
