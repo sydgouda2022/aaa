@@ -45,6 +45,10 @@ jobs:
         env:
           NODE_PATH: /tmp/renpet-pw/node_modules
         run: node renpet/tests/safari-save.cjs
+      - name: Test direct-delete and drag-resize using iPhone WebKit
+        env:
+          NODE_PATH: /tmp/renpet-pw/node_modules
+        run: node renpet/tests/safari-direct-actions.cjs
       - name: Save screenshots and issue report
         if: always()
         uses: actions/upload-artifact@v4
