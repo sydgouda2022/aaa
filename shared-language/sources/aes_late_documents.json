@@ -57,6 +57,24 @@
         "NK"
       ],
       "stage_basis": "Ramesside Late Egyptian literary tale"
+    },
+    {
+      "id": "C6HNRC4K7FAYBHNDS3LV24EANI",
+      "title": "The Tale of Two Brothers",
+      "document": "Papyrus D'Orbiney (BM EA 10183), recto",
+      "allowed_dates": [
+        "NK"
+      ],
+      "stage_basis": "Ramesside Late Egyptian literary narrative"
+    },
+    {
+      "id": "5UEPUHOXE5CCRF5VQGC4V7SQWQ",
+      "title": "Truth and Falsehood",
+      "document": "Papyrus Chester Beatty II",
+      "allowed_dates": [
+        "NK"
+      ],
+      "stage_basis": "Ramesside Late Egyptian literary narrative"
     }
   ]
 }
