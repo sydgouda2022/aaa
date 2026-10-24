@@ -39,6 +39,12 @@ jobs:
         env:
           NODE_PATH: /tmp/renpet-pw/node_modules
         run: node renpet/tests/mobile-ux.cjs
+      - name: Install WebKit and system packages for Safari-compatible save test
+        run: /tmp/renpet-pw/node_modules/.bin/playwright install --with-deps webkit
+      - name: Verify iOS WebKit appointment save for all scripts
+        env:
+          NODE_PATH: /tmp/renpet-pw/node_modules
+        run: node renpet/tests/safari-save.cjs
       - name: Save screenshots and issue report
         if: always()
         uses: actions/upload-artifact@v4
