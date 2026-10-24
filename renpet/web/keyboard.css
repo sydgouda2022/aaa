@@ -1,5 +1,5 @@
 /* Renpet 4 — one native-script keyboard dock, shared by Coptic and Egyptian. */
-:root{--renpet-kb-height:min(47dvh,355px)}
+:root{--renpet-kb-height:min(53dvh,355px)}
 .renpet-keyboard[hidden]{display:none!important}
 .renpet-keyboard{position:fixed;inset-inline:0;bottom:0;z-index:160;display:flex;flex-direction:column;gap:5px;height:var(--renpet-kb-height);max-height:390px;padding:7px max(6px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:#e4e9e3;border-top:1px solid #c7d2c9;box-shadow:0 -8px 18px #1b292425;direction:ltr;overflow:hidden}
 .kb-top{display:flex;align-items:center;justify-content:space-between;min-height:28px;gap:5px;padding-inline:5px}
@@ -33,7 +33,7 @@
 .keyboard-open .ux-bottom{visibility:hidden}
 .keyboard-open .renpet-backup-backdrop{bottom:var(--renpet-kb-height)}
 @media(max-height:680px){
- :root{--renpet-kb-height:min(48dvh,320px)}
+ :root{--renpet-kb-height:min(53dvh,350px)}
  .kb-sign{height:37px}
  .kb-tabs{min-height:29px}
  .kb-tabs button{min-height:29px}
@@ -41,4 +41,20 @@
  .kb-num{min-height:35px}
  .kb-controls{min-height:35px}
  .kb-controls button{min-height:35px}
+}
+
+/* The entire 32-letter Coptic alphabet must fit without internal scrolling. */
+.kb-coptic{grid-template-rows:repeat(4,minmax(32px,1fr));overflow:visible}
+.kb-coptic .kb-sign{height:100%;min-height:32px}
+.kb-top{min-height:24px}
+.kb-suggestions{min-height:33px}
+.kb-suggestions button{min-height:32px}
+.kb-numbers{min-height:36px}
+.kb-num{min-height:33px}
+.kb-controls{min-height:36px}
+.kb-controls button{min-height:36px}
+@media(max-height:680px){
+ .kb-coptic .kb-sign{min-height:32px}
+ .kb-numbers{min-height:33px}
+ .kb-num{min-height:32px}
 }
