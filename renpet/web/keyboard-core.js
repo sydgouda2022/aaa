@@ -38,8 +38,10 @@ export function suggestions(raw,language,lexicon,learned={},limit=4){
  candidates.sort((a,b)=>score(b)-score(a)||a.text.localeCompare(b.text));
  if(language==='cop'){
   const choose=[],seen=new Set();
-  for(const flag of [1,2]){
-   const c=candidates.find(x=>(x.dialects&flag)&&!seen.has(x.text));
+  // Explicitly surface independent Sahidic and Bohairic written forms whenever
+  // both exist. Shared spellings (S+B) are deduplicated, never fabricated.
+  for(const mask of [1,2,3]){
+   const c=candidates.find(x=>x.dialects===mask&&!seen.has(x.text));
    if(c){choose.push(c);seen.add(c.text);}
   }
   for(const c of candidates){if(choose.length>=limit-1)break;if(!seen.has(c.text)){choose.push(c);seen.add(c.text);}}
