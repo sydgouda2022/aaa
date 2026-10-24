@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/audit-ramses-wordforms.yml'
+      - 'shared-language/src/ramses_unicode.py'
+      - 'shared-language/tests/test_ramses_unicode.py'
 permissions:
   contents: read
 jobs:
@@ -16,6 +18,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Test strict Ramses Unicode decoding
+        run: python -m unittest discover -s shared-language/tests -p 'test_ramses_unicode.py' -v
       - name: Read pinned CC-BY-4 model and segmented word forms
         run: |
           set -euo pipefail
@@ -42,3 +46,10 @@ jobs:
           print('WORDS_LINES',len(raw))
           for s in raw[:10]:print('WORDS_SAMPLE',repr(s[:700]))
           PY
+      - name: Audit unique Unicode word spellings
+        run: python shared-language/src/ramses_unicode.py --model /tmp/ramses/model.json --report /tmp/ramses/coverage.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ramses-unicode-audit
+          path: /tmp/ramses/coverage.json
+          retention-days: 14
