@@ -5,6 +5,7 @@ The audit is a prerequisite for a defensible Late Egyptian stage filter.
 from __future__ import annotations
 import argparse,collections,hashlib,json,sys
 from pathlib import Path
+from aes_unicode import decode_aes_hiero
 
 def encoded(s):
     return isinstance(s,str) and bool(s) and len(s)<=256 and all(
@@ -37,12 +38,13 @@ def audit(paths):
                 text=token.get('hiero_unicode')
                 if not isinstance(text,str) or not text.strip():continue
                 tally[(date,'encoded_nonempty')]+=1
-                if encoded(text):
+                decoded=decode_aes_hiero(text)
+                if decoded:
                     tally[(date,'valid')]+=1
                     full[(key,'valid')]+=1
-                    unique.add((str(token.get('lemmaID') or ''),text))
+                    unique.add((str(token.get('lemmaID') or ''),decoded))
                     if len(examples[key])<2:examples[key].append({
-                        'sentence':sid,'lemma':token.get('lemmaID'),'writing':text,
+                        'sentence':sid,'lemma':token.get('lemmaID'),'writing':decoded,
                         'date':date,'token_id':token.get('_id')
                     })
                 else:
