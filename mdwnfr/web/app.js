@@ -233,6 +233,24 @@ async function renderPapyrusWindow(){
   if(pageSlots[0]===slot){slot.pending=null;if(succeeded&&slot.wantWindow!==slot.windowKey)schedulePapyrusWindow();}
  }
 }
+// One verified font determines exact glyph ink and SVG baseline coordinates.
+function drawQuadratInk(host,quadrat,color,bold){
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+ svg.classList.add('glyph-ink-svg');
+ svg.setAttribute('viewBox',`0 0 ${quadrat.width} ${quadrat.height}`);
+ svg.setAttribute('aria-hidden','true');
+ for(const glyph of quadrat.signs){
+  const text=document.createElementNS(ns,'text');text.textContent=glyph.sign;
+  text.setAttribute('x',String(glyph.text_x));text.setAttribute('y',String(glyph.text_y));
+  text.setAttribute('font-size',String(glyph.font_size));
+  text.setAttribute('font-family','MdwNfr Hieroglyphs');
+  text.setAttribute('fill',color||'#192433');
+  if(bold){text.setAttribute('paint-order','stroke fill');text.setAttribute('stroke',color||'#192433');
+   text.setAttribute('stroke-width',String(glyph.font_size*.012));}
+  svg.append(text);
+ }
+ host.append(svg);
+}
 function paintPageContent(slot,p,shell){
  const paper=document.createElement('div');paper.className='paper';
  paper.style.width=mm(p.width);paper.style.height=mm(p.height);paper.style.transform=`scale(${zoom})`;
@@ -265,12 +283,7 @@ function paintPageContent(slot,p,shell){
       const wordNode=document.createElement('div');wordNode.className='table-cell-word';
       wordNode.style.left=mm(w.x);wordNode.style.top=mm(w.y);
       wordNode.style.width=mm(w.quadrat.width);wordNode.style.height=mm(w.height);
-      for(const glyph of w.quadrat.signs){
-       const sign=document.createElement('span');sign.className='sign';sign.textContent=glyph.sign;
-       sign.style.left=mm(glyph.x);sign.style.top=mm(glyph.y);sign.style.width=mm(glyph.width);
-       sign.style.height=mm(glyph.height);sign.style.fontSize=mm(glyph.height*1.2);
-       sign.style.color=w.color;if(w.bold)sign.style.fontWeight='bold';wordNode.append(sign);
-      }
+      drawQuadratInk(wordNode,w.quadrat,w.color,w.bold);
       box.append(wordNode);
      }
      if(cell.error){const err=document.createElement('span');err.className='table-cell-error';err.textContent='⚠';err.title=cell.error;box.append(err);}
@@ -299,13 +312,7 @@ function paintPageContent(slot,p,shell){
      const wordNode=document.createElement('div');wordNode.className='cartouche-word';
      wordNode.style.left=mm(w.x);wordNode.style.top=mm(w.y);
      wordNode.style.width=mm(w.quadrat.width);wordNode.style.height=mm(w.height);
-     for(const glyph of w.quadrat.signs){
-      const s=document.createElement('span');s.className='sign';s.textContent=glyph.sign;
-      s.style.left=mm(glyph.x);s.style.top=mm(glyph.y);
-      s.style.width=mm(glyph.width);s.style.height=mm(glyph.height);
-      s.style.fontSize=mm(glyph.height*1.2);s.style.color=w.color;
-      if(w.bold)s.style.fontWeight='bold';wordNode.append(s);
-     }
+     drawQuadratInk(wordNode,w.quadrat,w.color,w.bold);
      node.append(wordNode);
     }
     paper.append(node);continue;
@@ -345,12 +352,7 @@ function paintPageContent(slot,p,shell){
      node.append(h);
     }
    }else{
-    for(const sign of item.quadrat.signs){
-     const span=document.createElement('span');span.className='sign';span.textContent=sign.sign;
-     span.style.left=mm(sign.x);span.style.top=mm(sign.y);span.style.width=mm(sign.width);
-     span.style.height=mm(sign.height);span.style.fontSize=mm(sign.height*1.20);
-     span.style.color=item.color;if(item.bold)span.style.fontWeight='bold';node.append(span);
-    }
+    drawQuadratInk(node,item.quadrat,item.color,item.bold);
    }
    paper.append(node);
   }
@@ -367,36 +369,6 @@ function paintPageContent(slot,p,shell){
 function showPageInViewport(index){
  renderPageDetails(index);drawInsertionCaret();drawSelectionHandles();
 }
-// Sign outline measurements are independent of document revisions.
-// A new document is scanned once; subsequent edits measure only new signs.
-const glyphMeasurements=new Map();
-let metricCanvasContext=null;
-function observeSigns(signs){
- if(!Array.isArray(signs))return;
- for(const sign of signs){
-  if(glyphMeasurements.has(sign))continue;
-  if(!metricCanvasContext){
-   metricCanvasContext=document.createElement('canvas').getContext('2d');
-   metricCanvasContext.font='128px \"MdwNfr Hieroglyphs\", \"Noto Sans Egyptian Hieroglyphs\"';
-  }
-  const m=metricCanvasContext.measureText(sign);
-  const w=(m.actualBoundingBoxLeft||0)+(m.actualBoundingBoxRight||0);
-  const h=(m.actualBoundingBoxAscent||0)+(m.actualBoundingBoxDescent||0);
-  if(w>0&&h>0)glyphMeasurements.set(sign,{width:w,height:h});
- }
-}
-function observeDocumentSigns(d){
- glyphMeasurements.clear();
- for(const item of d.items){if(item.type==='word')observeSigns(item.signs);}
-}
-function observeActionSigns(action){
- observeSigns(action.signs);
- if(action.object?.type==='word')observeSigns(action.object.signs);
- if(Array.isArray(action.objects)){
-  for(const item of action.objects){if(item.type==='word')observeSigns(item.signs);}
- }
-}
-
 let libraryBusy=false;
 const libraryScreen=$('library-screen');
 const editorScreen=$('editor-screen');
@@ -1050,22 +1022,22 @@ function requiredLayoutDeltas(documentId,revision){
  }
  return next===revision?batch:null;
 }
-async function sendLayoutRequest(snapshot,metrics){
+async function sendLayoutRequest(snapshot){
  const id=snapshot.id;
  const batch=requiredLayoutDeltas(id,snapshot.revision);
  if(batch===null){
   // First open, worker restart or missing revision: resynchronize once.
-  const opened=await layoutRpc('layout_open',{document:snapshot,metrics,summary_only:true});
+  const opened=await layoutRpc('layout_open',{document:snapshot,summary_only:true});
   recordLayoutReceipt(opened,id);return opened;
  }
  try{
   const result=await layoutRpc('layout_sync',{
-   document_id:id,base_revision:layoutSyncedRevision,changes:batch,metrics,summary_only:true});
+   document_id:id,base_revision:layoutSyncedRevision,changes:batch,summary_only:true});
   recordLayoutReceipt(result,id);return result;
  }catch(error){
   if(error.code!=='LayoutRevisionConflict')throw error;
   // Revision gap is a recoverable transport failure, not a user edit.
-  const opened=await layoutRpc('layout_open',{document:snapshot,metrics,summary_only:true});
+  const opened=await layoutRpc('layout_open',{document:snapshot,summary_only:true});
   recordLayoutReceipt(opened,id);return opened;
  }
 }
@@ -1117,7 +1089,7 @@ async function openDocument(id){
   if(entry?.items?.some(item=>item.type==='clipart'))await ensureArtworkCatalog();
   if(!entry)throw new Error('Document not found. It may have been deleted.');
   await rpc('session_open',{document:entry});
-  resetLayoutSynchronization();repairedDetailRevisions.clear();doc=entry;selectedTableCell=null;observeDocumentSigns(entry);selectedId=null;selectionAnchorId=null;selectionFocusId=null;editingId=null;buffer=[];canUndo=false;canRedo=false;layoutCache=null;
+  resetLayoutSynchronization();repairedDetailRevisions.clear();doc=entry;selectedTableCell=null;selectedId=null;selectionAnchorId=null;selectionFocusId=null;editingId=null;buffer=[];canUndo=false;canRedo=false;layoutCache=null;
   caretIndex=doc.items.length;
   showEditor();refreshZoomOptions();setUiFromDoc();drawKeys();renderComposer();
   await reflow();
@@ -1230,7 +1202,7 @@ function apply(action){
   try{
    const answer=await rpc('session_edit',{action:{...action,base_revision:doc.revision}});
    receiveSessionResult(answer);
-   observeActionSigns(action);
+   
    scheduleAutosave();reflow();return true;
   }catch(e){status('Edit failed: '+e.message,true);return false;}
  });
@@ -1245,7 +1217,7 @@ function replayHistory(kind){
    receiveSessionResult(answer);
    // Previous styles/signs may be restored during undo; the layout worker
    // measures any newly present signs when preparing the next snapshot.
-   observeDocumentSigns(doc);
+   
    scheduleAutosave();reflow();return true;
   }catch(e){status((kind==='undo'?'Undo':'Redo')+' failed: '+e.message,true);return false;}
  });
@@ -1280,15 +1252,12 @@ document.addEventListener('keydown',e=>{
  if(e.target instanceof Element && e.target.closest('input,textarea,[contenteditable="true"],#dialog-backdrop'))return;
  e.preventDefault();replayHistory(e.code==='KeyY'||e.key.toLowerCase()==='y'||e.shiftKey?'redo':'undo');
 });
-function metricSource(){
- return Object.fromEntries(glyphMeasurements);
-}
 // Only one geometry calculation is queued at a time. Edits stay on the
 // independent document worker and new revisions replace obsolete queued jobs.
 // The renderer never sees a half-computed layout.
 function reflow(){
  if(!doc || editorScreen.hidden)return Promise.resolve();
- const request={version:++layoutVersion,snapshot:doc,metrics:metricSource()};
+ const request={version:++layoutVersion,snapshot:doc};
  queuedLayout=request;
  return pumpLayoutQueue();
 }
@@ -1297,9 +1266,9 @@ async function pumpLayoutQueue(){
  layoutInFlight=true;
  try{
   while(queuedLayout){
-   const {version,snapshot,metrics}=queuedLayout;queuedLayout=null;
+   const {version,snapshot}=queuedLayout;queuedLayout=null;
    try{
-    const outcome=await sendLayoutRequest(snapshot,metrics);
+    const outcome=await sendLayoutRequest(snapshot);
     if(version!==layoutVersion||!doc||snapshot.id!==doc.id||
        snapshot.revision!==doc.revision||editorScreen.hidden)continue;
     layoutCache=outcome.layout;paint(outcome.layout);
@@ -1666,12 +1635,7 @@ function renderComposer(){
     const geometry=fitQuadrat(answer.quadrat);
     const word=document.createElement('div');word.className='quadrat-preview-word';
     word.style.width=geometry.width+'px';word.style.height=geometry.height+'px';
-    for(const g of geometry.signs){
-     const glyph=document.createElement('span');glyph.className='quadrat-preview-sign';glyph.textContent=g.sign;
-     glyph.style.left=g.x+'px';glyph.style.top=g.y+'px';
-     glyph.style.width=g.width+'px';glyph.style.height=g.height+'px';
-     glyph.style.fontSize=g.fontSize+'px';word.append(glyph);
-    }
+    drawQuadratInk(word,geometry,'#153f70',false);
     preview.replaceChildren(word);preview.hidden=false;
    }).catch(error=>{if(current===predVersion)status('Word preview: '+error.message,true);});
   },90);
