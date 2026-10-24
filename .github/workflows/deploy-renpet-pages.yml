@@ -81,6 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           node --check renpet/web/app.js
+          node --check renpet/web/responsive-layout.js
           node --check renpet/web/lexicon-install.mjs
           node --check renpet/web/coptic-install.mjs
           node --check renpet/web/keyboard.js
@@ -99,6 +100,7 @@ jobs:
           node --check renpet/web/ics-core.mjs
           node --check renpet/web/sw.js
           python renpet/tests/test_service_worker_source.py
+          node --test renpet/tests/responsive-layout.test.mjs
           node renpet/tests/ui.test.mjs
           node renpet/tests/keyboard.test.mjs
           node --test shared-language/tests/keyboard_search.test.mjs

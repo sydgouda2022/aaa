@@ -1,4 +1,5 @@
 import {DAY,dayNumber,toEgyptian,toGregorian,monthGrid,nativeNumber} from './calendar.js';
+import {layoutForViewport,isKeyboardDrivenResize} from './responsive-layout.js';
 import {LOCALES} from './locales.js';
 import {AMUN_SOURCE,loadFestivalCatalog,enabledSourceIds,festivalHitsForDay,festivalSourceName} from './festival-catalog.js';
 import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,hiddenItemsForDay,ensureSavedItemVisible,revealSavedCalendars,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted} from './scheduler.js';
@@ -8,6 +9,29 @@ import {timeEditorFields,openTimeEditor,updateTimeChoice,closeTimeEditor} from '
 import {inputClock,timeText,timeHtml,localMinutes,nowLineTop} from './clock.js';
 
 // Single owner of #app. No observers, shadow views, patched DOM or legacy year board.
+// Responsive UI is a CSS-only rearrangement of the SAME DOM and state.
+// No user-agent checks, manual GUI setting, reload, or forced render on resize.
+// A focused native keyboard's same-width height loss is not a GUI switch.
+let lastStableLayoutViewport=null;
+function syncResponsiveLayout(){
+ if(typeof window==='undefined')return; // Node's DOM smoke fixture.
+ const width=window.innerWidth,height=window.innerHeight;
+ const active=document.activeElement;
+ // Only touch-capable input can expose an on-screen keyboard. A desktop
+ // window resized vertically while typing must still follow the breakpoints.
+ const softKeyboardPossible=window.matchMedia?.('(any-pointer: coarse)').matches??false;
+ const editing=softKeyboardPossible&&Boolean(active?.matches?.('input:not([type=checkbox]):not([type=radio]),textarea,[contenteditable="true"]'));
+ if(isKeyboardDrivenResize(lastStableLayoutViewport,width,height,editing))return;
+ document.documentElement.dataset.renpetLayout=layoutForViewport(width,height);
+ lastStableLayoutViewport={width,height};
+}
+if(typeof window!=='undefined'){
+ syncResponsiveLayout();
+ window.addEventListener('resize',syncResponsiveLayout,{passive:true});
+ window.addEventListener('orientationchange',syncResponsiveLayout,{passive:true});
+}
+
+
 const root=document.querySelector('#app'), SETTINGS='renpet.settings.v1';
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{const d=new Date();return dayNumber([d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'));};
