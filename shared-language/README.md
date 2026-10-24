@@ -25,8 +25,11 @@ Run `node --test tests/predict.test.mjs` and
 
 ## Next required implementations
 
-1. Source-specific, legally permitted importers for pinned TLA Late → AED → AES →
-   ORAEC datasets and KELLIA/Scriptorium Coptic resources, with source IDs and
+1. Source-specific, legally permitted importers for the approved Late Egyptian
+   registry (`sources/late_egyptian_registry.json`): TLA Corpus 20, TLA v19
+   filtered extract, Projet Ramsès, AED, AES, ORAEC, and Lesko as a reference-only
+   gap checker; separately KELLIA/Scriptorium Coptic resources when that track
+   resumes. Preserve source IDs and
    per-source reproducible coverage reports. Recover and validate the original
    full MdwNfr lexicon, **not** the 665/728-record development pack.
 2. Morphological inference limited to documented grammatical paradigms,
@@ -50,3 +53,20 @@ physical iPhone keyboard input, save/reload behavior and airplane mode.
 **Sources to evaluate:** KELLIA Coptic Dictionary Online (CC BY-SA 4.0 lexical
 TEI), Coptic SCRIPTORIUM NLP and corpus resources (per-dataset license), TLA and
 user-pinned AED/AES/ORAEC editions (rights and source-format verification).
+
+## Late Egyptian expanded source registry (2026-10-24)
+
+The seven **source editions** from six named projects are now registered in
+`sources/late_egyptian_registry.json` (TLA has two distinct corpus editions).
+Run `python src/source_registry.py status` to inspect priorities and ingestion
+rights. `src/source_registry.py:verified_source_manifest()` verifies locally
+acquired bytes and licenses before creating a manifest accepted by the existing
+pack builder. Tests prove that rights-limited sources cannot be automatically
+packaged. AED, AES and ORAEC share one historical source lineage.
+
+**Registry membership does not mean the contents have been downloaded,**
+**converted or included in either app.** TLA Corpus 20 requires identification
+of specifically open/licensed raw releases; Ramsès needs a verified bulk export
+and permission; Lesko remains a bibliographic reference only unless a separate
+license is secured. This is the first integration gate, not a comprehensive
+Late Egyptian dictionary release. No Coptic modifications were made.

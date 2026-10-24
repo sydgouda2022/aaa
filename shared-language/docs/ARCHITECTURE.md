@@ -56,3 +56,33 @@ Stage W3: unify screen, hit testing, selection, reflow, paper/papyrus, export an
 5. Implement/verify the MdwNfr-only advanced compositor on actual pinned font metrics; maintain independently verified Renpet inline presentation.
 
 These steps are engineering requirements, not a claim that the completed dictionaries, iPhone UX, or advanced historical compositor already exist.
+
+## Late Egyptian corpus expansion (approved 2026-10-24)
+
+The Late Egyptian acquisition authority is now
+`sources/late_egyptian_registry.json` (seven *editions*, six project names):
+
+1. **TLA Corpus 20**: primary lexical reference; only individual raw editions
+   with verified open-data permissions may be distributed. A web interface is
+   not equivalent to a bulk-data license.
+2. **TLA Late Egyptian v19 premium**: attested, filtered, downloadable baseline;
+   a subset, not the entire Corpus 20. Its overlapping TLA editorial lineage
+   must not be double-counted.
+3. **Projet Ramsès**: preferred Late Egyptian contextual supplement, blocked from
+   bulk ingestion and redistribution until authorized machine-readable access
+   and a license are documented. Historical project size is not a current export.
+4. **AED**: open CC BY-SA lexicon, needs an edition pin and stage filtering.
+5. **AES**: open CC BY-SA sentence data, needs an edition pin, complete-sign
+   checks, stage filtering and source-level identity preservation.
+6. **ORAEC**: per-file CC BY-SA or CC0, source text lineage overlaps AED/AES,
+   and only eligible files with proven rights may be ingested.
+7. **Lesko, _A Dictionary of Late Egyptian_, 2nd ed.**: specialist scholarly
+   comparison only; no automatic transcription of the copyrighted dictionary.
+
+Priority ranks are not evidence weights or independent-vote counts. Only
+wordforms demonstrably from Late Egyptian records qualify as primary Late
+Egyptian predictions; unknown-stage and earlier/other Egyptian material must
+remain separately tagged and must not be silently promoted. This registry is
+for all future writing apps; no change is made to MdwNfr's existing pinned
+four-source lexicon or current PWA until replacement data has passed the
+independent checksum, provenance, overlap, publication and compatibility gates.
