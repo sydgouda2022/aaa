@@ -40,10 +40,18 @@ async function run(){
     const after=await page.evaluate((title)=>({editor:!!document.querySelector('#event-editor'),
       err:document.querySelector('.event-error')?.textContent,view:document.querySelector('.day-page')?.className,
       scheduler:JSON.parse(localStorage.getItem('renpet.scheduler.v1')||'null')?.items?.filter(x=>x.title===title),
+      notice:document.querySelector('.save-confirmation')?.textContent,
+      reveal:(()=>{
+       const item=[...document.querySelectorAll('.timeline-event[data-edit]')].find(e=>e.innerText.includes(title));
+       if(!item)return null;
+       const r=item.getBoundingClientRect(),main=document.querySelector('.main-scroll')?.getBoundingClientRect();
+       return {top:r.top,bottom:r.bottom,inView:!!main&&r.top>=main.top&&r.top<main.bottom};
+      })(),
       btn:document.querySelector('.save-button')?.outerHTML}),title);
     report(lang+'-after',JSON.stringify(after));
     await snap(lang+'-postsave');
     if(after.editor||!after.scheduler?.length)throw Error('Save did not persist and dismiss in '+lang+': '+JSON.stringify(after));
+    if(!after.notice||!after.reveal?.inView)throw Error(lang+' saved but confirmation or event is invisible: '+JSON.stringify(after));
     await page.reload();
     const persists=await page.evaluate(title=>JSON.parse(localStorage.getItem('renpet.scheduler.v1')||'null')?.items?.some(i=>i.title===title),title);
     if(!persists)throw Error('Lost saved '+lang+' appointment on WebKit reload');
