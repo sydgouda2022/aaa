@@ -1,4 +1,4 @@
-name: Deploy Renpet 6.4.0 to Cloudflare
+name: Deploy Renpet 6.5.0 to Cloudflare
 on:
   push:
     branches: [main]
@@ -43,30 +43,7 @@ jobs:
           curl -fLsS --retry 3 --max-time 120 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-Earlier_Egyptian_original-v18-premium/resolve/main/train.jsonl?download=true' -o /tmp/renpet-tla-v18.jsonl
           test "$(wc -c </tmp/renpet-tla-v18.jsonl)" -gt 5000000
           python renpet/tools/build_egyptian_words.py /tmp/renpet-tla-v18.jsonl
-          python - <<'PY'
-          from pathlib import Path
-          import hashlib,json
-          root=Path('renpet/web')
-          files=['./'+p.relative_to(root).as_posix() for p in sorted(root.rglob('*')) if p.is_file() and p.name not in {'sw.js','_headers'}]
-          stamp=hashlib.sha256(b''.join((p.encode()+hashlib.sha256((root/p.removeprefix('./')).read_bytes()).digest()) for p in files)).hexdigest()[:12]
-          sw="""const CACHE='renpet-6.4.0-__STAMP__';
-          const ASSETS=__ASSETS__;
-          self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-          self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('renpet-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
-          self.addEventListener('fetch',e=>{
-            if(e.request.method!=='GET')return;
-            const u=new URL(e.request.url);
-            if(u.origin!==self.location.origin)return;
-            if(e.request.mode==='navigate'){
-              e.respondWith(fetch(e.request).then(r=>{if(r.ok)caches.open(CACHE).then(c=>c.put('./index.html',r.clone()));return r;}).catch(()=>caches.match('./index.html')));
-            }else{
-              e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(r.ok)caches.open(CACHE).then(x=>x.put(e.request,r.clone()));return r;})));
-            }
-          });
-          """.replace('__STAMP__',stamp).replace('__ASSETS__',json.dumps(files,separators=(',',':')))
-          (root/'sw.js').write_text(sw,encoding='utf-8')
-          print('Built Renpet 6.4.0 from tracked sources; offline assets:',len(files))
-          PY
+          python renpet/tools/build_service_worker.py
       - name: Validate single renderer and data
         run: |
           set -euo pipefail
@@ -82,6 +59,7 @@ jobs:
           node --check renpet/web/backup-core.mjs
           node --check renpet/web/ics-core.mjs
           node --check renpet/web/sw.js
+          python renpet/tests/test_service_worker_source.py
           node renpet/tests/ui.test.mjs
           node renpet/tests/keyboard.test.mjs
           node renpet/tests/time-editor.test.mjs
@@ -100,12 +78,12 @@ jobs:
           ! grep -q 'MutationObserver\|year-grid\|year-tile' renpet/web/app.js
           grep -q 'Single owner of #app' renpet/web/app.js
           grep -q 'openBackup' renpet/web/backup.js
-          grep -q 'ui.css?v=6.4.0' renpet/web/index.html
+          grep -q 'ui.css?v=6.5.0' renpet/web/index.html
           python - <<'PY'
           import json
           from pathlib import Path
           d=json.loads(Path('renpet/web/data.json').read_text())
-          assert d['version']=='6.4.0'
+          assert d['version']=='6.5.0'
           assert d['min_date']=='1900-01-01' and d['max_date']=='2200-12-31'
           assert len(d['years'])>300 and len(d['festivals'])>0
           print('Calendar data and version validated')
@@ -132,17 +110,17 @@ jobs:
           set -euo pipefail
           BASE="https://renpet.sydgouda.workers.dev"
           for i in 1 2 3 4 5 6 7 8; do
-            if curl -fsSL --max-time 20 "$BASE/?v=6.4.0" -o /tmp/renpet-index \
+            if curl -fsSL --max-time 20 "$BASE/?v=6.5.0" -o /tmp/renpet-index \
               && curl -fsSL --max-time 20 "$BASE/data.json" -o /tmp/renpet-data \
-              && curl -fsSL --max-time 20 "$BASE/app.js?v=6.4.0" -o /tmp/renpet-app \
-              && curl -fsSL --max-time 20 "$BASE/ui.css?v=6.4.0" -o /tmp/renpet-css \
+              && curl -fsSL --max-time 20 "$BASE/app.js?v=6.5.0" -o /tmp/renpet-app \
+              && curl -fsSL --max-time 20 "$BASE/ui.css?v=6.5.0" -o /tmp/renpet-css \
               && curl -fsSL --max-time 20 "$BASE/scheduler.js" -o /tmp/renpet-scheduler \
-              && grep -q '"version":"6.4.0"' /tmp/renpet-data \
-              && grep -q 'ui.css?v=6.4.0' /tmp/renpet-index \
+              && grep -q '"version":"6.5.0"' /tmp/renpet-data \
+              && grep -q 'ui.css?v=6.5.0' /tmp/renpet-index \
               && grep -q 'Single owner of #app' /tmp/renpet-app \
               && grep -q 'month-section' /tmp/renpet-css \
               && grep -q 'itemsForDay' /tmp/renpet-scheduler; then
-              echo "Renpet 6.4.0 single-renderer build is live"
+              echo "Renpet 6.5.0 single-renderer build is live"
               exit 0
             fi
             sleep 6
