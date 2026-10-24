@@ -225,6 +225,7 @@ def build_egyptian(tla_path,aed_path,out,aes_path=None,aes_whitelist=None,ramses
             eid=hashlib.sha256((record_id+'|'+ref).encode()).hexdigest()[:24]
             db.execute('INSERT OR IGNORE INTO attestation VALUES (?,?,?,?,?)',
                        (eid,record_id,'RAMSES-WORD-MODEL-2023',ref,sha_ramses))
+        known[(lexical_id,form)]=len(entries)
         entries.append({'ref':record_id,'signs':form,'lemma':lexical_id,
                         'source':'RAMSES-WORD-MODEL-2023','primary':True,
                         'attestations':frequency,'lexical_identity_verified':False})
