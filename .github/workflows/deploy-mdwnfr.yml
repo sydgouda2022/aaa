@@ -143,6 +143,7 @@ jobs:
             sleep 1
           done
           node qa/test_browser_keyboard.mjs
+          node qa/test_font_bounds_browser.mjs
       - name: Deploy Cloudflare Worker
         working-directory: mdwnfr
         env:
