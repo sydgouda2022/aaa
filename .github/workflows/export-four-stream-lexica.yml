@@ -1,0 +1,53 @@
+name: Export verified dictionary releases for four-way split
+on:
+  push:
+    branches: [export/four-stream-snapshot-20261025]
+    paths: [.github/workflows/export-four-stream-lexica.yml]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.12'}
+      - name: Rebuild both original authoritative lexical inventories
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lexica
+          curl -fLsS --retry 3 --max-time 150 'https://huggingface.co/datasets/thesaurus-linguae-aegyptiae/tla-late_egyptian-v19-premium/resolve/main/train.jsonl' -o /tmp/lexica/tla.jsonl
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aed-tei/462c722e0323e05641aea2eee8cdf1e27303d939/files/dictionary.xml' -o /tmp/lexica/aed.xml
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/simondschweitzer/aes/35276d2527cca1a055e31ed5f6683e777717170f/files/aes/_aes_sawlit.json' -o /tmp/lexica/aes.json
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/MaReTEgyptologists/TranslitModels/c612a91407bddf8d546beedaf46edd5190a67eef/Models/RamsesTrainingSetModel.json' -o /tmp/lexica/ramses.json
+          curl -fLsS --retry 3 --max-time 150 'https://raw.githubusercontent.com/KELLIA/dictionary/f365e2d239bd12b6897f3a761487e40d384b2b24/xml/Comprehensive_Coptic_Lexicon-v1.2-2020.xml' -o /tmp/lexica/coptic.xml
+          echo 'dfded75c7d34bc1f2f12e18af6936394dc0c5cadacd1229dc28d46751d6389df  /tmp/lexica/tla.jsonl' | sha256sum -c -
+          echo 'faaca47fc4e3c89899a764e56321ca2dc051e58ef6462acedaa6205ea666b730  /tmp/lexica/aed.xml' | sha256sum -c -
+          echo 'b3d5eb695584be976b9981392eb4e149d13f447f677cf445b5a954898bc82ef4  /tmp/lexica/aes.json' | sha256sum -c -
+          echo 'b399acfef9462c76f4df97794a97369c24f33dc6d87269f315e41a5d16103691  /tmp/lexica/ramses.json' | sha256sum -c -
+          echo 'ace84fce11b76386a6adb9888b2cb947056954fc9fe9c04aa0676b1f595fd43d  /tmp/lexica/coptic.xml' | sha256sum -c -
+          mkdir -p snapshot-lexica/cop snapshot-lexica/egy
+          python shared-language/src/compile_lexica.py egyptian --tla /tmp/lexica/tla.jsonl --aed /tmp/lexica/aed.xml --aes /tmp/lexica/aes.json --aes-whitelist shared-language/sources/aes_late_documents.json --ramses /tmp/lexica/ramses.json --out snapshot-lexica/egy
+          python shared-language/src/publish_release.py --catalog snapshot-lexica/egy/lexicon.json --out snapshot-lexica/egy
+          python shared-language/src/compile_lexica.py coptic --tei /tmp/lexica/coptic.xml --forms renpet/web/assets/dictionaries/coptic.json --popular renpet/web/assets/dictionaries/coptic-popular.json --out snapshot-lexica/cop
+          python shared-language/src/publish_compiled_coptic.py --out snapshot-lexica/cop
+          python - <<'PY'
+          import json,hashlib,sqlite3
+          from pathlib import Path
+          for language,n in (('egy',41330),('cop',20652)):
+              root=Path('snapshot-lexica')/language
+              m=json.loads((root/'manifest.json').read_text())
+              data=(root/'lexicon.json').read_bytes()
+              assert m['spelling_records']==n
+              assert m['sha256']==hashlib.sha256(data).hexdigest()
+              with sqlite3.connect(root/'lexicon.sqlite3') as db:
+                  assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
+              print(language,'verified',n,m['sha256'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-backed-coptic-hieroglyphic-master-releases
+          path: snapshot-lexica/
+          retention-days: 3
