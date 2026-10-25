@@ -422,7 +422,8 @@ async function run(){
    if((await q.locator('.year-mini-day').count())<360)throw Error('Year mini calendars missing numbered days');
    if((await q.locator('.year-mini-today').count())!==1)throw Error('Today missing or multiply highlighted');
    const todayColor=await q.locator('.year-mini-today').evaluate(el=>getComputedStyle(el).backgroundColor);
-   if(todayColor!=='rgb(246, 56, 65)')throw Error('Today is not marked red: '+todayColor);
+   const ordinaryColor=await q.locator('.year-mini-day:not(.year-mini-today)').first().evaluate(el=>getComputedStyle(el).backgroundColor);
+   if(todayColor===ordinaryColor||todayColor==='rgba(0, 0, 0, 0)')throw Error('Today has no distinct filled marker: '+todayColor);
    await screenshot(q,name+'-arabic-cairo-year-with-today');
    await q.locator('[data-primary-view=today]').click();
    await q.locator('header [data-new]').click();

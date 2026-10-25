@@ -10,6 +10,9 @@ assert f"app.js?v={version}" in html, "Wrong module version"
 assert "cache.match(event.request, {ignoreSearch: true})" in s, "Versioned JS/CSS must work offline"
 assert "await cache.match('./index.html')" in s, "Offline navigation requires the cached shell"
 assert "await cache.addAll(ASSETS)" in s, "Offline boot graph needs an atomic install"
+for asset in ["calendar-presentation.mjs", "season-theme.css", "assets/seasons/akhet.webp", "assets/seasons/peret.webp", "assets/seasons/shemu.webp"]:
+    assert '"./' + asset + '"' in s, "Seasonal asset must be installed atomically: " + asset
+assert f"season-theme.css?v={version}-" in html, "Seasonal CSS must use its current content hash"
 assert "url.pathname.endsWith('/festival-sources.json')" in s, "Registry must bypass old cache when online"
 assert "url.pathname.includes('/festival-packs/')" in s, "Festival pack updates must bypass old cache"
 assert "fetch(event.request, {cache: 'no-store'})" in s, "Current festival source must be fetched first"
@@ -37,3 +40,4 @@ headers = (root / '_headers').read_text(encoding='utf-8')
 assert "script-src 'self' 'sha256-" + digest + "';" in headers, "CSP would block startup watchdog"
 assert "script-src 'self' 'unsafe-inline'" not in headers, "Do not weaken script CSP"
 print("Renpet offline query handling, boot recovery and safe update rules verified")
+

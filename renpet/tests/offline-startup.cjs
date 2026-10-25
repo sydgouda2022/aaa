@@ -56,9 +56,12 @@ async function scenario(engine,name) {
      const direct=await p.evaluate(async(moduleUrl)=>{
       const uri=new URL(moduleUrl,location.href).href;
       const found=await caches.match(uri,{ignoreSearch:true});
-      return {cached:!!found,content:found?(await found.text()).slice(0,60):''};
+      const artwork=await Promise.all(['akhet','peret','shemu'].map(async season=>
+       !!(await caches.match(new URL('./assets/seasons/'+season+'.webp',location.href).href))));
+      return {cached:!!found,content:found?(await found.text()).slice(0,60):'',artwork};
      },moduleUrl);
      if(!direct.cached||!direct.content.includes('import '))throw Error('WebKit offline CacheStorage missing app JS: '+JSON.stringify(direct));
+     if(!direct.artwork.every(Boolean))throw Error('WebKit offline seasonal artwork missing');
      if(await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'))!=='test-value')throw Error('WebKit offline cache test lost data');
      results.push({engine:name,width,offlineCache:true,moduleStored:true,dataPreserved:true,offlineNavigation:'not supported by Playwright Web Inspector'});
      continue;
@@ -93,15 +96,20 @@ async function scenario(engine,name) {
      const fullUrl=new URL('./app.js',location.href).href;
      const cached=await caches.match(fullUrl);
      const matchWithVersion=await caches.match(new URL(moduleUrl,location.href).href,{ignoreSearch:true});
+     const artwork=await Promise.all(['akhet','peret','shemu'].map(async season=>{
+      const response=await fetch('./assets/seasons/'+season+'.webp');
+      return response.ok&&(await response.arrayBuffer()).byteLength>20000;
+     }));
      try{
       const response=await fetch(moduleUrl);
       return {ok:response.ok,type:response.headers.get('content-type'),text:(await response.text()).slice(0,65),
-       cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys};
+       cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys,artwork};
      }catch(error){
       return {ok:false,error:String(error),cacheHit:!!cached,queryCacheHit:!!matchWithVersion,cacheKeys};
      }
     },moduleUrl);
     if(!asset.ok||!asset.text?.includes('import '))throw Error('Offline query-string module failed: '+JSON.stringify(asset));
+    if(!asset.artwork.every(Boolean))throw Error('Offline seasonal artwork failed: '+JSON.stringify(asset));
     await p.reload({waitUntil:'domcontentloaded'});
     await p.locator('.month-section').waitFor({timeout:24000});
     const preserved=await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'));

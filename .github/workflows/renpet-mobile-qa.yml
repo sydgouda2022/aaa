@@ -49,6 +49,10 @@ jobs:
         env:
           NODE_PATH: /tmp/renpet-pw/node_modules
         run: node renpet/tests/calendar-integrity.cjs
+      - name: Verify seasonal artwork on iPhone and both iPad orientations
+        env:
+          NODE_PATH: /tmp/renpet-pw/node_modules
+        run: node renpet/tests/season-theme.cjs
       - name: Install WebKit and system packages for Safari-compatible save test
         run: /tmp/renpet-pw/node_modules/.bin/playwright install --with-deps webkit
       - name: Verify iOS WebKit appointment save for all scripts
