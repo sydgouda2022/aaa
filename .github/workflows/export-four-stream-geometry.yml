@@ -1,0 +1,32 @@
+name: Export verified MdwNfr typography fixtures
+on:
+  push:
+    branches: [export/four-stream-snapshot-20261025]
+    paths: [.github/workflows/export-four-stream-geometry.yml]
+permissions:
+  contents: read
+jobs:
+  geometry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.12'}
+      - name: Generate font-correct verified geometry for detached local QA
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'fonttools[woff]' brotli pillow
+          mkdir -p geometry
+          curl -fLsS --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o geometry/NotoSansEgyptianHieroglyphs-Regular.ttf
+          echo 'b792accc6207ca9caa59fc67f53926b6985a99d255dd432d7c68b68a6dfd62f8  geometry/NotoSansEgyptianHieroglyphs-Regular.ttf' | sha256sum -c -
+          python mdwnfr/tools/generate_glyph_ink.py geometry/NotoSansEgyptianHieroglyphs-Regular.ttf geometry/glyph_geometry.json
+          python - <<'PY'
+          from fontTools.ttLib import TTFont
+          f=TTFont('geometry/NotoSansEgyptianHieroglyphs-Regular.ttf');f.flavor='woff2';f.save('geometry/hieroglyphs.woff2')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mdwnfr-font-and-glyph-geometry
+          path: geometry/
+          retention-days: 3
