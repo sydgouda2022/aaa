@@ -12,7 +12,7 @@ from collections import deque
 from functools import lru_cache
 from math import ceil
 from .document import SURFACES, assert_document, DocumentError, artwork_catalog, validated_margins
-from .quadrat import compose, expand_internal, expand_to_ink_bottom, _shape_ratio
+from .quadrat import compose, expand_internal, expand_after_word, expand_to_ink_bottom, _shape_ratio
 from .silhouette import free_sectors, solid_object_mask, cartouche_object_mask, silhouettes_collide
 from .tables import typeset_table, paginate_table, TableError
 from .cartouches import typeset_cartouche, CartoucheError
@@ -144,6 +144,7 @@ def _seed_from_column(col: dict) -> dict:
             'span':col.get('span', 1), 'kind':col.get('kind', 'words'),
             **({'ink_bottom_aligned':True} if col.get('ink_bottom_aligned') else {}),
             **({'terminal_gap_removed':True} if col.get('terminal_gap_removed') else {}),
+            **({'word_boundary_justify':True} if col.get('word_boundary_justify') else {}),
             **({'table_fragment_index':col['table_fragment_index']} if 'table_fragment_index' in col else {}),
             **({'break_before':True} if col.get('break_before') else {}),
             **({'slot_offset':col['slot_offset'],'slot_width':col['slot_width']}
@@ -213,6 +214,7 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
                                'kind':seed.get('kind','words'), 'span':span,
                                **({'ink_bottom_aligned':True} if seed.get('ink_bottom_aligned') else {}),
                                **({'terminal_gap_removed':True} if seed.get('terminal_gap_removed') else {}),
+                               **({'word_boundary_justify':True} if seed.get('word_boundary_justify') else {}),
                                **({'table_fragment_index':seed['table_fragment_index']} if 'table_fragment_index' in seed else {}),
                                'x':round(x,5), 'width':col_width,'index':ci,
                                **({'slot_offset':seed['slot_offset'],'slot_width':used_slots}
@@ -399,51 +401,41 @@ def _layout(doc: dict, glyph_metrics: dict | None,
     def finish_column(justified: bool) -> dict:
         nonlocal pending, used
         if not pending:raise DocumentError('Cannot finish an empty text column')
-        # Every word owns the gap AFTER its last sign. Once a column ends,
-        # that last gap is unnecessary. It is never a second bottom margin.
+        # Only a real overflow triggers justification: the incoming word did
+        # not fit. A final/incomplete column is NEVER vertically stretched.
         last_q=pending[-1][1]
         last_gap=last_q.flexible_gaps[-1]
-        eligible=sum(len(q.signs) for _,q in pending)-len(last_q.rows[-1])
-        expanded=[0.0]*len(pending)
-        first_y=page_top
-        if justified and eligible>0:
-            # Complete (including final) text columns: share all unused
-            # height AND the terminal half-height gap among earlier signs.
-            leftover=max(0.0,usable_height-used)
-            share=(leftover+last_gap)/eligible
-            expanded=[share*len(q.signs) for _,q in pending]
-            expanded[-1]=share*(len(last_q.signs)-len(last_q.rows[-1]))-last_gap
-        elif justified:
-            # A column with only one composed row has NO interior whitespace.
-            # Bottom-align its ink rather than stretching its shape.
-            expanded[-1]=-last_gap
-            first_y=page_bottom-(used-last_gap)
-        else:
-            # Interruption by artwork/table: drop the terminal gap without
-            # intruding into the reserved artwork sector or moving earlier ink.
-            expanded[-1]=-last_gap
-        y=first_y
+        # Preserve the position and internal geometry of every word.
+        # The terminal half-height gap is removed when the column ends.
+        adjustable=bool(justified and len(pending)>1)
+        extra=max(0.0,usable_height-used) if adjustable else 0.0
+        share=(extra+last_gap)/(len(pending)-1) if adjustable else 0.0
+        expanded=([share]*(len(pending)-1)+[-last_gap]
+                  if adjustable else [0.0]*(len(pending)-1)+[-last_gap])
+        y=page_top
         placements=[]
-        for index,(obj,q) in enumerate(pending):
+        for index,(obj,quadrat) in enumerate(pending):
+            terminal=index==len(pending)-1
             if compact:
                 placements.append((obj['id'],round(y,5),
-                                   round(q.height+expanded[index],5),expanded[index]))
+                                   round(quadrat.height+expanded[index],5),
+                                   expanded[index]))
             else:
-                adjusted=(expand_to_ink_bottom(q,expanded[index])
-                          if index==len(pending)-1
-                          else expand_internal(q,expanded[index]))
+                adjusted=(expand_to_ink_bottom(quadrat,expanded[index])
+                          if terminal else
+                          expand_after_word(quadrat,expanded[index]))
                 placements.append({'id':obj['id'],'type':'word','signs':obj['signs'],
                                    'color':obj.get('color','#192433'),
                                    'bold':obj.get('bold',False),
-                                   'y':round(y,5),
-                                   'height':round(adjusted.height,5),
+                                   'y':round(y,5),'height':round(adjusted.height,5),
                                    'quadrat':adjusted.payload()})
-            y+=q.height+expanded[index]
+            y+=quadrat.height+expanded[index]
         seed={'placements':placements,
               'text_top':(placements[0][1] if compact else placements[0]['y']),
               'text_bottom':round(y,5),'span':1,'kind':'words',
               'terminal_gap_removed':True,
-              **({'ink_bottom_aligned':True} if justified else {})}
+              **({'ink_bottom_aligned':True,'word_boundary_justify':True}
+                 if adjustable else {})}
         pending=[]
         used=0.0
         stats['computed_columns']+=1
@@ -1129,9 +1121,8 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         if from_carry:carry.popleft()
         else:i += 1
     if pending:
-        # Even a short final text column respects the page's bottom ink line.
-        # Artwork-interrupted columns use finish_column(False) separately.
-        columns.append(finish_column(True))
+        # No next word exists: natural word spacing, no forced page fill.
+        columns.append(finish_column(False))
 
     pages = _pack_pages(doc, columns, width, page_width, page_height, page_capacity, compact, nested_masks)
     result = {'document_id': doc['id'], 'revision': doc['revision'],
@@ -1239,6 +1230,8 @@ def expand_compact_page(page: dict, document_by_id: dict[str, dict],
             last_ink=(column.get('terminal_gap_removed')
                       and entry_index==len(column['placements'])-1)
             quadrat=(expand_to_ink_bottom(source,extra) if last_ink
+                     else expand_after_word(source,extra)
+                     if column.get('word_boundary_justify')
                      else expand_internal(source,extra))
             placements.append({'id': ident, 'type': 'word', 'signs': signs,
                                'color': obj.get('color', '#192433'),

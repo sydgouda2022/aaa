@@ -3,7 +3,7 @@ import json,math,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'core'))
-from mdwnfr.quadrat import compose,expand_internal,expand_to_ink_bottom,glyph_geometry,glyph_scanlines,glyph_optical_factors,_silhouette_advance
+from mdwnfr.quadrat import compose,expand_internal,expand_after_word,expand_to_ink_bottom,glyph_geometry,glyph_scanlines,glyph_optical_factors,_silhouette_advance
 from mdwnfr.layout import fixed_page_column_grid, layout_document, column_width_mm
 from mdwnfr.typography import DIVIDER_TO_STEM_RATIO, glyph_reference_stroke_mm, divider_stroke_mm
 
@@ -164,15 +164,10 @@ class VisibleInkComposition(unittest.TestCase):
         b=second['quadrat']['signs'][0]
         bottom=first['y']+a['y']+a['height']
         top=second['y']+b['y']
-        # A short final column now allocates spare height to the one
-        # interior gap, while its final glyph touches the bottom frame.
-        # Previously this assertion assumed non-justified short columns.
-        from mdwnfr.document import SURFACES,validated_margins
-        margins=validated_margins(doc)
-        frame_height=SURFACES[doc['surface']][1]-margins['top']-margins['bottom']
-        expected_gap=frame_height-a['height']-b['height']
-        self.assertAlmostEqual(top-bottom,expected_gap,places=4)
-        self.assertTrue(placements[-1]['quadrat']['flexible_gaps'][-1]==0)
+        # The last column is incomplete, so the natural preceding-row
+        # half-height gap remains and only the terminal whitespace disappears.
+        self.assertAlmostEqual(top-bottom,a['height']/2,places=4)
+        self.assertAlmostEqual(placements[-1]['quadrat']['flexible_gaps'][-1],0)
 
     def test_asymmetric_neighbors_have_one_preceding_half_height_gap(self):
         for sequence in ('𓅓𓈖', '𓈖𓅓', '𓅓𓅓', '𓈖𓈖'):
@@ -305,40 +300,78 @@ class VisibleInkComposition(unittest.TestCase):
                     self.assertAlmostEqual(a_sign['y'],b_sign['y'],places=7)
                     self.assertAlmostEqual(a_sign['height'],b_sign['height'],places=7)
 
-    def test_short_final_column_fills_vertical_frame_without_distortion(self):
+    def test_final_column_keeps_words_natural_and_not_page_justified(self):
         from mdwnfr.document import new_document,transaction,validated_margins,SURFACES
         from mdwnfr.layout import incremental_layout_document,expand_compact_layout
         for sequence in [['𓅓'],['𓅓','𓈖'],['𓇋','𓅓','𓏏']]:
-            doc=new_document('Short final column')
-            for i,sign in enumerate(sequence):
-                doc=transaction(doc,{'op':'insert_word','index':i,'signs':[sign]})
-            result=layout_document(doc)
-            words=[c for p in result['pages'] for c in p['columns']
-                   if c['kind']=='words' and c['placements']]
-            self.assertEqual(len(words),1)
-            col=words[0]
-            self.assertTrue(col.get('ink_bottom_aligned'))
+            doc=new_document('Natural unfinished column')
+            for index,sign in enumerate(sequence):
+                doc=transaction(doc,{'op':'insert_word','index':index,
+                                     'signs':[sign]})
+            layout=layout_document(doc)
+            columns=[c for page in layout['pages'] for c in page['columns']
+                     if c['kind']=='words' and c['placements']]
+            self.assertEqual(len(columns),1)
+            col=columns[0]
+            self.assertFalse(col.get('word_boundary_justify',False))
+            self.assertFalse(col.get('ink_bottom_aligned',False))
             self.assertTrue(col.get('terminal_gap_removed'))
-            margins=validated_margins(doc)
-            first=col['placements'][0]
-            final=col['placements'][-1]
-            bottom=SURFACES[doc['surface']][1]-margins['bottom']
-            ink_bottom=final['y']+max(g['y']+g['height']
-                                     for g in final['quadrat']['signs'])
-            self.assertAlmostEqual(ink_bottom,bottom,places=4)
-            self.assertAlmostEqual(final['quadrat']['flexible_gaps'][-1],0,places=6)
-            if len(sequence)>1:
-                self.assertAlmostEqual(first['y'],margins['top'],places=4)
-            else:
-                self.assertGreater(first['y'],margins['top'])
+            self.assertAlmostEqual(col['placements'][0]['y'],
+                                   validated_margins(doc)['top'],places=5)
+            last=col['placements'][-1]
+            lower=SURFACES[doc['surface']][1]-validated_margins(doc)['bottom']
+            self.assertLess(last['y']+last['height'],lower)
+            self.assertAlmostEqual(last['quadrat']['flexible_gaps'][-1],0)
+            for item in col['placements']:
+                natural=compose(item['signs'],layout['column_width_mm'])
+                for g,h in zip(item['quadrat']['signs'],natural.signs):
+                    near(self,g['y'],h.y)
+                    near(self,g['height'],h.height)
             compact,_=incremental_layout_document(doc,compact=True)
-            restored=expand_compact_layout(compact,{o['id']:o for o in doc['items']})
-            materialized=restored['pages'][0]['columns'][0]['placements']
-            for full,small in zip(col['placements'],materialized):
-                self.assertAlmostEqual(full['y'],small['y'],places=5)
-                for x,y in zip(full['quadrat']['signs'],small['quadrat']['signs']):
-                    self.assertAlmostEqual(x['y'],y['y'],places=6)
-                    self.assertAlmostEqual(x['height'],y['height'],places=6)
+            detailed=expand_compact_layout(
+                compact,{item['id']:item for item in doc['items']})
+            recovered=detailed['pages'][0]['columns'][0]['placements']
+            for full,small in zip(col['placements'],recovered):
+                self.assertAlmostEqual(full['height'],small['height'],places=5)
+                for a,b in zip(full['quadrat']['signs'],small['quadrat']['signs']):
+                    near(self,a['y'],b['y'])
+
+    def test_adjustment_changes_only_spaces_between_complete_words(self):
+        from mdwnfr.document import new_document,transaction
+        from mdwnfr.layout import incremental_layout_document,expand_compact_layout
+        doc=new_document('Only overflow justifies')
+        for i in range(37):
+            signs=['𓇋','𓇋','𓅓'] if i%3==0 else ['𓅓']
+            doc=transaction(doc,{'op':'insert_word','index':i,'signs':signs})
+        full=layout_document(doc)
+        justified=[col for page in full['pages'] for col in page['columns']
+                   if col.get('word_boundary_justify')]
+        self.assertTrue(justified)
+        for col in justified:
+            self.assertGreater(len(col['placements']),1)
+            for item in col['placements']:
+                natural=compose(item['signs'],full['column_width_mm'])
+                for sign,origin in zip(item['quadrat']['signs'],natural.signs):
+                    near(self,sign['x'],origin.x)
+                    near(self,sign['y'],origin.y)
+                    near(self,sign['height'],origin.height)
+            spacers=[p['height']-compose(p['signs'],full['column_width_mm']).height
+                     for p in col['placements'][:-1]]
+            self.assertTrue(all(v>0 for v in spacers))
+            self.assertLess(max(spacers)-min(spacers),0.00002)
+        compact,_=incremental_layout_document(doc,compact=True)
+        expanded=expand_compact_layout(compact,{i['id']:i for i in doc['items']})
+        full_cols=[c for page in full['pages'] for c in page['columns']
+                   if c.get('word_boundary_justify')]
+        copy_cols=[c for page in expanded['pages'] for c in page['columns']
+                   if c.get('word_boundary_justify')]
+        self.assertEqual(len(full_cols),len(copy_cols))
+        for old,new in zip(full_cols,copy_cols):
+            for first,second in zip(old['placements'],new['placements']):
+                self.assertAlmostEqual(first['y'],second['y'],places=5)
+                for a,b in zip(first['quadrat']['signs'],
+                               second['quadrat']['signs']):
+                    near(self,a['y'],b['y'])
 
     def test_final_edge_redistribution_does_not_stretch_ink(self):
         q=compose(list('𓅓𓇋𓈖'),C)
