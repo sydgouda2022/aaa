@@ -3,7 +3,8 @@
 The document fixes ONE column width. Glyph proportions and bearings come from
 the actual outlines of the same verified font served to the browser. The
 horizontal gaps around ink silhouettes equal half their visible widths.
-Vertical gaps equal half each neighboring row's tallest silhouette height.
+Each row contributes exactly ONE following gap of half its tallest visible
+sign's height. No extra gap before the first row or at word boundaries.
 The full row's height is determined by its tallest sign. No distortion.
 """
 from __future__ import annotations
@@ -160,11 +161,10 @@ def compose(signs:list[str],column_width:float,
     rows=choose(0)[1]
     heights=[max(dimensions(ratios[i],width/2 if len(row)==1 else
                             2*width/7)[1] for i in row) for row in rows]
-    gaps=[heights[0]/2]
-    gaps.extend((left+right)/2 for left,right in zip(heights,heights[1:]))
-    gaps.append(heights[-1]/2)
+    # One half-height space AFTER each row; never double-count it.
+    gaps=[height/2 for height in heights]
     placed=[None]*len(signs)
-    y=gaps[0]
+    y=0.0
     for row_number,row in enumerate(rows):
         row_height=heights[row_number]
         limit=width/2 if len(row)==1 else 2*width/7
@@ -189,12 +189,11 @@ def compose(signs:list[str],column_width:float,
             em=h/(top-bottom)
             placed[index]=SignBox(signs[index],x,ink_y,w,h,em,
                                   x-left*em,ink_y+top*em)
-        if row_number+1<len(rows):
-            y+=row_height+gaps[row_number+1]
+        # Include the final row's trailing space so the same gap applies
+        # across word boundaries without an additional layout margin.
+        y+=row_height+gaps[row_number]
 
-    # Half-height outer margins plus mean adjacent-row heights produce
-    # precisely twice the sum of the row's ink heights.
-    return Quadrat(width,2*sum(heights),tuple(placed),tuple(rows),tuple(gaps))
+    return Quadrat(width,y,tuple(placed),tuple(rows),tuple(gaps))
 
 
 def expand_internal(quadrat:Quadrat,additional_height:float)->Quadrat:
@@ -206,7 +205,8 @@ def expand_internal(quadrat:Quadrat,additional_height:float)->Quadrat:
     additions=[additional_height*g/total for g in gaps]
     revised=[None]*len(quadrat.signs)
     for row_number,indices in enumerate(quadrat.rows):
-        delta=sum(additions[:row_number+1])
+        # Only additional spacing from PRECEDING rows moves this row.
+        delta=sum(additions[:row_number])
         for index in indices:
             sign=quadrat.signs[index]
             revised[index]=SignBox(sign.sign,sign.x,sign.y+delta,

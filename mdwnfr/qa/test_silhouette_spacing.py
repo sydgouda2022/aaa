@@ -27,8 +27,10 @@ class VisibleInkComposition(unittest.TestCase):
         near(self,s.width,C/2)
         near(self,s.x,s.width/2)
         near(self,C-s.x-s.width,s.width/2)
-        near(self,s.y,s.height/2)
+        near(self,s.y,0.0)
         near(self,q.height-s.y-s.height,s.height/2)
+        near(self,q.height,1.5*s.height)
+        self.assertEqual(len(q.flexible_gaps),1)
 
     def test_real_silhouette_profiles_reduce_unused_gap(self):
         # Complementary half-width ink contours may have overlapping
@@ -55,8 +57,9 @@ class VisibleInkComposition(unittest.TestCase):
         a,b=q.signs
         near(self,a.height,b.height)
         near(self,b.x-a.x-a.width,(a.width+b.width)/4)
-        near(self,a.y,a.height/2)
+        near(self,a.y,0.0)
         near(self,q.height-(a.y+a.height),a.height/2)
+        near(self,q.height,1.5*a.height)
         for g in (a,b):
             box=glyph_geometry()[g.sign]
             near(self,g.width/g.height,(box[2]-box[0])/(box[3]-box[1]))
@@ -66,16 +69,17 @@ class VisibleInkComposition(unittest.TestCase):
         self.assertEqual(q.rows,((0,1),))
         a,b=q.signs
         taller=max(a.height,b.height)
-        near(self,q.height,2*taller)
+        near(self,q.height,1.5*taller)
         near(self,a.y+a.height/2,b.y+b.height/2)
         near(self,q.flexible_gaps[0],taller/2)
-        near(self,q.flexible_gaps[-1],taller/2)
+        self.assertEqual(len(q.flexible_gaps),1)
 
     def test_owl_does_not_share_row_with_narrow_reed(self):
         q=compose(list('𓇋𓅓'),C)
         self.assertEqual(q.rows,((0,),(1,)))
         a,b=q.signs
-        near(self,b.y-(a.y+a.height),(a.height+b.height)/2)
+        near(self,b.y-(a.y+a.height),a.height/2)
+        near(self,a.y,0.0)
 
     def test_flat_signs_preserve_silhouette_ratio(self):
         for sign in '𓈖𓏏':
@@ -84,13 +88,13 @@ class VisibleInkComposition(unittest.TestCase):
             box=glyph_geometry()[sign]
             near(self,g.width/g.height,(box[2]-box[0])/(box[3]-box[1]))
             near(self,g.width,C/2)
-            near(self,q.height,2*g.height)
+            near(self,q.height,1.5*g.height)
 
     def test_ultranarrow_stroke_has_bounded_height(self):
         q=compose(list('𓏺'),C)
         self.assertEqual(q.rows,((0,),))
         self.assertLessEqual(q.signs[0].height,C+1e-8)
-        near(self,q.height,2*q.signs[0].height)
+        near(self,q.height,1.5*q.signs[0].height)
         self.assertGreaterEqual(q.signs[0].x,0)
         self.assertLessEqual(q.signs[0].x+q.signs[0].width,C+1e-8)
 
@@ -119,7 +123,33 @@ class VisibleInkComposition(unittest.TestCase):
         bottom=first['y']+a['y']+a['height']
         top=second['y']+b['y']
         # Document placements are rounded to 5 decimal places in millimetres.
-        self.assertAlmostEqual(top-bottom,(a['height']+b['height'])/2,places=4)
+        self.assertAlmostEqual(top-bottom,a['height']/2,places=4)
+
+    def test_asymmetric_neighbors_have_one_preceding_half_height_gap(self):
+        for sequence in ('𓅓𓈖', '𓈖𓅓', '𓅓𓅓', '𓈖𓈖'):
+            q=compose(list(sequence),C)
+            self.assertEqual(q.rows,((0,),(1,)))
+            first,next_sign=q.signs
+            near(self,first.y,0.0)
+            near(self,next_sign.y-first.y-first.height,first.height/2)
+            near(self,q.height-next_sign.y-next_sign.height,next_sign.height/2)
+            near(self,q.height,1.5*(first.height+next_sign.height))
+            self.assertEqual(len(q.flexible_gaps),2)
+
+    def test_several_rows_have_only_one_trailing_half_height_gap(self):
+        for sequence in ('𓅓𓏏𓈖𓇋', '𓇋𓇋𓅓𓏏', '𓏏𓅓𓅓'):
+            q=compose(list(sequence),C)
+            self.assertEqual(len(q.rows),len(q.flexible_gaps))
+            heights=[max(q.signs[i].height for i in row) for row in q.rows]
+            near(self,q.height,1.5*sum(heights))
+            for index,row in enumerate(q.rows):
+                top=min(q.signs[i].y for i in row)
+                if index==0:near(self,top,0.0)
+                else:
+                    preceding=q.rows[index-1]
+                    bottom=max(q.signs[i].y+q.signs[i].height for i in preceding)
+                    near(self,top-bottom,heights[index-1]/2)
+                near(self,q.flexible_gaps[index],heights[index]/2)
 
     def test_justification_changes_only_whitespace(self):
         q=compose(list('𓅓𓇋𓏏'),C)
