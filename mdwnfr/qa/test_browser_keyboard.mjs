@@ -17,6 +17,39 @@ try{
     {timeout:180000});
   await page.locator('#create-document').click();
   await page.locator('#editor-screen').waitFor({state:'visible',timeout:90000});
+  // Google-Docs-like editor has exactly three panels. The former Edit and
+  // Insert controls live in Format as accessible icon-only actions.
+  const panelAudit=await page.evaluate(()=>{
+    const ids=['pages-panel','format-panel','keyboard-panel'];
+    const old=['edit-panel','insert-panel','edit-toggle','insert-toggle'];
+    const actions=['select-all','copy-selection','cut-selection','paste-selection',
+                   'delete','undo','redo','insert-clipart','insert-image',
+                   'insert-table','insert-cartouche'];
+    const format=document.getElementById('format-panel');
+    return {three:ids.every(x=>document.getElementById(x)),
+      obsolete:old.some(x=>document.getElementById(x)),
+      actions:actions.map(x=>{
+       const el=document.getElementById(x);
+       return {id:x,inside:Boolean(format?.contains(el)),icon:Boolean(el?.querySelector('svg')),
+         label:el?.getAttribute('aria-label'),text:el?.textContent?.trim()};
+      })};
+  });
+  assert.ok(panelAudit.three,'The editor must provide all three panels');
+  assert.equal(panelAudit.obsolete,false,'Obsolete panels must be removed');
+  for(const tool of panelAudit.actions){
+    assert.equal(tool.inside,true,tool.id+' must live inside Format');
+    assert.equal(tool.icon,true,tool.id+' must display an icon');
+    assert.equal(tool.text,'',tool.id+' must be icon-only');
+    assert.ok(tool.label,tool.id+' must retain accessible labels');
+  }
+  // e.code is tied to physical keys; e.key deliberately uses Arabic here.
+  await page.evaluate(()=>document.dispatchEvent(
+    new KeyboardEvent('keydown',{code:'Digit2',key:'٢',ctrlKey:true,shiftKey:true,bubbles:true})));
+  assert.equal(await page.locator('#format-panel').isVisible(),true,
+    'Ctrl+Shift+2 must open Format on non-English keyboard layouts');
+  await page.evaluate(()=>document.dispatchEvent(
+    new KeyboardEvent('keydown',{code:'Digit3',key:'٣',ctrlKey:true,shiftKey:true,bubbles:true})));
+  assert.equal(await page.locator('#pages-panel').isVisible(),true);
   await page.locator('#keyboard-toggle').click();
   await page.locator('#keyboard-panel').waitFor({state:'visible'});
   const reed=page.locator('#keys button').filter({hasText:'𓇋'}).first();
@@ -39,6 +72,12 @@ try{
     null,{timeout:90000});
   const ink=await page.locator('.word .glyph-ink-svg text').allTextContents();
   assert.deepEqual(ink,['𓇋','𓇋'],'Rendered document preserves glyph sequence');
+  // Physical Ctrl+B must work despite an Arabic key value.
+  await page.locator('.word').first().click();
+  await page.evaluate(()=>document.dispatchEvent(
+    new KeyboardEvent('keydown',{code:'KeyB',key:'لا',ctrlKey:true,bubbles:true})));
+  await page.waitForFunction(()=>document.querySelector('#bold')?.getAttribute('aria-pressed')==='true',
+    null,{timeout:30000});
   await page.locator('#library').click();
   await page.locator('#library-screen').waitFor({state:'visible',timeout:45000});
   await page.locator('#doc-list .document-open').first().waitFor({state:'visible'});
