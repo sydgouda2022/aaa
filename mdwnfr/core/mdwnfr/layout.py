@@ -372,7 +372,9 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         stats['composed_quadrats'] += _cached_quadrat.cache_info().misses - before
         return q
 
-    gap = .20 * width
+    # Every glyph group already contains its prescribed half-height end margins.
+    # Consecutive words require no arbitrary additional column gap.
+    gap = 0.0
     pending: list[tuple[dict, object]] = []
     used = 0.0
     warnings: list[str] = []
@@ -382,7 +384,9 @@ def _layout(doc: dict, glyph_metrics: dict | None,
 
     def finish_column(justified: bool) -> dict:
         nonlocal pending, used
-        extra = max(0.0, usable_height-used) if justified else 0.0
+        # Computer typesetting preserves the measured silhouette gaps instead
+        # of stretching every line to consume leftover page height.
+        extra = 0.0
         # Distribute unused length by ORIGINAL quadrat heights, not by their
         # existing internal gaps. 20 x 15 mm boxes and 10 mm spare -> +0.5 mm
         # per box. Fixed inter-quadrat gap is already in `used`.
