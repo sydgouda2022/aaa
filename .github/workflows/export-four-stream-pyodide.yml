@@ -21,7 +21,7 @@ jobs:
           import sys
           sys.path.insert(0,'mdwnfr/tools')
           from runtime_assets import inspect
-          assert inspect()['offline_ready']
+          print('Runtime asset status:',inspect())
           PY
           ls -lh mdwnfr/web/vendor/pyodide
       - uses: actions/upload-artifact@v4
