@@ -5,6 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'core'))
 from mdwnfr.quadrat import compose,expand_internal,expand_to_ink_bottom,glyph_geometry,glyph_scanlines,glyph_optical_factors,_silhouette_advance
 from mdwnfr.layout import fixed_page_column_grid, layout_document, column_width_mm
+from mdwnfr.typography import DIVIDER_TO_STEM_RATIO, glyph_reference_stroke_mm, divider_stroke_mm
 
 C=20.0
 def near(test,left,right):
@@ -12,6 +13,26 @@ def near(test,left,right):
                     f'{left} != {right}')
 
 class VisibleInkComposition(unittest.TestCase):
+    def test_vertical_dividers_are_exactly_twice_the_prior_thickness(self):
+        self.assertEqual(DIVIDER_TO_STEM_RATIO,6.0)
+        for font_pt in (6,12,22,36,72):
+            target=round(6.0*glyph_reference_stroke_mm(font_pt),5)
+            near(self,divider_stroke_mm(font_pt),target)
+        # Verify the published layout uses the same authoritative metric,
+        # without moving a divider away from its original column boundary.
+        from mdwnfr.document import new_document,transaction
+        doc=new_document('Divider thickness')
+        for index in range(48):
+            doc=transaction(doc,{'op':'insert_word','index':index,
+                                 'signs':['𓅓']})
+        result=layout_document(doc)
+        dividers=[line for page in result['pages']
+                  for line in page['dividers']]
+        self.assertTrue(dividers,'Dense text should produce column dividers')
+        for line in dividers:
+            near(self,line['thickness_mm'],divider_stroke_mm(doc['font_size_pt']))
+            self.assertGreater(line['y2'],line['y1'])
+
     def test_optical_detail_is_calculated_from_ink_and_bounded(self):
         factors=glyph_optical_factors()
         self.assertTrue(all(1.0<=value<=1.18 for value in factors.values()))

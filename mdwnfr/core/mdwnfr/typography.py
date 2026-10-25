@@ -4,7 +4,8 @@ Unicode hieroglyph outlines scale with their rendered font size already. These
 rules do not resize signs, recompose quadrats or simulate arbitrary font stems.
 The reference stem is an explicit *design metric*: one CSS pixel at 22 pt,
 NOT an assertion that every sign in every font has an identical measured stem.
-Divider strokes are precisely three times this nominal reference weight.
+Divider strokes are precisely six times this nominal reference weight
+(double the earlier three-stem design thickness).
 
 A tiny optical compensation (0.9% of the actual displayed glyph em) is painted
 outside the existing font outline by the view, with the original fill painted
@@ -19,7 +20,7 @@ PT_TO_MM = 25.4 / 72.0
 REFERENCE_SIZE_PT = 22.0
 REFERENCE_STEM_MM = 25.4 / 96.0  # one CSS px at the reference point size
 REFERENCE_STEM_EM = REFERENCE_STEM_MM / (REFERENCE_SIZE_PT * PT_TO_MM)
-DIVIDER_TO_STEM_RATIO = 3.0
+DIVIDER_TO_STEM_RATIO = 6.0
 OPTICAL_CORRECTION_EM = 0.009
 
 
@@ -32,7 +33,7 @@ def glyph_reference_stroke_mm(font_size_pt: float) -> float:
 
 
 def divider_stroke_mm(font_size_pt: float) -> float:
-    """Divider is three nominal glyph stems at this document font size."""
+    """Divider is six nominal glyph stems (2x previous width)."""
     return round(DIVIDER_TO_STEM_RATIO * glyph_reference_stroke_mm(font_size_pt), 5)
 
 

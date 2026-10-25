@@ -359,7 +359,7 @@ function paintPageContent(slot,p,shell){
  }
  for(const line of p.dividers){
   const el=document.createElement('div');el.className='divider-line';
-  const thickness=line.thickness_mm||0.265;
+  const thickness=line.thickness_mm??0.53;
   el.style.left=mm(line.x-thickness/2);el.style.width=mm(thickness);
   el.style.top=mm(line.y1);el.style.height=mm(line.y2-line.y1);
   paper.append(el);
