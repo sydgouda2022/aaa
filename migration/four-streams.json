@@ -1,0 +1,100 @@
+{
+  "schema": "four-streams-migration-v1",
+  "origin": {
+    "repository": "sydgouda2022/aaa",
+    "branch": "main",
+    "baseline_commit": "448fa145a30c8d55d2665fb69507a3309783abc0"
+  },
+  "target_repositories": [
+    {
+      "name": "coptic-keyboard",
+      "kind": "library",
+      "consumers": [
+        "renpet"
+      ],
+      "source_roots": [
+        "shared-language/src",
+        "shared-language/tests",
+        "renpet/web/assets/dictionaries"
+      ],
+      "runtime_pack": "coptic-predict-v1"
+    },
+    {
+      "name": "hieroglyphic-keyboard",
+      "kind": "library",
+      "consumers": [
+        "renpet",
+        "mdwnfr"
+      ],
+      "source_roots": [
+        "shared-language/src",
+        "shared-language/sources",
+        "mdwnfr/web/keyboard_catalog.js",
+        "mdwnfr/data/lexicon.sqlite3"
+      ],
+      "runtime_pack": "mdwnfr-predict-v1"
+    },
+    {
+      "name": "renpet",
+      "kind": "application",
+      "dependencies": [
+        "coptic-keyboard",
+        "hieroglyphic-keyboard"
+      ],
+      "source_roots": [
+        "renpet"
+      ],
+      "deployment": "renpet.sydgouda.workers.dev"
+    },
+    {
+      "name": "mdwnfr",
+      "kind": "application",
+      "dependencies": [
+        "hieroglyphic-keyboard"
+      ],
+      "source_roots": [
+        "mdwnfr"
+      ],
+      "deployment": "mdwnfr.sydgouda.workers.dev"
+    }
+  ],
+  "dependency_edges": [
+    [
+      "coptic-keyboard",
+      "renpet"
+    ],
+    [
+      "hieroglyphic-keyboard",
+      "renpet"
+    ],
+    [
+      "hieroglyphic-keyboard",
+      "mdwnfr"
+    ]
+  ],
+  "current_baseline": {
+    "coptic_distinct_surfaces": 20652,
+    "hieroglyphic_distinct_surfaces": 40265,
+    "hieroglyphic_spelling_records": 41330,
+    "egy_lexicon_sha256": "48f7769c20b1560f76b0080e8ac5155b5e42c2b9fe2c1fe696f765e803dd5a39"
+  },
+  "deletion_candidates": [
+    "sydgouda2022/Object-Detection-in-an-Urban-Environment",
+    "sydgouda2022/Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking",
+    "sydgouda2022/egypt-radio-gateway",
+    "sydgouda2022/egyptian-radio-pwa",
+    "sydgouda2022/aaa"
+  ],
+  "state": "proposed-not-migrated",
+  "cutover_gates": [
+    "four_repositories_created",
+    "source_and_history_preserved",
+    "library_releases_verified",
+    "consumers_pinned_and_tested",
+    "downstream_auto_update_proven",
+    "cloudflare_redeploy_verified",
+    "old_deploys_disabled",
+    "backups_checked"
+  ],
+  "cleanup_allowed_only_after_all_gates": true
+}
