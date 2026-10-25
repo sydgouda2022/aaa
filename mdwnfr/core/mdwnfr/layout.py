@@ -12,7 +12,7 @@ from collections import deque
 from functools import lru_cache
 from math import ceil
 from .document import SURFACES, assert_document, DocumentError, artwork_catalog, validated_margins
-from .quadrat import compose, expand_internal, _shape_ratio
+from .quadrat import compose, expand_internal, expand_to_ink_bottom, _shape_ratio
 from .silhouette import free_sectors, solid_object_mask, cartouche_object_mask, silhouettes_collide
 from .tables import typeset_table, paginate_table, TableError
 from .cartouches import typeset_cartouche, CartoucheError
@@ -142,6 +142,7 @@ def _seed_from_column(col: dict) -> dict:
                            for placement in col['placements']],
             'text_top': col['text_top'], 'text_bottom': col['text_bottom'],
             'span':col.get('span', 1), 'kind':col.get('kind', 'words'),
+            **({'ink_bottom_aligned':True} if col.get('ink_bottom_aligned') else {}),
             **({'table_fragment_index':col['table_fragment_index']} if 'table_fragment_index' in col else {}),
             **({'break_before':True} if col.get('break_before') else {}),
             **({'slot_offset':col['slot_offset'],'slot_width':col['slot_width']}
@@ -209,6 +210,7 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
             positioned.append({'placements':placements,
                                'text_top':seed['text_top'], 'text_bottom':seed['text_bottom'],
                                'kind':seed.get('kind','words'), 'span':span,
+                               **({'ink_bottom_aligned':True} if seed.get('ink_bottom_aligned') else {}),
                                **({'table_fragment_index':seed['table_fragment_index']} if 'table_fragment_index' in seed else {}),
                                'x':round(x,5), 'width':col_width,'index':ci,
                                **({'slot_offset':seed['slot_offset'],'slot_width':used_slots}
@@ -399,13 +401,26 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         # 20 signs with 10 mm spare -> 0.5 mm added after each sign.
         # A paired row receives two shares in one following gap.
         extra=max(0.0,usable_height-used) if justified else 0.0
-        total_signs=sum(len(obj['signs']) for obj,_ in pending)
-        expanded=([extra*len(obj['signs'])/total_signs for obj,_ in pending]
-                  if total_signs and extra>0 else [0.0]*len(pending))
+        total_signs=sum(len(q.signs) for _,q in pending)
+        last_row_count=len(pending[-1][1].rows[-1])
+        last_gap=pending[-1][1].flexible_gaps[-1]
+        eligible=total_signs-last_row_count
+        fit_ink=bool(justified and eligible>0)
+        if fit_ink:
+            # The final trailing half-height gap is NOT a second page margin.
+            # Redistribute it along with the page remainder to INTERNAL gaps,
+            # leaving the first and last visible ink on equal physical margins.
+            share=(extra+last_gap)/eligible
+            expanded=[share*len(q.signs) for _,q in pending]
+            expanded[-1]=share*(len(pending[-1][1].signs)-last_row_count)-last_gap
+        else:
+            expanded=([extra*len(q.signs)/total_signs for _,q in pending]
+                      if total_signs and extra>0 else [0.0]*len(pending))
         newgap = gap
         y = page_top
         placements = []
         for i, (obj, q) in enumerate(pending):
+            last_ink=fit_ink and i==len(pending)-1
             if compact:
                 # ID, final Y, final height, and *unrounded* internal expansion.
                 # The signs, formatting and glyph arrangements are recovered
@@ -413,7 +428,8 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                 placements.append((obj['id'], round(y, 5),
                                    round(q.height + expanded[i], 5), expanded[i]))
             else:
-                adjusted = expand_internal(q, expanded[i])
+                adjusted = (expand_to_ink_bottom(q,expanded[i]) if last_ink
+                            else expand_internal(q,expanded[i]))
                 placements.append({'id': obj['id'], 'type': 'word', 'signs': obj['signs'],
                                    'color': obj.get('color', '#192433'),
                                    'bold': obj.get('bold', False), 'y': round(y, 5),
@@ -423,7 +439,8 @@ def _layout(doc: dict, glyph_metrics: dict | None,
             if i < len(pending)-1:
                 y += newgap
         seed = {'placements': placements, 'text_top': (placements[0][1] if compact else placements[0]['y']),
-                'text_bottom': round(y, 5), 'span':1, 'kind':'words'}
+                'text_bottom': round(y, 5), 'span':1, 'kind':'words',
+                **({'ink_bottom_aligned':True} if fit_ink else {})}
         pending = []
         used = 0.0
         stats['computed_columns'] += 1
@@ -1180,7 +1197,7 @@ def expand_compact_page(page: dict, document_by_id: dict[str, dict],
     for column in page['columns']:
         column_width = column['width'] if width is None else width
         placements = []
-        for ident, y, height, extra in column['placements']:
+        for entry_index,(ident,y,height,extra) in enumerate(column['placements']):
             obj = document_by_id[ident]
             if obj['type']=='cartouche':
                 geo=typeset_cartouche(obj, width if width is not None else column['width']/max(1,column['span']),
@@ -1213,7 +1230,11 @@ def expand_compact_page(page: dict, document_by_id: dict[str, dict],
             signs = obj['signs']
             spelling = tuple(signs)
             ratios = tuple(_shape_ratio(sign, glyph_metrics) for sign in spelling)
-            quadrat = expand_internal(_cached_quadrat(spelling, column_width, ratios), extra)
+            source=_cached_quadrat(spelling,column_width,ratios)
+            last_ink=(column.get('ink_bottom_aligned')
+                      and entry_index==len(column['placements'])-1)
+            quadrat=(expand_to_ink_bottom(source,extra) if last_ink
+                     else expand_internal(source,extra))
             placements.append({'id': ident, 'type': 'word', 'signs': signs,
                                'color': obj.get('color', '#192433'),
                                'bold': obj.get('bold', False),

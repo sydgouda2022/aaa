@@ -200,27 +200,56 @@ def compose(signs:list[str],column_width:float,
     return Quadrat(width,y,tuple(placed),tuple(rows),tuple(gaps))
 
 
-def expand_internal(quadrat:Quadrat,additional_height:float)->Quadrat:
-    """Allocate spare vertical space equally PER GLYPH, after its row.
-
-    A row with two signs receives two shares in their common trailing gap.
-    Individual glyph dimensions never change; only subsequent rows move.
-    """
-    if additional_height<=0:return quadrat
+def _adjust_row_gaps(quadrat:Quadrat,changes:list[float])->Quadrat:
+    """Move ink only by changing inter-row whitespace, never glyph size."""
     gaps=quadrat.flexible_gaps
-    total_signs=sum(len(indices) for indices in quadrat.rows)
-    if total_signs<=0 or len(gaps)!=len(quadrat.rows):return quadrat
-    share=additional_height/total_signs
-    additions=[share*len(indices) for indices in quadrat.rows]
+    if len(changes)!=len(gaps):
+        raise ValueError('One spacing correction required per composed row')
+    updated=[g+d for g,d in zip(gaps,changes)]
+    if any(not math.isfinite(g) or g < -1e-9 for g in updated):
+        raise ValueError("A row's whitespace cannot be negative")
+    corrected=tuple(max(0.0,g) for g in updated)
     revised=[None]*len(quadrat.signs)
+    shift=0.0
     for row_number,indices in enumerate(quadrat.rows):
-        # Only additional spacing from PRECEDING rows moves this row.
-        delta=sum(additions[:row_number])
         for index in indices:
             sign=quadrat.signs[index]
-            revised[index]=SignBox(sign.sign,sign.x,sign.y+delta,
-                                  sign.width,sign.height,sign.font_size,
-                                  sign.text_x,sign.text_y+delta)
-    return Quadrat(quadrat.width,quadrat.height+additional_height,
-                   tuple(revised),quadrat.rows,
-                   tuple(g+a for g,a in zip(gaps,additions)))
+            revised[index]=SignBox(sign.sign,sign.x,sign.y+shift,
+                                   sign.width,sign.height,sign.font_size,
+                                   sign.text_x,sign.text_y+shift)
+        shift+=corrected[row_number]-gaps[row_number]
+    return Quadrat(quadrat.width,
+                   quadrat.height+sum(corrected)-sum(gaps),
+                   tuple(revised),quadrat.rows,corrected)
+
+
+def expand_internal(quadrat:Quadrat,additional_height:float)->Quadrat:
+    """Share extra whitespace equally per glyph, after its row."""
+    if additional_height<=0:return quadrat
+    total=sum(len(row) for row in quadrat.rows)
+    if not total:return quadrat
+    share=additional_height/total
+    return _adjust_row_gaps(quadrat,[share*len(row) for row in quadrat.rows])
+
+
+def expand_to_ink_bottom(quadrat:Quadrat,extra:float)->Quadrat:
+    """Complete a rigid-paper column with its LAST ink touching the frame edge.
+
+    The final row's natural trailing gap is redistributed among earlier row
+    gaps. Paired signs contribute two equal shares to their common gap. This
+    is used ONLY for a completed column; an unfinished column keeps normal
+    symbol-then-space rhythm. For a single-row final word there is nothing
+    internal to expand, but its trailing gap can still be removed while
+    previous words receive the extra space.
+    """
+    if not quadrat.rows:return quadrat
+    last_gap=quadrat.flexible_gaps[-1]
+    eligible=sum(len(row) for row in quadrat.rows[:-1])
+    if not eligible:
+        if not math.isclose(extra,-last_gap,rel_tol=0,abs_tol=1e-7):
+            raise ValueError('A one-row final word can only remove its trailing gap')
+        return _adjust_row_gaps(quadrat,[0.0]*(len(quadrat.rows)-1)+[-last_gap])
+    share=(extra+last_gap)/eligible
+    if share < -1e-8:raise ValueError('Cannot shrink inner row gaps')
+    changes=[max(0.0,share)*len(row) for row in quadrat.rows[:-1]]+[-last_gap]
+    return _adjust_row_gaps(quadrat,changes)

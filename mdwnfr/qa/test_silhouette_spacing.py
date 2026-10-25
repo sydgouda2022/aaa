@@ -3,7 +3,7 @@ import json,math,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'core'))
-from mdwnfr.quadrat import compose,expand_internal,glyph_geometry,glyph_scanlines,_silhouette_advance
+from mdwnfr.quadrat import compose,expand_internal,expand_to_ink_bottom,glyph_geometry,glyph_scanlines,_silhouette_advance
 from mdwnfr.layout import fixed_page_column_grid, layout_document, column_width_mm
 
 C=20.0
@@ -211,12 +211,73 @@ class VisibleInkComposition(unittest.TestCase):
         self.assertAlmostEqual(last['y']+last['height'],bottom,places=4)
         self.assertAlmostEqual(word_positions[0]['y'],top,places=4)
         natural=compose(['𓅓'],result['column_width_mm'])
-        expected=(bottom-top-len(word_positions)*natural.height)/len(word_positions)
+        # All available gaps are interior after closing the final ink edge.
+        # N one-sign words therefore have N-1 distributable gaps; the final
+        # word's trailing half-height gap is removed, not enlarged.
+        trailing=natural.flexible_gaps[-1]
+        expected=(bottom-top-len(word_positions)*natural.height+trailing)/(len(word_positions)-1)
         self.assertGreater(expected,0.0)
-        for entry in word_positions:
+        for entry in word_positions[:-1]:
             self.assertAlmostEqual(entry['height']-natural.height,expected,places=4)
+        self.assertAlmostEqual(word_positions[-1]['height'],
+                               natural.height-trailing,places=4)
         for left,right in zip(word_positions,word_positions[1:]):
             self.assertAlmostEqual(right['y']-(left['y']+left['height']),0,places=4)
+
+    def test_completed_column_balances_first_and_last_visible_ink(self):
+        from mdwnfr.document import new_document,transaction,validated_margins,SURFACES
+        from mdwnfr.layout import incremental_layout_document,expand_compact_layout
+        doc=new_document('Page edge ink')
+        for i in range(34):
+            doc=transaction(doc,{'op':'insert_word','index':i,
+                                 'signs':['𓅓'] if i%3 else ['𓈖']})
+        full=layout_document(doc)
+        ink_cols=[col for p in full['pages'] for col in p['columns']
+                  if col['kind']=='words' and col.get('ink_bottom_aligned')]
+        self.assertTrue(ink_cols,'Expected at least one full justified column')
+        margins=validated_margins(doc)
+        bottom=SURFACES[doc['surface']][1]-margins['bottom']
+        for col in ink_cols:
+            words=col['placements']
+            first=words[0]
+            last=words[-1]
+            first_ink=first['y']+min(s['y'] for s in first['quadrat']['signs'])
+            last_ink=last['y']+max(s['y']+s['height'] for s in last['quadrat']['signs'])
+            self.assertAlmostEqual(first_ink,margins['top'],places=4)
+            self.assertAlmostEqual(last_ink,bottom,places=4)
+            self.assertAlmostEqual(last['y']+last['height'],bottom,places=4)
+            self.assertAlmostEqual(last['quadrat']['flexible_gaps'][-1],0,places=7)
+        compact,_=incremental_layout_document(doc,compact=True)
+        detailed=expand_compact_layout(compact,{o['id']:o for o in doc['items']})
+        compact_cols=[col for p in detailed['pages'] for col in p['columns']
+                      if col['kind']=='words' and col.get('ink_bottom_aligned')]
+        self.assertEqual(len(ink_cols),len(compact_cols))
+        for original,derived in zip(ink_cols,compact_cols):
+            self.assertEqual([p['id'] for p in original['placements']],
+                             [p['id'] for p in derived['placements']])
+            for a,b in zip(original['placements'],derived['placements']):
+                self.assertAlmostEqual(a['y'],b['y'],places=5)
+                for a_sign,b_sign in zip(a['quadrat']['signs'],b['quadrat']['signs']):
+                    self.assertAlmostEqual(a_sign['y'],b_sign['y'],places=7)
+                    self.assertAlmostEqual(a_sign['height'],b_sign['height'],places=7)
+
+    def test_final_edge_redistribution_does_not_stretch_ink(self):
+        q=compose(list('𓅓𓇋𓈖'),C)
+        share=3.0
+        tail=q.flexible_gaps[-1]
+        eligible=sum(len(row) for row in q.rows[:-1])
+        expected_extra=share*eligible-tail
+        result=expand_to_ink_bottom(q,expected_extra)
+        near(self,result.height,q.height+expected_extra)
+        near(self,result.flexible_gaps[-1],0.0)
+        for index,row in enumerate(q.rows[:-1]):
+            near(self,result.flexible_gaps[index]-q.flexible_gaps[index],
+                 share*len(row))
+        for original,changed in zip(q.signs,result.signs):
+            near(self,original.width,changed.width)
+            near(self,original.height,changed.height)
+            near(self,original.font_size,changed.font_size)
+            near(self,original.x,changed.x)
 
     def test_justification_changes_only_whitespace(self):
         q=compose(list('𓅓𓇋𓏏'),C)
