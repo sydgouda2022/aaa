@@ -211,10 +211,16 @@ class VisibleInkComposition(unittest.TestCase):
         self.assertAlmostEqual(last['y']+last['height'],bottom,places=4)
         self.assertAlmostEqual(word_positions[0]['y'],top,places=4)
         natural=compose(['𓅓'],result['column_width_mm'])
-        expected=(bottom-top-len(word_positions)*natural.height)/len(word_positions)
+        # All available gaps are interior after closing the final ink edge.
+        # N one-sign words therefore have N-1 distributable gaps; the final
+        # word's trailing half-height gap is removed, not enlarged.
+        trailing=natural.flexible_gaps[-1]
+        expected=(bottom-top-len(word_positions)*natural.height+trailing)/(len(word_positions)-1)
         self.assertGreater(expected,0.0)
-        for entry in word_positions:
+        for entry in word_positions[:-1]:
             self.assertAlmostEqual(entry['height']-natural.height,expected,places=4)
+        self.assertAlmostEqual(word_positions[-1]['height'],
+                               natural.height-trailing,places=4)
         for left,right in zip(word_positions,word_positions[1:]):
             self.assertAlmostEqual(right['y']-(left['y']+left['height']),0,places=4)
 
