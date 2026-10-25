@@ -128,6 +128,21 @@ jobs:
           assert not (root/'lexicon/lexicon.sqlite3').exists()
           print('Offline bundle complete:',len(assets['assets']),'verified assets')
           PY
+      - name: Browser acceptance — mobile word editor and persistence
+        working-directory: mdwnfr
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+          python -m http.server 8123 --bind 127.0.0.1 --directory dist >/tmp/mdwnfr-browser-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl -fsS 'http://127.0.0.1:8123/runtime-status.json' >/dev/null; then break; fi
+            sleep 1
+          done
+          node qa/test_browser_keyboard.mjs
       - name: Deploy Cloudflare Worker
         working-directory: mdwnfr
         env:
