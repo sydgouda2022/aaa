@@ -64,6 +64,30 @@ async function scenario(engine,name) {
      continue;
     }
     await ctx.setOffline(true);
+    // Reproduce an installed PWA retaining the full retired catalogs, even
+    // when network revalidation cannot replace them. The current app must
+    // reject the stale sources before loading their cached festival packs.
+    const currentManifest=JSON.parse(fs.readFileSync('renpet/web/festival-sources.json','utf8'));
+    await p.evaluate(async({release,manifest})=>{
+     const key=(await caches.keys()).find(k=>k.startsWith('renpet-'+release+'-'));
+     const cache=await caches.open(key);
+     const removed=[{id:'christian-coptic',category:'christian'},
+      {id:'muslim-egypt',category:'muslim'}];
+     for(const source of removed){
+      source.status='available';source.name={ar:'مصدر قديم'};
+      source.calendarRule='gregorian-annual';source.defaultEnabled=true;
+      source.data={type:'file',path:'./festival-packs/'+source.id+'.json'};
+      const pack={schema:1,sourceId:source.id,events:[{
+       id:source.id+'-old',ar:'عيد قديم',month:10,day:6,duration:1}]};
+      await cache.put(new URL(source.data.path,location.href).href,
+       new Response(JSON.stringify(pack),{headers:{'Content-Type':'application/json'}}));
+     }
+     manifest.sources.push(...removed);
+     await cache.put(new URL('./festival-sources.json',location.href).href,
+      new Response(JSON.stringify(manifest),{headers:{'Content-Type':'application/json'}}));
+     localStorage.setItem('renpet.settings.v1',JSON.stringify({language:'ar',gregorian:false,
+      festivalSources:['amun-theban','national-egypt','christian-coptic','muslim-egypt'],weeks:{}}));
+    },{release,manifest:currentManifest});
     const asset=await p.evaluate(async(moduleUrl)=>{
      const cacheKeys=await caches.keys();
      const fullUrl=new URL('./app.js',location.href).href;
@@ -82,8 +106,20 @@ async function scenario(engine,name) {
     await p.locator('.month-section').waitFor({timeout:24000});
     const preserved=await p.evaluate(()=>localStorage.getItem('renpet.startup-preserve'));
     if(preserved!=='test-value')throw Error('Offline reload lost local storage');
+    await p.locator('[data-open-panel="settings"]').click();
+    await p.locator('[data-open-panel="festivals"]').click();
+    const sourceIds=await p.locator('[data-festival-source-id]').evaluateAll(nodes=>
+     nodes.map(node=>node.dataset.festivalSourceId));
+    if(JSON.stringify(sourceIds)!==JSON.stringify(['amun-theban','national-egypt','esna-khnum','isis-philae'])){
+     throw Error('Offline startup revived retired festival options: '+JSON.stringify(sourceIds));
+    }
+    const migrated=await p.evaluate(()=>JSON.parse(localStorage.getItem('renpet.settings.v1')));
+    if(JSON.stringify(migrated.festivalSources)!==JSON.stringify(['amun-theban','national-egypt'])||migrated.gregorian!==false){
+     throw Error('Offline migration changed retained festival/Gregorian preferences: '+JSON.stringify(migrated));
+    }
+    await p.keyboard.press('Escape');
     await p.screenshot({path:path.join(dir,'offline-'+name+'-'+width+'.png'),fullPage:true});
-    results.push({engine:name,width,offline:true,queryModule:true,dataPreserved:true});
+    results.push({engine:name,width,offline:true,queryModule:true,dataPreserved:true,retiredCatalogsRejected:true});
    }catch(e){
     errors.push({engine:name,width,scenario:'offline',error:String(e.stack||e).slice(0,1200)});
     await p.screenshot({path:path.join(dir,'offline-'+name+'-'+width+'-FAILED.png'),fullPage:true}).catch(()=>{});
@@ -119,3 +155,4 @@ async function main(){
  if(errors.length||results.length!==6)process.exitCode=1;
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
+

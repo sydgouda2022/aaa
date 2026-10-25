@@ -16,6 +16,44 @@ assert.deepEqual(catalog.sources.map(s=>s.id),['amun-theban','national-egypt','e
 assert.ok(!catalog.sources.some(s=>['christian-coptic','muslim-egypt'].includes(s.id)));
 assert.deepEqual(enabledSourceIds(['national-egypt','christian-coptic','muslim-egypt'],catalog),['national-egypt'],'Legacy selections of removed packs are ignored');
 
+// An installed PWA can still return a six-source registry and its old packs
+// while offline. Retirement must be enforced by code, not only by deleting
+// current files or assuming network revalidation always succeeds.
+const retiredSources=[
+ {id:'christian-coptic',category:'christian'},
+ {id:'muslim-egypt',category:'muslim'},
+ // A retired ID stays retired even if its cached category is incorrect.
+ {id:'christian-coptic',category:'national'},
+ // Category filtering also covers a stale catalog with another source ID.
+ {id:'old-christian',category:'christian'},
+ {id:'old-muslim',category:'muslim'},
+ {id:'old-islamic',category:'islamic'}
+].map(source=>({...source,status:'available',name:{ar:'مصدر قديم'},
+ calendarRule:'gregorian-annual',defaultEnabled:true,
+ data:{type:'file',path:'./festival-packs/'+source.id+'.json'},
+ events:[{id:'retired-event',ar:'عيد قديم',month:10,day:6,duration:1}]}));
+const staleManifest={...actualManifest,sources:[...actualManifest.sources,...retiredSources]};
+const requestedPacks=[];
+const staleCatalog=await loadFestivalCatalog(data,async url=>{
+ requestedPacks.push(url);
+ if(url==='./festival-sources.json')return {ok:true,json:async()=>staleManifest};
+ const retired=retiredSources.find(source=>source.data.path===url);
+ return retired?{ok:true,json:async()=>({schema:1,sourceId:retired.id,events:retired.events})}:fetchManifest(url);
+});
+assert.deepEqual(staleCatalog.sources.map(source=>source.id),catalog.sources.map(source=>source.id),
+ 'Cached retired catalogs cannot reappear as selectable festival sources');
+for(const source of retiredSources){
+ assert.ok(!requestedPacks.includes(source.data.path),'Do not request a retired festival pack: '+source.id);
+}
+const legacyCatalog={sources:[...catalog.sources,...retiredSources]};
+const oldSelection=['national-egypt',...retiredSources.map(source=>source.id)];
+assert.deepEqual(enabledSourceIds(oldSelection,legacyCatalog),['national-egypt'],
+ 'Legacy in-memory catalogs must also reject retired source selections');
+assert.ok(!enabledSourceIds(null,legacyCatalog).some(id=>retiredSources.some(source=>source.id===id)),
+ 'Retired default-enabled sources must never become enabled');
+assert.deepEqual(festivalHitsForDay(dayNumber('2026-10-06'),data.years,legacyCatalog,oldSelection).map(event=>event.id),
+ ['armed-forces'],'A stale catalog must produce only the retained national festival');
+
 // Every festival, including embedded Amun and all three external packs,
 // must contain its own native-script title and descriptive interpretation.
 // A missing localization must not show Arabic in Coptic/hieroglyphic screens.
@@ -108,3 +146,4 @@ assert.equal(festivalHitsForDay(dec25,data.years,future,[]).length,0);
 const fallback=await loadFestivalCatalog(data,async()=>{throw Error('offline registry blocked')});
 assert.equal(fallback.sources[0].events.length,data.festivals.length,'Amun remains readable if registry request fails');
 console.log('Four-source registry, retained national Sham El Nessim and personal calendar isolation passed');
+

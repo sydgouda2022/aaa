@@ -131,7 +131,7 @@ function dateButton(c){
  if(!c)return '<span class="blank" aria-hidden="true"></span>';
  const d=c.gregorian,ev=items(d),hits=festivalsOn(d);
  // Festival dates are always mapped to the underlying absolute day. Turning
- // off the Gregorian *labels* must never remove national/Christian/Islamic
+ // off the Gregorian *labels* must never remove selected festival
  // festival markers, accessible names, or continued multi-day observances.
  const festivalNames=hits.map(f=>festivalText(f,'title'));
  const festivalSources=[...new Set(hits.map(f=>f.sourceId))].join(',');
@@ -735,3 +735,4 @@ async function init(){
  }catch(e){root.textContent='Renpet: '+e.message;console.error(e);globalThis.RenpetBoot?.fail(e.message);}
 }
 init();
+
