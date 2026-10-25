@@ -84,6 +84,22 @@ self.addEventListener('fetch', event => {
   canonical.hash = '';
   const cached = await cache.match(canonical.href) ||
     await cache.match(event.request, {ignoreSearch: true});
+  // The source registry can be removed or amended between PWA releases.
+  // Cache-first previously kept six obsolete festival choices visible even
+  // after production contained only four. Prefer the network when online,
+  // but keep the installed snapshot for genuinely offline use.
+  if (url.pathname.endsWith('/festival-sources.json') ||
+      url.pathname.includes('/festival-packs/')) {
+    try {
+      const fresh = await fetch(event.request, {cache: 'no-store'});
+      if (fresh.ok) {
+        event.waitUntil(cache.put(canonical.href, fresh.clone()).catch(() => {}));
+        return fresh;
+      }
+    } catch {}
+    return cached ||
+      new Response('Festival catalog unavailable offline', {status: 503});
+  }
   if (cached) return cached;
   try {
    const response = await fetch(event.request);
