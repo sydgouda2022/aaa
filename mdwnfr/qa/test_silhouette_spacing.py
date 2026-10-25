@@ -82,6 +82,23 @@ class VisibleInkComposition(unittest.TestCase):
             near(self,g.text_y-top*g.font_size,g.y)
             near(self,g.text_y-bottom*g.font_size,g.y+g.height)
 
+    def test_independent_words_share_exact_silhouette_row_spacing(self):
+        from mdwnfr.document import new_document,transaction
+        from mdwnfr.layout import layout_document
+        doc=new_document('Measured column spacing')
+        doc=transaction(doc,{'op':'insert_word','index':0,'signs':['𓅓']})
+        doc=transaction(doc,{'op':'insert_word','index':1,'signs':['𓈖']})
+        result=layout_document(doc)
+        placements=[item for page in result['pages'] for col in page['columns']
+                    for item in col['placements'] if item.get('type')=='word']
+        self.assertGreaterEqual(len(placements),2)
+        first,second=placements[:2]
+        a=first['quadrat']['signs'][0]
+        b=second['quadrat']['signs'][0]
+        bottom=first['y']+a['y']+a['height']
+        top=second['y']+b['y']
+        near(self,top-bottom,(a['height']+b['height'])/2)
+
     def test_justification_changes_only_whitespace(self):
         q=compose(list('𓅓𓇋𓏏'),C)
         other=expand_internal(q,11)
