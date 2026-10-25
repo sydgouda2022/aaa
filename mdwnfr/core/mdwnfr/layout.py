@@ -583,7 +583,7 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                 extra=max(0.0,positions[index+1]-positions[index]-q.height)
             if compact:
                 placements.append((ob['id'],round(positions[index],5),
-                                   round(q.height+extra,5),round(extra,5)))
+                                   round(q.height+extra,5),extra))
             else:
                 adjusted=(expand_to_ink_bottom(q,extra) if last else
                           expand_after_word(q,extra) if extra>1e-8 else q)
