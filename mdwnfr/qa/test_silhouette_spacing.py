@@ -97,7 +97,8 @@ class VisibleInkComposition(unittest.TestCase):
         b=second['quadrat']['signs'][0]
         bottom=first['y']+a['y']+a['height']
         top=second['y']+b['y']
-        near(self,top-bottom,(a['height']+b['height'])/2)
+        # Document placements are rounded to 5 decimal places in millimetres.
+        self.assertAlmostEqual(top-bottom,(a['height']+b['height'])/2,places=4)
 
     def test_justification_changes_only_whitespace(self):
         q=compose(list('𓅓𓇋𓏏'),C)
