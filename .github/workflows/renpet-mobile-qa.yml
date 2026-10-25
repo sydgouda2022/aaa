@@ -45,11 +45,11 @@ jobs:
         env:
           NODE_PATH: /tmp/renpet-pw/node_modules
         run: node renpet/tests/mobile-ux.cjs
-      - name: Verify multi-day appointments and iPad agenda contract
+      - name: Verify multi-day appointments and iPad day navigation
         env:
           NODE_PATH: /tmp/renpet-pw/node_modules
         run: node renpet/tests/calendar-integrity.cjs
-      - name: Verify seasonal artwork on iPhone and both iPad orientations
+      - name: Verify seasonal artwork and day navigation on iPhone, iPad and desktop
         env:
           NODE_PATH: /tmp/renpet-pw/node_modules
         run: node renpet/tests/season-theme.cjs

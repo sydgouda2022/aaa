@@ -9,7 +9,7 @@ const memory=new Map();
 memory.set('renpet.settings.v1',JSON.stringify({language:'ar',gregorian:true,
  festivalSources:['amun-theban','christian-coptic','muslim-egypt'],weeks:{}}));
 globalThis.localStorage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
-globalThis.document={querySelector:s=>s==='#app'?root:null,addEventListener:()=>{},documentElement:{lang:'ar',dir:'rtl'},body:{dataset:{}}};
+globalThis.document={querySelector:s=>s==='#app'?root:null,addEventListener:()=>{},documentElement:{lang:'ar',dir:'rtl',dataset:{}},body:{dataset:{}}};
 // The unit smoke loader must serve the manifest AND its read-only packs,
 // not silently return data.json for every request.
 globalThis.fetch=async url=>({ok:true,json:async()=>JSON.parse(await readFile(
@@ -43,10 +43,15 @@ assert.ok(has('class="list-page"'),'List view displays the selected festival sou
 assert.ok(has('data-new'),'Empty Schedule has new-event action');
 click('data-primary-view','today');
 const d=dayNumber('2026-10-17');
-click('data-date',d);
-assert.ok(has('timeline-hour'),'Single tap opens selected Day');
-click('data-back');
-assert.ok(has('month-agenda'),'Day back returns to Month');
+for(const layout of ['phone','tablet-stacked','tablet-split']){
+ document.documentElement.dataset.renpetLayout=layout;
+ click('data-date',d);
+ assert.ok(has('timeline-hour'),'Single tap opens selected Day on '+layout);
+ assert.equal(document.body.dataset.view,'day');
+ click('data-back');
+ assert.ok(has('month-agenda'),'Day back returns to Month on '+layout);
+ assert.ok(has('data-date="'+d+'"'),'Back retains the selected month on '+layout);
+}
 click('data-open-panel','settings');
 assert.ok(has('preferences-page')&&has('class="app-shell"'),'Settings opens as compact overlay');
 assert.ok(has('data-open-panel="calendars"')&&has('data-backup'),'Advanced features nested in Settings');
