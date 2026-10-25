@@ -143,6 +143,7 @@ def _seed_from_column(col: dict) -> dict:
             'text_top': col['text_top'], 'text_bottom': col['text_bottom'],
             'span':col.get('span', 1), 'kind':col.get('kind', 'words'),
             **({'ink_bottom_aligned':True} if col.get('ink_bottom_aligned') else {}),
+            **({'terminal_gap_removed':True} if col.get('terminal_gap_removed') else {}),
             **({'table_fragment_index':col['table_fragment_index']} if 'table_fragment_index' in col else {}),
             **({'break_before':True} if col.get('break_before') else {}),
             **({'slot_offset':col['slot_offset'],'slot_width':col['slot_width']}
@@ -211,6 +212,7 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
                                'text_top':seed['text_top'], 'text_bottom':seed['text_bottom'],
                                'kind':seed.get('kind','words'), 'span':span,
                                **({'ink_bottom_aligned':True} if seed.get('ink_bottom_aligned') else {}),
+                               **({'terminal_gap_removed':True} if seed.get('terminal_gap_removed') else {}),
                                **({'table_fragment_index':seed['table_fragment_index']} if 'table_fragment_index' in seed else {}),
                                'x':round(x,5), 'width':col_width,'index':ci,
                                **({'slot_offset':seed['slot_offset'],'slot_width':used_slots}
@@ -396,54 +398,55 @@ def _layout(doc: dict, glyph_metrics: dict | None,
 
     def finish_column(justified: bool) -> dict:
         nonlocal pending, used
-        # Only completed columns, where the NEXT word cannot fit, receive
-        # the unused height. Equal shares belong to glyphs, not word boxes.
-        # 20 signs with 10 mm spare -> 0.5 mm added after each sign.
-        # A paired row receives two shares in one following gap.
-        extra=max(0.0,usable_height-used) if justified else 0.0
-        total_signs=sum(len(q.signs) for _,q in pending)
-        last_row_count=len(pending[-1][1].rows[-1])
-        last_gap=pending[-1][1].flexible_gaps[-1]
-        eligible=total_signs-last_row_count
-        fit_ink=bool(justified and eligible>0)
-        if fit_ink:
-            # The final trailing half-height gap is NOT a second page margin.
-            # Redistribute it along with the page remainder to INTERNAL gaps,
-            # leaving the first and last visible ink on equal physical margins.
-            share=(extra+last_gap)/eligible
+        if not pending:raise DocumentError('Cannot finish an empty text column')
+        # Every word owns the gap AFTER its last sign. Once a column ends,
+        # that last gap is unnecessary. It is never a second bottom margin.
+        last_q=pending[-1][1]
+        last_gap=last_q.flexible_gaps[-1]
+        eligible=sum(len(q.signs) for _,q in pending)-len(last_q.rows[-1])
+        expanded=[0.0]*len(pending)
+        first_y=page_top
+        if justified and eligible>0:
+            # Complete (including final) text columns: share all unused
+            # height AND the terminal half-height gap among earlier signs.
+            leftover=max(0.0,usable_height-used)
+            share=(leftover+last_gap)/eligible
             expanded=[share*len(q.signs) for _,q in pending]
-            expanded[-1]=share*(len(pending[-1][1].signs)-last_row_count)-last_gap
+            expanded[-1]=share*(len(last_q.signs)-len(last_q.rows[-1]))-last_gap
+        elif justified:
+            # A column with only one composed row has NO interior whitespace.
+            # Bottom-align its ink rather than stretching its shape.
+            expanded[-1]=-last_gap
+            first_y=page_bottom-(used-last_gap)
         else:
-            expanded=([extra*len(q.signs)/total_signs for _,q in pending]
-                      if total_signs and extra>0 else [0.0]*len(pending))
-        newgap = gap
-        y = page_top
-        placements = []
-        for i, (obj, q) in enumerate(pending):
-            last_ink=fit_ink and i==len(pending)-1
+            # Interruption by artwork/table: drop the terminal gap without
+            # intruding into the reserved artwork sector or moving earlier ink.
+            expanded[-1]=-last_gap
+        y=first_y
+        placements=[]
+        for index,(obj,q) in enumerate(pending):
             if compact:
-                # ID, final Y, final height, and *unrounded* internal expansion.
-                # The signs, formatting and glyph arrangements are recovered
-                # from the authoritative document and cached quadrat on demand.
-                placements.append((obj['id'], round(y, 5),
-                                   round(q.height + expanded[i], 5), expanded[i]))
+                placements.append((obj['id'],round(y,5),
+                                   round(q.height+expanded[index],5),expanded[index]))
             else:
-                adjusted = (expand_to_ink_bottom(q,expanded[i]) if last_ink
-                            else expand_internal(q,expanded[i]))
-                placements.append({'id': obj['id'], 'type': 'word', 'signs': obj['signs'],
-                                   'color': obj.get('color', '#192433'),
-                                   'bold': obj.get('bold', False), 'y': round(y, 5),
-                                   'height': round(adjusted.height, 5),
-                                   'quadrat': adjusted.payload()})
-            y += q.height + expanded[i]
-            if i < len(pending)-1:
-                y += newgap
-        seed = {'placements': placements, 'text_top': (placements[0][1] if compact else placements[0]['y']),
-                'text_bottom': round(y, 5), 'span':1, 'kind':'words',
-                **({'ink_bottom_aligned':True} if fit_ink else {})}
-        pending = []
-        used = 0.0
-        stats['computed_columns'] += 1
+                adjusted=(expand_to_ink_bottom(q,expanded[index])
+                          if index==len(pending)-1
+                          else expand_internal(q,expanded[index]))
+                placements.append({'id':obj['id'],'type':'word','signs':obj['signs'],
+                                   'color':obj.get('color','#192433'),
+                                   'bold':obj.get('bold',False),
+                                   'y':round(y,5),
+                                   'height':round(adjusted.height,5),
+                                   'quadrat':adjusted.payload()})
+            y+=q.height+expanded[index]
+        seed={'placements':placements,
+              'text_top':(placements[0][1] if compact else placements[0]['y']),
+              'text_bottom':round(y,5),'span':1,'kind':'words',
+              'terminal_gap_removed':True,
+              **({'ink_bottom_aligned':True} if justified else {})}
+        pending=[]
+        used=0.0
+        stats['computed_columns']+=1
         return seed
 
     def wrapped_sector(items: list[tuple[dict,object]], top:float, bottom:float,
@@ -1126,7 +1129,9 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         if from_carry:carry.popleft()
         else:i += 1
     if pending:
-        columns.append(finish_column(False))
+        # Even a short final text column respects the page's bottom ink line.
+        # Artwork-interrupted columns use finish_column(False) separately.
+        columns.append(finish_column(True))
 
     pages = _pack_pages(doc, columns, width, page_width, page_height, page_capacity, compact, nested_masks)
     result = {'document_id': doc['id'], 'revision': doc['revision'],
@@ -1231,7 +1236,7 @@ def expand_compact_page(page: dict, document_by_id: dict[str, dict],
             spelling = tuple(signs)
             ratios = tuple(_shape_ratio(sign, glyph_metrics) for sign in spelling)
             source=_cached_quadrat(spelling,column_width,ratios)
-            last_ink=(column.get('ink_bottom_aligned')
+            last_ink=(column.get('terminal_gap_removed')
                       and entry_index==len(column['placements'])-1)
             quadrat=(expand_to_ink_bottom(source,extra) if last_ink
                      else expand_internal(source,extra))

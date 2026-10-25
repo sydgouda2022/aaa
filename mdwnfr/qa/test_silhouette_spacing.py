@@ -277,6 +277,41 @@ class VisibleInkComposition(unittest.TestCase):
                     self.assertAlmostEqual(a_sign['y'],b_sign['y'],places=7)
                     self.assertAlmostEqual(a_sign['height'],b_sign['height'],places=7)
 
+    def test_short_final_column_fills_vertical_frame_without_distortion(self):
+        from mdwnfr.document import new_document,transaction,validated_margins,SURFACES
+        from mdwnfr.layout import incremental_layout_document,expand_compact_layout
+        for sequence in [['𓅓'],['𓅓','𓈖'],['𓇋','𓅓','𓏏']]:
+            doc=new_document('Short final column')
+            for i,sign in enumerate(sequence):
+                doc=transaction(doc,{'op':'insert_word','index':i,'signs':[sign]})
+            result=layout_document(doc)
+            words=[c for p in result['pages'] for c in p['columns']
+                   if c['kind']=='words' and c['placements']]
+            self.assertEqual(len(words),1)
+            col=words[0]
+            self.assertTrue(col.get('ink_bottom_aligned'))
+            self.assertTrue(col.get('terminal_gap_removed'))
+            margins=validated_margins(doc)
+            first=col['placements'][0]
+            final=col['placements'][-1]
+            bottom=SURFACES[doc['surface']][1]-margins['bottom']
+            ink_bottom=final['y']+max(g['y']+g['height']
+                                     for g in final['quadrat']['signs'])
+            self.assertAlmostEqual(ink_bottom,bottom,places=4)
+            self.assertAlmostEqual(final['quadrat']['flexible_gaps'][-1],0,places=6)
+            if len(sequence)>1:
+                self.assertAlmostEqual(first['y'],margins['top'],places=4)
+            else:
+                self.assertGreater(first['y'],margins['top'])
+            compact,_=incremental_layout_document(doc,compact=True)
+            restored=expand_compact_layout(compact,{o['id']:o for o in doc['items']})
+            materialized=restored['pages'][0]['columns'][0]['placements']
+            for full,small in zip(col['placements'],materialized):
+                self.assertAlmostEqual(full['y'],small['y'],places=5)
+                for x,y in zip(full['quadrat']['signs'],small['quadrat']['signs']):
+                    self.assertAlmostEqual(x['y'],y['y'],places=6)
+                    self.assertAlmostEqual(x['height'],y['height'],places=6)
+
     def test_final_edge_redistribution_does_not_stretch_ink(self):
         q=compose(list('𓅓𓇋𓈖'),C)
         share=3.0
