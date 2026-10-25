@@ -606,10 +606,11 @@ async function run(){
    const festivalDate=await q.locator('.festival-detail-sheet .festival-when').innerText();
    if(/2026|٢٠٢٦/.test(festivalDate))throw Error('Festival detail still shows the hidden Gregorian date in '+language);
    await q.locator('[data-close-festival]').click();
+   // iPad retains its month/agenda split when a date is tapped; it does not
+   // navigate to the phone-only Day screen.
    await cell().click();
-   await q.locator('.day-festivals [data-festival-source=national-egypt]').waitFor();
-   await q.locator('[data-back]').click();
    await event().waitFor();
+   if((await cell().getAttribute('aria-pressed'))!=='true')throw Error('Selected national day not retained on iPad');
    await q.locator('header [data-open-panel=settings]').click();
    await q.locator('[name=gregorian]').check();
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
