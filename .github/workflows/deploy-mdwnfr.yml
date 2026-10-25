@@ -88,6 +88,7 @@ jobs:
           python mdwnfr/tools/generate_glyph_ink.py /tmp/mdwnfr-hieroglyphs.ttf mdwnfr/core/mdwnfr/data/glyph_geometry.json
           python mdwnfr/qa/test_keyboard.py -v
           python mdwnfr/qa/test_quadrat_flow.py -v
+          python mdwnfr/qa/test_silhouette_spacing.py -v
       - name: Vendor and verify self-hosted Pyodide 0.27.8
         working-directory: mdwnfr
         run: |
