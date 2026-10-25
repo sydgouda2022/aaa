@@ -602,6 +602,10 @@ async function run(){
    const title=await event().locator('strong').innerText();
    if(!title)throw Error('National festival title missing in '+language);
    await screenshot(q,'national-without-gregorian-'+language);
+   await event().first().click();
+   const festivalDate=await q.locator('.festival-detail-sheet .festival-when').innerText();
+   if(/2026|٢٠٢٦/.test(festivalDate))throw Error('Festival detail still shows the hidden Gregorian date in '+language);
+   await q.locator('[data-close-festival]').click();
    await cell().click();
    await q.locator('.day-festivals [data-festival-source=national-egypt]').waitFor();
    await q.locator('[data-back]').click();
