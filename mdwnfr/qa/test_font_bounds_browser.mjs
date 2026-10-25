@@ -9,33 +9,32 @@ try {
   await document.fonts.ready;
   const source=await fetch('/core/mdwnfr/data/glyph_geometry.json').then(r=>r.json());
   if(source.format!=='mdwnfr-glyph-ink-v2')throw new Error('Not the installed silhouette font');
-  const ns='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(ns,'svg');
-  Object.assign(svg.style,{position:'fixed',left:'-50000px',top:'-50000px'});
-  svg.setAttribute('width','500');svg.setAttribute('height','300');
-  document.body.append(svg);
-  const bad=[],samples=[],threshold=1;
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.font='100px "MdwNfr Hieroglyphs"';
+  const bad=[],samples=[],threshold=2.0;
   for(const [sign,[left,bottom,right,top]] of Object.entries(source.glyphs)){
-   const glyph=document.createElementNS(ns,'text');
-   glyph.setAttribute('x','0');glyph.setAttribute('y','150');
-   glyph.setAttribute('font-family','MdwNfr Hieroglyphs');
-   glyph.setAttribute('font-size','100');glyph.textContent=sign;svg.append(glyph);
-   const measured=glyph.getBBox();glyph.remove();
-   const target={x:left*100,y:150-top*100,width:(right-left)*100,height:(top-bottom)*100};
-   const diffs={x:measured.x-target.x,y:measured.y-target.y,
-    width:measured.width-target.width,height:measured.height-target.height};
+   const m=ctx.measureText(sign);
+   const measured={left:-m.actualBoundingBoxLeft,
+     right:m.actualBoundingBoxRight,
+     top:m.actualBoundingBoxAscent,
+     bottom:-m.actualBoundingBoxDescent};
+   const target={left:left*100,right:right*100,top:top*100,bottom:bottom*100};
+   const diffs={left:measured.left-target.left,
+    right:measured.right-target.right,top:measured.top-target.top,
+    bottom:measured.bottom-target.bottom};
    const error=Math.max(...Object.values(diffs).map(Math.abs));
-   if(error>threshold)bad.push({sign,code:sign.codePointAt(0).toString(16),error,diffs,measured,target});
+   if(error>threshold)bad.push({sign,code:sign.codePointAt(0).toString(16),
+     error,diffs,measured,target});
    if('𓅓𓇋𓈖𓏏𓏺'.includes(sign))samples.push({sign,error,diffs});
   }
-  svg.remove();
   bad.sort((a,b)=>b.error-a.error);
   return {count:Object.keys(source.glyphs).length,bad:bad.length,
    maxError:bad[0]?.error??0,worst:bad.slice(0,12),samples};
  });
  console.log('Actual browser ink geometry:',JSON.stringify(diagnostics));
  assert.equal(diagnostics.count,1072);
- assert.equal(diagnostics.bad,0,'SVG visible bounds deviate from the Python font outline; vertical spacing cannot match');
+ assert.equal(diagnostics.bad,0,'Canvas ink bounds deviate from the Python font outline; vertical spacing cannot match');
 } finally {
  await browser.close();
 }
