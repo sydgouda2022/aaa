@@ -94,6 +94,10 @@ try{
   assert.match(await page.locator('.word .hieroglyph-direction-layer').first().getAttribute('transform'),
     /scale\(-1 1\)/,'Restored RTL faces should mirror again');
 
+  // Close the floating Format inspector before selecting ink beneath it.
+  // This matches the normal document editing flow on a small screen.
+  await page.locator('#format-toggle').click();
+  await page.locator('#format-panel').waitFor({state:'hidden'});
   // Physical Ctrl+B must work despite an Arabic key value.
   await page.locator('.word').first().click();
   await page.evaluate(()=>document.dispatchEvent(
