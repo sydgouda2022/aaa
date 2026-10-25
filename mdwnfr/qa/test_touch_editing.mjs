@@ -18,7 +18,11 @@ for(const engineName of engines){
    const page=await context.newPage();
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    page.setDefaultTimeout(45000);
-   const count=async n=>page.waitForFunction(n=>document.getElementById('wordcount')?.textContent===n+' words',n,{timeout:90000});
+   const count=async n=>{
+    await page.waitForFunction(n=>document.getElementById('wordcount')?.textContent===n+' words',n,{timeout:90000});
+    // The Python layout worker publishes asynchronously after the transaction.
+    await page.waitForFunction(n=>document.querySelectorAll('.word').length===n,n,{timeout:90000});
+   };
    const shortcut=async(letter,{meta=false,shift=false,key='ش'}={})=>page.evaluate(({letter,meta,shift,key})=>{
     document.dispatchEvent(new KeyboardEvent('keydown',{code:'Key'+letter,key,ctrlKey:!meta,metaKey:meta,shiftKey:shift,bubbles:true,cancelable:true}));
    },{letter,meta,shift,key});
@@ -125,6 +129,7 @@ for(const engineName of engines){
     await page.locator('.document-open').first().click();await count(6);
     assert.equal(await page.locator('#font-size').inputValue(),'10');
     assert.deepEqual(errors,[]);
+    console.log('PASS:',engineName,viewport.width+'x'+viewport.height,'touch menu, clipboard, colors, delete/undo, reopen');
     results.push({engine:engineName,viewport,commands:'cut/copy/paste/select-all/delete',persistence:true,targets:'44px minimum'});
    }finally{await context.close();}
   }
