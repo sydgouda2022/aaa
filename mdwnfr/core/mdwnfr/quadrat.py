@@ -135,12 +135,16 @@ def compose(signs:list[str],column_width:float,
     ink_scans=glyph_scanlines()
     ratios=[_shape_ratio(s,glyph_metrics) for s in signs]
 
-    # A single ink silhouette occupies up to C/2 width. If two slender signs
-    # share a row, each has up to 2C/7 width. The actual silhouette can be
-    # narrower because no glyph may become taller than C. The unused width is
-    # centered column slack, not a distorted or artificially wider character.
+    # Normal single signs occupy C/2 in visible ink width. Exception:
+    # flat signs may grow uniformly until H>=C/4, but no more than 3C/4
+    # in width. The fixed column pitch is never exceeded. Tall signs
+    # keep their natural ratio, with an absolute height limit of C.
+    # Paired narrow signs retain their original individual size limit.
     def dimensions(ratio:float,limit:float)->tuple[float,float]:
-        h=min(width,limit/ratio)
+        target=limit
+        if limit==width/2:
+            target=min(3*width/4,max(width/2,ratio*width/4))
+        h=min(width,target/ratio)
         return ratio*h,h
 
     @lru_cache(maxsize=None)
@@ -197,12 +201,17 @@ def compose(signs:list[str],column_width:float,
 
 
 def expand_internal(quadrat:Quadrat,additional_height:float)->Quadrat:
-    """Distribute column justification through whitespace only; do not scale ink."""
+    """Allocate spare vertical space equally PER GLYPH, after its row.
+
+    A row with two signs receives two shares in their common trailing gap.
+    Individual glyph dimensions never change; only subsequent rows move.
+    """
     if additional_height<=0:return quadrat
     gaps=quadrat.flexible_gaps
-    total=sum(gaps)
-    if total<=0:return quadrat
-    additions=[additional_height*g/total for g in gaps]
+    total_signs=sum(len(indices) for indices in quadrat.rows)
+    if total_signs<=0 or len(gaps)!=len(quadrat.rows):return quadrat
+    share=additional_height/total_signs
+    additions=[share*len(indices) for indices in quadrat.rows]
     revised=[None]*len(quadrat.signs)
     for row_number,indices in enumerate(quadrat.rows):
         # Only additional spacing from PRECEDING rows moves this row.

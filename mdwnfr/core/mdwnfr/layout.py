@@ -296,8 +296,10 @@ def _layout(doc: dict, glyph_metrics: dict | None,
     page_capacity = None if papyrus else max(1, int((usable_width + 1e-9)//width))
     if not papyrus and usable_width < width:
         raise DocumentError('Font too large for selected paper width')
-    # All full-size columns on one sheet have exactly equal width. The unused
-    # horizontal remainder belongs to the columns, not to the far margin.
+    # For rigid paper only: share an insufficient-for-another-column
+    # remainder equally across all column slots on EVERY page.
+    # Example: 20 nominal 15 mm columns + 10 mm remainder ->
+    # exactly 20 equal 15.5 mm columns. Papyrus retains its nominal width.
     if page_capacity is not None:
         width = usable_width / page_capacity
 
@@ -384,13 +386,14 @@ def _layout(doc: dict, glyph_metrics: dict | None,
 
     def finish_column(justified: bool) -> dict:
         nonlocal pending, used
-        # Computer typesetting preserves the measured silhouette gaps instead
-        # of stretching every line to consume leftover page height.
-        extra = 0.0
-        # Distribute unused length by ORIGINAL quadrat heights, not by their
-        # existing internal gaps. 20 x 15 mm boxes and 10 mm spare -> +0.5 mm
-        # per box. Fixed inter-quadrat gap is already in `used`.
-        expanded = proportional_extra([q.height for _, q in pending], extra)
+        # Only completed columns, where the NEXT word cannot fit, receive
+        # the unused height. Equal shares belong to glyphs, not word boxes.
+        # 20 signs with 10 mm spare -> 0.5 mm added after each sign.
+        # A paired row receives two shares in one following gap.
+        extra=max(0.0,usable_height-used) if justified else 0.0
+        total_signs=sum(len(obj['signs']) for obj,_ in pending)
+        expanded=([extra*len(obj['signs'])/total_signs for obj,_ in pending]
+                  if total_signs and extra>0 else [0.0]*len(pending))
         newgap = gap
         y = page_top
         placements = []
@@ -427,8 +430,11 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         """
         natural=sum(q.height for _,q in items)+gap*(len(items)-1)
         extra=max(0.0,(bottom-top)-natural)
-        allocations=([0.0] if len(items)==1 else
-                     proportional_extra([q.height for _,q in items],extra))
+        # Wrapped sectors use the same per-sign rule as ordinary columns.
+        # A single word keeps its defined bottom alignment around artwork.
+        count=sum(len(ob['signs']) for ob,_ in items)
+        allocations=([0.0] if len(items)==1 or count==0 else
+                     [extra*len(ob['signs'])/count for ob,_ in items])
         normalgap=gap
         y=bottom-items[0][1].height if len(items)==1 else top
         placements=[]
