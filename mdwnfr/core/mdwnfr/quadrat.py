@@ -47,13 +47,15 @@ class Quadrat:
 
 
 @lru_cache(maxsize=1)
-def _catalogue()->tuple[dict,dict]:
+def _catalogue()->tuple[dict,dict,dict]:
     source=json.loads(DATA_PATH.read_text(encoding='utf-8'))
     glyphs=source.get('glyphs',{})
     scans=source.get('scanlines',{})
+    optics=source.get('optics',{})
     resolution=source.get('resolution')
     if (source.get('format')!='mdwnfr-glyph-ink-v2' or
-        len(glyphs)!=1072 or set(scans)!=set(glyphs) or resolution!=64):
+        len(glyphs)!=1072 or set(scans)!=set(glyphs) or
+        set(optics)!=set(glyphs) or resolution!=64):
         raise ValueError('Verified two-dimensional Egyptian glyph silhouettes are missing')
     for sign,bounds in glyphs.items():
         if (len(sign)!=1 or len(bounds)!=4 or
@@ -72,7 +74,11 @@ def _catalogue()->tuple[dict,dict]:
                 raise ValueError('Invalid glyph silhouette scan')
             valid_rows+=1
         if not valid_rows:raise ValueError('Empty glyph silhouette')
-    return glyphs,scans
+        factor=optics[sign]
+        if (type(factor) not in (int,float) or
+            not math.isfinite(factor) or not 1.0<=factor<=1.18):
+            raise ValueError('Invalid optical factor for glyph')
+    return glyphs,scans,optics
 
 
 def glyph_geometry()->dict:
@@ -81,6 +87,10 @@ def glyph_geometry()->dict:
 
 def glyph_scanlines()->dict:
     return _catalogue()[1]
+
+
+def glyph_optical_factors()->dict:
+    return _catalogue()[2]
 
 
 def _silhouette_advance(left:list,right:list,w_left:float,h_left:float,
@@ -133,30 +143,35 @@ def compose(signs:list[str],column_width:float,
     width=float(column_width)
     bounds=glyph_geometry()
     ink_scans=glyph_scanlines()
+    optics=glyph_optical_factors()
     ratios=[_shape_ratio(s,glyph_metrics) for s in signs]
+    boosts=[optics[s] for s in signs]
 
     # Normal single signs occupy C/2 in visible ink width. Exception:
     # flat signs may grow uniformly until H>=C/4, but no more than 3C/4
     # in width. The fixed column pitch is never exceeded. Tall signs
     # keep their natural ratio, with an absolute height limit of C.
     # Paired narrow signs retain their original individual size limit.
-    def dimensions(ratio:float,limit:float)->tuple[float,float]:
+    def dimensions(ratio:float,limit:float,boost:float)->tuple[float,float]:
         target=limit
         if limit==width/2:
-            target=min(3*width/4,max(width/2,ratio*width/4))
+            base=min(3*width/4,max(width/2,ratio*width/4))
+            # Optically delicate glyphs receive a modest uniform enlargement.
+            # The hard 75%-column limit and tall-sign height cap still apply.
+            target=min(3*width/4,base*boost)
         h=min(width,target/ratio)
         return ratio*h,h
 
     @lru_cache(maxsize=None)
     def choose(index:int)->tuple[float,tuple[tuple[int,...],...]]:
         if index==len(signs):return 0.0,()
-        _,single_h=dimensions(ratios[index],width/2)
+        _,single_h=dimensions(ratios[index],width/2,boosts[index])
         rest,candidate=choose(index+1)
         choices=[(single_h+rest,((index,),)+candidate)]
         if (index+1<len(signs) and ratios[index]<=NARROW_RATIO and
             ratios[index+1]<=NARROW_RATIO):
-            h1=dimensions(ratios[index],2*width/7)[1]
-            h2=dimensions(ratios[index+1],2*width/7)[1]
+            h1=dimensions(ratios[index],2*width/7,boosts[index])[1]
+            h2=dimensions(ratios[index+1],2*width/7,boosts[index+1])[1]
             if min(h1,h2)/max(h1,h2)>=PAIR_HEIGHT_PARITY:
                 rest,candidate=choose(index+2)
                 choices.append((max(h1,h2)+rest,((index,index+1),)+candidate))
@@ -164,7 +179,7 @@ def compose(signs:list[str],column_width:float,
 
     rows=choose(0)[1]
     heights=[max(dimensions(ratios[i],width/2 if len(row)==1 else
-                            2*width/7)[1] for i in row) for row in rows]
+                            2*width/7,boosts[i])[1] for i in row) for row in rows]
     # One half-height space AFTER each row; never double-count it.
     gaps=[height/2 for height in heights]
     placed=[None]*len(signs)
@@ -172,7 +187,7 @@ def compose(signs:list[str],column_width:float,
     for row_number,row in enumerate(rows):
         row_height=heights[row_number]
         limit=width/2 if len(row)==1 else 2*width/7
-        dims=[dimensions(ratios[i],limit) for i in row]
+        dims=[dimensions(ratios[i],limit,boosts[i]) for i in row]
         if len(row)==1:
             w=dims[0][0]
             # Local left/right clearance is w/2. Distribute additional slack.

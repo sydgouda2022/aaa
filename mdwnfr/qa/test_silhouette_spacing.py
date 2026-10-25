@@ -3,7 +3,7 @@ import json,math,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'core'))
-from mdwnfr.quadrat import compose,expand_internal,expand_to_ink_bottom,glyph_geometry,glyph_scanlines,_silhouette_advance
+from mdwnfr.quadrat import compose,expand_internal,expand_to_ink_bottom,glyph_geometry,glyph_scanlines,glyph_optical_factors,_silhouette_advance
 from mdwnfr.layout import fixed_page_column_grid, layout_document, column_width_mm
 
 C=20.0
@@ -12,11 +12,26 @@ def near(test,left,right):
                     f'{left} != {right}')
 
 class VisibleInkComposition(unittest.TestCase):
+    def test_optical_detail_is_calculated_from_ink_and_bounded(self):
+        factors=glyph_optical_factors()
+        self.assertTrue(all(1.0<=value<=1.18 for value in factors.values()))
+        # Complex figures are larger than plain, heavy vertical strokes,
+        # but all scaling remains uniform and contained inside the column.
+        self.assertGreater(factors['𓅓'],factors['𓏺'])
+        for sign in ('𓅓','𓅱','𓀀','𓉐','𓈖'):
+            q=compose([sign],C)
+            g=q.signs[0]
+            box=glyph_geometry()[sign]
+            near(self,g.width/g.height,(box[2]-box[0])/(box[3]-box[1]))
+            self.assertLessEqual(g.width,3*C/4+1e-8)
+            self.assertLessEqual(g.height,C+1e-8)
+
     def test_one_font_one_catalogue(self):
         data=json.loads((ROOT/'core/mdwnfr/data/glyph_geometry.json').read_text())
         self.assertEqual(data['format'],'mdwnfr-glyph-ink-v2')
         self.assertEqual(data['resolution'],64)
         self.assertEqual(len(glyph_scanlines()),1072)
+        self.assertEqual(len(glyph_optical_factors()),1072)
         self.assertEqual(len(glyph_geometry()),1072)
         self.assertEqual(data['font_sha256'],
                          'b792accc6207ca9caa59fc67f53926b6985a99d255dd432d7c68b68a6dfd62f8')
@@ -25,9 +40,9 @@ class VisibleInkComposition(unittest.TestCase):
         q=compose(list('𓅓'),C)
         self.assertEqual(q.rows,((0,),))
         s=q.signs[0]
-        near(self,s.width,C/2)
-        near(self,s.x,s.width/2)
-        near(self,C-s.x-s.width,s.width/2)
+        near(self,s.width,C/2*glyph_optical_factors()['𓅓'])
+        near(self,s.x,(C-s.width)/2)
+        near(self,C-s.x-s.width,(C-s.width)/2)
         near(self,s.y,0.0)
         near(self,q.height-s.y-s.height,s.height/2)
         near(self,q.height,1.5*s.height)
@@ -90,7 +105,7 @@ class VisibleInkComposition(unittest.TestCase):
             near(self,g.width/g.height,(box[2]-box[0])/(box[3]-box[1]))
             ratio=(box[2]-box[0])/(box[3]-box[1])
             target=min(3*C/4,max(C/2,ratio*C/4))
-            near(self,g.width,target)
+            near(self,g.width,min(3*C/4,target*glyph_optical_factors()[sign]))
             self.assertGreaterEqual(g.width,C/2)
             self.assertLessEqual(g.width,3*C/4)
             near(self,q.height,1.5*g.height)
@@ -100,6 +115,7 @@ class VisibleInkComposition(unittest.TestCase):
         self.assertEqual(q.rows,((0,),))
         self.assertLessEqual(q.signs[0].height,C+1e-8)
         near(self,q.height,1.5*q.signs[0].height)
+        self.assertLessEqual(q.signs[0].height,C+1e-8)
         self.assertGreaterEqual(q.signs[0].x,0)
         self.assertLessEqual(q.signs[0].x+q.signs[0].width,C+1e-8)
 
