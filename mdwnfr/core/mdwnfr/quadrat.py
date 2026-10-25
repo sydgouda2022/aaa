@@ -207,7 +207,7 @@ def _adjust_row_gaps(quadrat:Quadrat,changes:list[float])->Quadrat:
         raise ValueError('One spacing correction required per composed row')
     updated=[g+d for g,d in zip(gaps,changes)]
     if any(not math.isfinite(g) or g < -1e-9 for g in updated):
-        raise ValueError('A row's whitespace cannot be negative')
+        raise ValueError("A row's whitespace cannot be negative")
     corrected=tuple(max(0.0,g) for g in updated)
     revised=[None]*len(quadrat.signs)
     shift=0.0
