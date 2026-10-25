@@ -251,21 +251,27 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
                       'x':_art_x(col['x'],col['width'],ow,owner,doc['direction'],col.get('float_offset')),
                       'y':oy,'flip':'normal'})
         dividers=[]
-        # Shared typography design metric: 3 nominal glyph stems, each
-        # proportional to the document's universal font size. Lines remain
-        # derived decoration and never change quadrat geometry.
+        # A physical column can contain several silhouette-free sectors.
+        # Match neighboring slots, not consecutive seeds: upper/lower sectors
+        # are interleaved in reading order and need independent line segments.
+        word_slots = {}
+        for col in positioned:
+            if col['kind']!='words' or not col['placements']:continue
+            index=round((col['x']-margins['left'])/width)
+            word_slots.setdefault(index,[]).append((col['text_top'],col['text_bottom']))
+        # Shared typography metric, proportional to the universal font size.
         divider_thickness = divider_stroke_mm(doc['font_size_pt'])
-        for ci in range(1,len(positioned)):
-            a,b=positioned[ci-1],positioned[ci]
-            if a['kind']!='words' or b['kind']!='words':continue
-            # Overlaid columns may share a boundary with a previous column;
-            # never emit the same line twice or draw inside a word column.
-            if abs(a['x']-b['x'])<width*0.5:continue
-            y1=max(a['text_top'],b['text_top'])
-            y2=min(a['text_bottom'],b['text_bottom'])
-            if y2<=y1+1e-8:continue
-            x=max(a['x'],b['x'])
-            spans=[(y1,y2)]
+        for index in sorted(word_slots):
+            if index+1 not in word_slots:continue
+            x=margins['left']+(index+1)*width
+            overlaps=sorted((max(a,c),min(b,d))
+                for a,b in word_slots[index] for c,d in word_slots[index+1]
+                if min(b,d)>max(a,c)+1e-8)
+            spans=[]
+            for top,bottom in overlaps:
+                if spans and top<=spans[-1][1]+1e-8:
+                    spans[-1]=(spans[-1][0],max(spans[-1][1],bottom))
+                else:spans.append((top,bottom))
             for art in artworks:
                 remaining=[]
                 for top,bottom in spans:
@@ -398,24 +404,29 @@ def _layout(doc: dict, glyph_metrics: dict | None,
     all_objects={o['id']:o for o in doc['items']}
     nested_masks={}
 
-    def finish_column(justified: bool) -> dict:
-        nonlocal pending, used
-        if not pending:raise DocumentError('Cannot finish an empty text column')
+    def word_column(items: list[tuple[dict,object]], top:float,
+                    bottom:float, justified:bool) -> dict:
+        """One word-spacing rule for page columns and artwork-bounded sectors.
+
+        Only an actual overflow justifies a column, and only the spaces
+        BETWEEN complete words change. Glyphs within a word never move.
+        """
+        if not items:raise DocumentError('Cannot finish an empty text column')
         # Only a real overflow triggers justification: the incoming word did
         # not fit. A final/incomplete column is NEVER vertically stretched.
-        last_q=pending[-1][1]
+        last_q=items[-1][1]
         last_gap=last_q.flexible_gaps[-1]
         # Preserve the position and internal geometry of every word.
         # The terminal half-height gap is removed when the column ends.
-        adjustable=bool(justified and len(pending)>1)
-        extra=max(0.0,usable_height-used) if adjustable else 0.0
-        share=(extra+last_gap)/(len(pending)-1) if adjustable else 0.0
-        expanded=([share]*(len(pending)-1)+[-last_gap]
-                  if adjustable else [0.0]*(len(pending)-1)+[-last_gap])
-        y=page_top
+        natural=sum(q.height for _,q in items)
+        adjustable=bool(justified and len(items)>1)
+        extra=max(0.0,bottom-top-natural) if adjustable else 0.0
+        share=(extra+last_gap)/(len(items)-1) if adjustable else 0.0
+        expanded=[share]*(len(items)-1)+[-last_gap]
+        y=top
         placements=[]
-        for index,(obj,quadrat) in enumerate(pending):
-            terminal=index==len(pending)-1
+        for index,(obj,quadrat) in enumerate(items):
+            terminal=index==len(items)-1
             if compact:
                 placements.append((obj['id'],round(y,5),
                                    round(quadrat.height+expanded[index],5),
@@ -436,44 +447,25 @@ def _layout(doc: dict, glyph_metrics: dict | None,
               'terminal_gap_removed':True,
               **({'ink_bottom_aligned':True,'word_boundary_justify':True}
                  if adjustable else {})}
-        pending=[]
-        used=0.0
         stats['computed_columns']+=1
         return seed
 
+    def finish_column(justified: bool) -> dict:
+        nonlocal pending, used
+        seed=word_column(pending,page_top,page_bottom,justified)
+        pending=[]
+        used=0.0
+        return seed
+
     def wrapped_sector(items: list[tuple[dict,object]], top:float, bottom:float,
-                       slot_offset:int) -> dict:
-        """Emit a wrapped text column aligned to the sector neutral lines.
+                       slot_offset:int, justified:bool=False) -> dict:
+        """Paint a normal word column inside an existing object's free sector.
 
         It consumes NO additional page slots: these are unused channels of the
-        single clip-art reservation. A one-word sector is bottom-aligned.
+        single clip-art reservation. Unfinished sectors keep natural spacing.
         """
-        natural=sum(q.height for _,q in items)+gap*(len(items)-1)
-        extra=max(0.0,(bottom-top)-natural)
-        # Wrapped sectors use the same per-sign rule as ordinary columns.
-        # A single word keeps its defined bottom alignment around artwork.
-        count=sum(len(ob['signs']) for ob,_ in items)
-        allocations=([0.0] if len(items)==1 or count==0 else
-                     [extra*len(ob['signs'])/count for ob,_ in items])
-        normalgap=gap
-        y=bottom-items[0][1].height if len(items)==1 else top
-        placements=[]
-        for j,(ob,q) in enumerate(items):
-            if compact:
-                placements.append((ob['id'],round(y,5),round(q.height+allocations[j],5),
-                                   allocations[j]))
-            else:
-                adjusted=expand_internal(q,allocations[j])
-                placements.append({'id':ob['id'],'type':'word','signs':ob['signs'],
-                   'color':ob.get('color','#192433'),'bold':ob.get('bold',False),
-                   'y':round(y,5),'height':round(adjusted.height,5),
-                   'quadrat':adjusted.payload()})
-            y+=q.height+allocations[j]
-            if j<len(items)-1:y+=normalgap
-        stats['computed_columns']+=1
-        return {'placements':placements,'text_top':placements[0][1] if compact else placements[0]['y'],
-           'text_bottom':round(y,5),'kind':'words','span':0,
-           'slot_offset':slot_offset,'slot_width':1}
+        return {**word_column(items,top,bottom,justified),'span':0,
+                'slot_offset':slot_offset,'slot_width':1}
 
     def reserve_shared_object_clearance(obj: dict, image_w: float,
                                         image_h: float, image_y: float,
@@ -759,7 +751,7 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                     segment.append((preceding.popleft(),q))
                     length+=need
                 if segment:
-                    replacement.append(wrapped_sector(segment,top,bottom,-1))
+                    replacement.append(wrapped_sector(segment,top,bottom,-1,bool(preceding)))
         columns[-touched:]=replacement
         if requested>=0 and preceding:
             # At zero/forward offset the object is *after* these words in the
@@ -773,7 +765,7 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                     cost=q.height+(gap if chunk else 0.0)
                     if chunk and used_h+cost>usable_height+1e-8:break
                     chunk.append((preceding.popleft(),q));used_h+=cost
-                columns.append(wrapped_sector(chunk,page_top,page_bottom,0))
+                columns.append(wrapped_sector(chunk,page_top,page_bottom,0,bool(preceding)))
                 # An ordinary full slot, not a zero-span overlay.
                 columns[-1].update(span=1)
                 columns[-1].pop('slot_offset',None)
@@ -797,7 +789,6 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         clear=object_clearance_mm(width)
         cursor=start
         preceding = preceding if preceding is not None else deque()
-        had_lookbehind = bool(preceding)
         slot_position, obstacles = prior_object_obstacles()
         # Current image is the last obstacle. Find its start in slot space.
         image_start=slot_position-span
@@ -830,8 +821,10 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                     if preceding:preceding.popleft()
                     else:cursor+=1
                 if segment:
+                    overflow=bool(preceding or (cursor<len(doc['items']) and
+                                               doc['items'][cursor]['type']=='word'))
                     columns.append(wrapped_sector(segment,top,bottom,
-                                                    -span+slot_index))
+                                                    -span+slot_index,overflow))
         # The edge of a reserved object band is ALSO an internal border.
         # The first ordinary word column after it must respect the contour:
         # otherwise zero-offset rectangles/cartouches can touch following ink.
@@ -873,7 +866,9 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                         if preceding:preceding.popleft()
                         else:cursor+=1
                     if part:
-                        columns.append(wrapped_sector(part,top,bottom,-1))
+                        overflow=bool(preceding or (cursor<len(doc['items']) and
+                                                   doc['items'][cursor]['type']=='word'))
+                        columns.append(wrapped_sector(part,top,bottom,-1,overflow))
         # Keep earlier silhouette-safe word sectors intact even when another
         # graphical object follows. Rewinding these already composed words
         # back into an ordinary full-width column silently discards the first
@@ -905,7 +900,8 @@ def _layout(doc: dict, glyph_metrics: dict | None,
                     break
                 items.append((ob,q));length+=needed;cursor+=1
             if items:
-                columns.append(wrapped_sector(items,top,bottom,-span+slot_index))
+                overflow=(cursor<len(doc['items']) and doc['items'][cursor]['type']=='word')
+                columns.append(wrapped_sector(items,top,bottom,-span+slot_index,overflow))
         return cursor
 
     def preceding_nested_sector(top: float, span: int) -> list[dict]:

@@ -403,4 +403,110 @@ class VisibleInkComposition(unittest.TestCase):
             near(self,old.font_size,new.font_size)
             near(self,new.text_y-old.text_y,new.y-old.y)
 
+class ArtworkWordFlow(unittest.TestCase):
+    @staticmethod
+    def document(direction='rtl', offset=0, count=240, font_size=10):
+        from mdwnfr.document import new_document, word, clipart
+        doc=new_document('Word shapes around Horus',font_size_pt=font_size)
+        doc['direction']=direction
+        doc['items']=[word(list('𓍘𓈖𓂝𓂻') if i%3 else list('𓇋𓅓𓏏'))
+                      for i in range(count)]
+        art=clipart('horus-falcon-raster',65,flip='normal')
+        art['x_offset_mm']=offset
+        doc['items'].insert(min(32,count),art)
+        return doc
+
+    def assert_natural_ink(self, layout):
+        for page in layout['pages']:
+            for col in page['columns']:
+                if col['kind']!='words':continue
+                for item in col['placements']:
+                    natural=compose(item['signs'],layout['column_width_mm'])
+                    for actual,expected in zip(item['quadrat']['signs'],natural.signs):
+                        for key in ('x','y','width','height','font_size','text_x','text_y'):
+                            self.assertAlmostEqual(actual[key],getattr(expected,key),places=7,
+                                msg=f"{col.get('slot_offset')} {item['id']} {key}")
+
+    def test_wrapping_keeps_complete_word_shapes_in_both_directions(self):
+        for direction in ('ltr','rtl'):
+            for offset in (-22,0,42):
+                for font_size in (10,22):
+                    with self.subTest(direction=direction,offset=offset,font_size=font_size):
+                        doc=self.document(direction,offset,font_size=font_size)
+                        layout=layout_document(doc)
+                        self.assertTrue(any(c.get('span')==0 and c['placements']
+                            for p in layout['pages'] for c in p['columns']))
+                        self.assert_natural_ink(layout)
+                        words=[p['id'] for page in layout['pages'] for c in page['columns']
+                               if c['kind']=='words' for p in c['placements']]
+                        self.assertEqual(words,[o['id'] for o in doc['items'] if o['type']=='word'])
+
+    def test_short_wrapped_stream_starts_at_top_without_forced_fill(self):
+        from mdwnfr.document import new_document,word,clipart
+        for count in (1,2):
+            doc=new_document('Unfinished artwork sector')
+            doc['items']=[clipart('horus-falcon-raster',65)]+[
+                word(list('𓇋𓅓𓏏')) for _ in range(count)]
+            layout=layout_document(doc)
+            col=next(c for p in layout['pages'] for c in p['columns']
+                     if c['kind']=='words' and c['placements'])
+            self.assertAlmostEqual(col['placements'][0]['y'],18,places=5)
+            self.assertFalse(col.get('word_boundary_justify',False))
+            self.assert_natural_ink(layout)
+
+    def test_compact_wrapped_layout_matches_full_geometry(self):
+        from mdwnfr.layout import incremental_layout_document,expand_compact_layout
+        doc=self.document(offset=-22)
+        full=layout_document(doc)
+        small,_=incremental_layout_document(doc,compact=True)
+        expanded=expand_compact_layout(small,{o['id']:o for o in doc['items']})
+        self.assertEqual(expanded,full)
+
+    def test_dividers_join_matching_sectors_in_neighboring_slots(self):
+        layout=layout_document(self.document(offset=42))
+        checked=0
+        width=layout['column_width_mm']
+        for page in layout['pages']:
+            art=next((p for c in page['columns'] if c['kind']=='clipart'
+                      for p in c['placements']),None)
+            if art is None:continue
+            below=art['y']+art['height']/2
+            sectors=[c for c in page['columns'] if c.get('span')==0 and c['placements']]
+            for left in sectors:
+                for right in sectors:
+                    if not math.isclose(left['x']+width,right['x'],abs_tol=1e-5):continue
+                    top=max(left['text_top'],right['text_top'])
+                    bottom=min(left['text_bottom'],right['text_bottom'])
+                    # The bottom channels beneath Horus are completely clear.
+                    # They must still have a divider even though the seed list
+                    # interleaves upper and lower sectors of each column.
+                    if top<below-1e-4 or bottom-top<1:continue
+                    checked+=1
+                    self.assertTrue(any(math.isclose(d['x'],right['x'],abs_tol=1e-5)
+                        and d['y1']<=top+1e-5 and d['y2']>=bottom-1e-5
+                        for d in page['dividers']),f'Missing lower divider at {right["x"]}')
+        self.assertGreater(checked,0)
+
+    def test_words_and_dividers_keep_the_artwork_clearance(self):
+        from mdwnfr.silhouette import free_sectors
+        for direction in ('rtl','ltr'):
+            for offset in (-22,0,42):
+                layout=layout_document(self.document(direction,offset))
+                width=layout['column_width_mm']
+                for page in layout['pages']:
+                    arts=[p for c in page['columns'] if c['kind']=='clipart'
+                          for p in c['placements']]
+                    areas=[(p['x'],p['x']+width,p['y'],p['y']+p['height'])
+                        for c in page['columns'] if c['kind']=='words'
+                        for p in c['placements']]
+                    areas.extend((d['x']-.0001,d['x']+.0001,d['y1'],d['y2'])
+                                 for d in page['dividers'])
+                    for art in arts:
+                        for left,right,top,bottom in areas:
+                            safe=free_sectors(art['artwork_id'],image_width=art['width_mm'],
+                                image_height=art['height'],x_offset=art['x'],
+                                slot_left=left,slot_right=right,top=top,bottom=bottom,
+                                clearance=width,flip=art['resolved_flip'],image_top=art['y'])
+                            self.assertLessEqual(bottom-top-sum(b-a for a,b in safe),.0001)
+
 if __name__=='__main__':unittest.main()
