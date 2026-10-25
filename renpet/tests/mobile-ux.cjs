@@ -576,6 +576,50 @@ async function run(){
 
   await ctx.close();
  }
+ await step('National festivals remain visible with Gregorian labels hidden in all scripts',async()=>{
+  const ctx=await b.newContext({viewport:{width:1024,height:768},serviceWorkers:'block',timezoneId:'Africa/Cairo'});
+  const q=await ctx.newPage();q.setDefaultTimeout(15000);
+  await q.clock.install({time:new Date('2026-10-06T12:00:00.000Z')});
+  await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
+  await q.locator('.month-section').waitFor();
+  const day=Math.floor(Date.parse('2026-10-06T00:00:00Z')/86400000);
+  const cell=()=>q.locator('.month-section [data-date="'+day+'"]');
+  const event=()=>q.locator('.month-agenda [data-festival-source=national-egypt]');
+  const records=[];
+  for(const language of ['ar','cop','egy']){
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[name=language]').selectOption(language);
+   await q.locator('[name=gregorian]').uncheck();
+   await q.locator('[data-open-panel=festivals]').click();
+   const checkbox=q.locator('[data-festival-source-id=national-egypt]');
+   if(!(await checkbox.isChecked()))await checkbox.check();
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   await cell().waitFor();
+   if(await q.locator('.month-section .greg-day').count())throw Error('Gregorian date labels remain visible in '+language);
+   if(!(await cell().locator('.fest-mark').count()))throw Error('National festival marker vanished with Gregorian off: '+language);
+   if(!(await cell().getAttribute('data-festival-sources')||'').split(',').includes('national-egypt'))throw Error('National source not represented on Egyptian date in '+language);
+   await event().waitFor();
+   const title=await event().locator('strong').innerText();
+   if(!title)throw Error('National festival title missing in '+language);
+   await screenshot(q,'national-without-gregorian-'+language);
+   await cell().click();
+   await q.locator('.day-festivals [data-festival-source=national-egypt]').waitFor();
+   await q.locator('[data-back]').click();
+   await event().waitFor();
+   await q.locator('header [data-open-panel=settings]').click();
+   await q.locator('[name=gregorian]').check();
+   await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
+   if(!(await cell().locator('.fest-mark').count())||!(await event().count()))throw Error('Gregorian toggle changed national events in '+language);
+   if(!(await q.locator('.month-section .greg-day').count()))throw Error('Gregorian date labels not restored');
+   records.push({language,absoluteDay:day,nationalFestivalVisibleInBothModes:true,title});
+  }
+  await q.reload({waitUntil:'domcontentloaded'});
+  await event().waitFor();
+  const saved=await q.evaluate(()=>JSON.parse(localStorage.getItem('renpet.settings.v1')));
+  if(!saved.festivalSources.includes('national-egypt'))throw Error('National source selection did not persist');
+  await ctx.close();
+  return {records,persistent:true};
+ });
  await step('iPad/web large GUI has separated calendar, agenda and navigation rail',async()=>{
   const ctx=await b.newContext({viewport:{width:1024,height:768},deviceScaleFactor:1,serviceWorkers:'block',timezoneId:'Africa/Cairo'});
   const q=await ctx.newPage();q.setDefaultTimeout(8000);
