@@ -56,6 +56,14 @@ assert.ok(festivalHitsForDay(toGregorian({year:6282,month:11,day:13},data.years)
 assert.ok(festivalHitsForDay(toGregorian({year:6282,month:13,day:4},data.years),data.years,catalog,['isis-philae']).some(f=>f.id==='isis-epagomenal-birthday'));
 assert.equal(festivalHitsForDay(toGregorian({year:6282,month:13,day:4},data.years),data.years,catalog,[]).length,0,'No historical catalog on opt-out');
 assert.ok(festivalHitsForDay(dayNumber('2026-04-13'),data.years,catalog,['national-egypt']).some(f=>f.id==='sham-el-nessim'));
+const october6=dayNumber('2026-10-06');
+assert.ok(festivalHitsForDay(october6,data.years,catalog,['national-egypt']).some(f=>f.id==='armed-forces'),
+ '6 October national festival remains attached to its absolute date on the Egyptian calendar');
+assert.equal(festivalHitsForDay(october6,data.years,catalog,[]).length,0,
+ 'Festival source selection, not Gregorian label display, is the visibility switch');
+assert.equal(festivalHitsForDay(october6,data.years,catalog,['national-egypt']).some(f=>f.id==='armed-forces'),true,
+ 'Hide-Gregorian mode must use the same independent absolute-date catalog');
+
 assert.ok(festivalHitsForDay(dayNumber('2026-04-12'),data.years,catalog,['christian-coptic']).some(f=>f.id==='coptic-easter'));
 assert.ok(festivalHitsForDay(dayNumber('2027-05-02'),data.years,catalog,['christian-coptic']).some(f=>f.id==='coptic-easter'));
 assert.ok(festivalHitsForDay(dayNumber('2028-04-16'),data.years,catalog,['christian-coptic']).some(f=>f.id==='coptic-easter'));
