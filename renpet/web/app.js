@@ -130,11 +130,16 @@ function monthNumber(n){
 function dateButton(c){
  if(!c)return '<span class="blank" aria-hidden="true"></span>';
  const d=c.gregorian,ev=items(d),hits=festivalsOn(d);
+ // Festival dates are always mapped to the underlying absolute day. Turning
+ // off the Gregorian *labels* must never remove national/Christian/Islamic
+ // festival markers, accessible names, or continued multi-day observances.
+ const festivalNames=hits.map(f=>festivalText(f,'title'));
+ const festivalSources=[...new Set(hits.map(f=>f.sourceId))].join(',');
  const dots=ev.slice(0,3).map(i=>{
   const col=schedule.calendars.find(x=>x.id===i.calendarId)?.color||'#176C59';
   return '<i style="background:'+( /^#[0-9a-f]{6}$/i.test(col)?col:'#176C59')+'"></i>';
  }).join('');
- return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+(ev.length?' · '+safe(N(ev.length))+' '+safe(T().event):'')+(hits.length?' · '+safe(N(hits.length))+' '+safe(T().festivals):'')+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+monthNumber(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(ev.length>3?'<span class="date-more-count">+'+safe(N(ev.length-3))+'</span>':'')+(hits.some(f=>f.start===d)?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
+ return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today ':'')+(hits.length?'has-festival':'')+'" data-date="'+d+'" data-festival-sources="'+safe(festivalSources)+'" data-festival-count="'+hits.length+'" title="'+safe(festivalNames.join(' · '))+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+(ev.length?' · '+safe(N(ev.length))+' '+safe(T().event):'')+(festivalNames.length?' · '+safe(festivalNames.join(' · ')):'')+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+monthNumber(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(ev.length>3?'<span class="date-more-count">+'+safe(N(ev.length-3))+'</span>':'')+(hits.length?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
 }
 function monthSection(e){
  const w=week(),start=monthStart(e),length=monthDays(e);
