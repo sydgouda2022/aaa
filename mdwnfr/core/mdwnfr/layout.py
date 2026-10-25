@@ -46,6 +46,17 @@ def proportional_extra(heights: list[float], remainder: float) -> list[float]:
     return [remainder * height / total for height in heights]
 
 
+def fixed_page_column_grid(usable_width:float,nominal_width:float)->tuple[int,float]:
+    """Share the sub-column horizontal remainder equally across fixed-paper slots.
+
+    Do not apply this to papyrus, whose page width grows with its contents.
+    """
+    if usable_width<nominal_width or nominal_width<=0:
+        raise DocumentError('Font too large for selected paper width')
+    count=max(1,int((usable_width+1e-9)//nominal_width))
+    return count,usable_width/count
+
+
 def column_width_mm(font_size_pt: float) -> float:
     return float(font_size_pt) * PT_TO_MM * 2.0
 
@@ -293,15 +304,12 @@ def _layout(doc: dict, glyph_metrics: dict | None,
     if usable_height <= 0:
         raise DocumentError('Surface too short for margins')
     usable_width = page_width - margins['left'] - margins['right'] if not papyrus else 0.0
-    page_capacity = None if papyrus else max(1, int((usable_width + 1e-9)//width))
-    if not papyrus and usable_width < width:
-        raise DocumentError('Font too large for selected paper width')
-    # For rigid paper only: share an insufficient-for-another-column
-    # remainder equally across all column slots on EVERY page.
-    # Example: 20 nominal 15 mm columns + 10 mm remainder ->
-    # exactly 20 equal 15.5 mm columns. Papyrus retains its nominal width.
-    if page_capacity is not None:
-        width = usable_width / page_capacity
+    # For rigid sheets, no unused horizontal strip is left beside a
+    # fractional column. Every slot receives the same additional width.
+    # Papyrus is intentionally unbounded and never enters this branch.
+    page_capacity = None
+    if not papyrus:
+        page_capacity,width=fixed_page_column_grid(usable_width,width)
 
     stats = {'mode': 'full', 'reused_prefix_columns': 0,
              'reused_suffix_columns': 0, 'computed_columns': 0,

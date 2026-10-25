@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'core'))
 from mdwnfr.quadrat import compose,expand_internal,glyph_geometry,glyph_scanlines,_silhouette_advance
+from mdwnfr.layout import fixed_page_column_grid, layout_document, column_width_mm
 
 C=20.0
 def near(test,left,right):
@@ -87,7 +88,11 @@ class VisibleInkComposition(unittest.TestCase):
             g=q.signs[0]
             box=glyph_geometry()[sign]
             near(self,g.width/g.height,(box[2]-box[0])/(box[3]-box[1]))
-            near(self,g.width,C/2)
+            ratio=(box[2]-box[0])/(box[3]-box[1])
+            target=min(3*C/4,max(C/2,ratio*C/4))
+            near(self,g.width,target)
+            self.assertGreaterEqual(g.width,C/2)
+            self.assertLessEqual(g.width,3*C/4)
             near(self,q.height,1.5*g.height)
 
     def test_ultranarrow_stroke_has_bounded_height(self):
@@ -150,6 +155,68 @@ class VisibleInkComposition(unittest.TestCase):
                     bottom=max(q.signs[i].y+q.signs[i].height for i in preceding)
                     near(self,top-bottom,heights[index-1]/2)
                 near(self,q.flexible_gaps[index],heights[index]/2)
+
+    def test_fixed_paper_shares_remaining_width_and_papyrus_keeps_nominal(self):
+        count,width=fixed_page_column_grid(310,15)
+        self.assertEqual(count,20)
+        near(self,width,15.5)
+        near(self,count*width,310)
+        # A4 uses the SAME uniform width for every occupied column slot.
+        from mdwnfr.document import new_document
+        from mdwnfr.document import SURFACES,validated_margins
+        doc=new_document('Fixed paper width')
+        frame=SURFACES[doc['surface']][0]-sum(validated_margins(doc)[s]
+                                              for s in ('left','right'))
+        expected_n,expected_width=fixed_page_column_grid(
+            frame,column_width_mm(doc['font_size_pt']))
+        result=layout_document(doc)
+        near(self,result['column_width_mm'],expected_width)
+        near(self,expected_n*result['column_width_mm'],frame)
+        papyrus={**doc,'surface':'papyrus'}
+        papyrus_result=layout_document(papyrus)
+        near(self,papyrus_result['column_width_mm'],
+             column_width_mm(doc['font_size_pt']))
+
+    def test_equal_justification_shares_per_sign_and_not_per_word(self):
+        q=compose(list('𓇋𓇋𓅓𓏏'),C)
+        self.assertEqual(q.rows[0],(0,1))
+        remainder=10
+        adjusted=expand_internal(q,remainder)
+        self.assertEqual(len(q.signs),4)
+        near(self,adjusted.height-q.height,remainder)
+        old_gaps=q.flexible_gaps
+        new_gaps=adjusted.flexible_gaps
+        for index,group in enumerate(q.rows):
+            near(self,new_gaps[index]-old_gaps[index],
+                 remainder*len(group)/len(q.signs))
+        for before,after in zip(q.signs,adjusted.signs):
+            near(self,before.height,after.height)
+            near(self,before.width,after.width)
+            near(self,before.font_size,after.font_size)
+            near(self,before.x,after.x)
+
+    def test_completed_page_column_expands_each_word_equally(self):
+        from mdwnfr.document import new_document,transaction,validated_margins,SURFACES
+        doc=new_document('Fit the remaining column')
+        for i in range(34):
+            doc=transaction(doc,{'op':'insert_word','index':i,'signs':['𓅓']})
+        result=layout_document(doc)
+        first=[col for page in result['pages'] for col in page['columns']
+               if col['kind']=='words' and col['placements']][0]
+        word_positions=first['placements']
+        self.assertGreaterEqual(len(word_positions),3)
+        top=validated_margins(doc)['top']
+        bottom=SURFACES[doc['surface']][1]-validated_margins(doc)['bottom']
+        last=word_positions[-1]
+        self.assertAlmostEqual(last['y']+last['height'],bottom,places=4)
+        self.assertAlmostEqual(word_positions[0]['y'],top,places=4)
+        natural=compose(['𓅓'],result['column_width_mm'])
+        expected=(bottom-top-len(word_positions)*natural.height)/len(word_positions)
+        self.assertGreater(expected,0.0)
+        for entry in word_positions:
+            self.assertAlmostEqual(entry['height']-natural.height,expected,places=4)
+        for left,right in zip(word_positions,word_positions[1:]):
+            self.assertAlmostEqual(right['y']-(left['y']+left['height']),0,places=4)
 
     def test_justification_changes_only_whitespace(self):
         q=compose(list('𓅓𓇋𓏏'),C)
