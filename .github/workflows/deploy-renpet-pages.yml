@@ -145,7 +145,7 @@ jobs:
               && grep -q 'Single owner of #app' /tmp/renpet-app \
               && grep -q 'month-section' /tmp/renpet-css \
               && grep -q 'itemsForDay' /tmp/renpet-scheduler \
-              && grep -q 'amun-theban' /tmp/renpet-festival-sources \
+              && python -c "import json; ids=[s['id'] for s in json.load(open('/tmp/renpet-festival-sources'))['sources']]; assert ids == ['amun-theban','national-egypt','esna-khnum','isis-philae'], ids" \
               && grep -q 'festivalHitsForDay' /tmp/renpet-festival-code \
               && python -c "import json; assert json.load(open('/tmp/renpet-egy-lexicon'))['spelling_records']>=40000; assert json.load(open('/tmp/renpet-cop-lexicon'))['spelling_records']>=20000"; then
               echo "Renpet 7.0.0 consolidated release is live"
