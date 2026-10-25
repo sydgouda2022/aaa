@@ -476,22 +476,80 @@ class ArtworkWordFlow(unittest.TestCase):
             for left in sectors:
                 for right in sectors:
                     if not math.isclose(left['x']+width,right['x'],abs_tol=1e-5):continue
-                    top=max(left['text_top'],right['text_top'])
-                    bottom=min(left['text_bottom'],right['text_bottom'])
-                    if bottom-top<1:continue
-                    thickness=divider_stroke_mm(layout['font_size_pt'])
-                    safe=free_sectors(art['artwork_id'],image_width=art['width_mm'],
-                        image_height=art['height'],x_offset=art['x'],
-                        slot_left=right['x']-thickness/2,slot_right=right['x']+thickness/2,
-                        top=top,bottom=bottom,clearance=object_clearance_mm(width),
-                        flip=art['resolved_flip'],image_top=art['y'])
-                    for a,b in safe:
-                        if b-a<1:continue
-                        checked+=1
-                        self.assertTrue(any(math.isclose(d['x'],right['x'],abs_tol=1e-5)
-                            and d['y1']<=a+1e-4 and d['y2']>=b-1e-4
-                            for d in page['dividers']),f'Missing divider at {right["x"]}')
+                    # The actual adjoining ink runs, not the outer column
+                    # envelope, determine where a divider may exist.
+                    for ltop,lbottom in left['text_runs']:
+                        for rtop,rbottom in right['text_runs']:
+                            top=max(ltop,rtop)
+                            bottom=min(lbottom,rbottom)
+                            if bottom-top<1:continue
+                            thickness=divider_stroke_mm(layout['font_size_pt'])
+                            safe=free_sectors(art['artwork_id'],image_width=art['width_mm'],
+                                image_height=art['height'],x_offset=art['x'],
+                                slot_left=right['x']-thickness/2,slot_right=right['x']+thickness/2,
+                                top=top,bottom=bottom,clearance=object_clearance_mm(width),
+                                flip=art['resolved_flip'],image_top=art['y'])
+                            for a,b in safe:
+                                if b-a<1:continue
+                                checked+=1
+                                self.assertTrue(any(math.isclose(d['x'],right['x'],abs_tol=1e-5)
+                                    and d['y1']<=a+1e-4 and d['y2']>=b-1e-4
+                                    for d in page['dividers']),
+                                    f'Missing ink-bounded divider at {right["x"]}')
         self.assertGreater(checked,0)
+
+    def test_dividers_terminate_at_both_adjacent_text_runs(self):
+        from mdwnfr.layout import object_clearance_mm
+        for direction in ('ltr','rtl'):
+            layout=layout_document(self.document(direction=direction,offset=42))
+            width=layout['column_width_mm']
+            margins=layout['margins_mm']
+            tested=0
+            for page in layout['pages']:
+                by_slot={}
+                for column in page['columns']:
+                    if column['kind']!='words' or not column['placements']:
+                        continue
+                    slot=round((column['x']-margins['left'])/width)
+                    by_slot.setdefault(slot,[]).extend(column['text_runs'])
+                for divider in page['dividers']:
+                    right=round((divider['x']-margins['left'])/width)
+                    left_runs=by_slot.get(right-1,[])
+                    right_runs=by_slot.get(right,[])
+                    for edge in (divider['y1'],divider['y2']):
+                        self.assertTrue(any(a-1e-4<=edge<=b+1e-4
+                                            for a,b in left_runs))
+                        self.assertTrue(any(a-1e-4<=edge<=b+1e-4
+                                            for a,b in right_runs))
+                    tested+=1
+            self.assertGreater(tested,0)
+            self.assertAlmostEqual(object_clearance_mm(width),width/4)
+
+    def test_contour_reclaims_below_bird_before_next_columns(self):
+        from mdwnfr.document import new_document,word,clipart
+        from mdwnfr.layout import object_clearance_mm
+        for direction in ('ltr','rtl'):
+            doc=new_document('Bird and lower margin',font_size_pt=10)
+            doc['direction']=direction
+            bird=clipart('horus-falcon-raster',60,flip='normal')
+            bird['y_align']=.15
+            doc['items']=[bird]+[word(['𓏺']) for _ in range(320)]
+            layout=layout_document(doc)
+            page=layout['pages'][0]
+            art=next(p for col in page['columns'] if col['kind']=='clipart'
+                     for p in col['placements'])
+            width=layout['column_width_mm']
+            clearance=object_clearance_mm(width)
+            bottom=page['height']-layout['margins_mm']['bottom']
+            below=[placement for col in page['columns'] if col['kind']=='words'
+                   for placement in col['placements']
+                   if placement['x']<art['x']+art['width_mm'] and
+                      placement['x']+width>art['x'] and
+                      placement['y']>=art['y']+art['height']+clearance-1e-4 and
+                      placement['y']+max(g['y']+g['height']
+                          for g in placement['quadrat']['signs'])<=bottom+1e-4]
+            self.assertTrue(below,'Words must use the clear region below the bird')
+            self.assert_natural_ink(layout)
 
     def test_words_and_dividers_keep_the_artwork_clearance(self):
         from mdwnfr.silhouette import free_sectors

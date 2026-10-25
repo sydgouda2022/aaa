@@ -142,6 +142,7 @@ def _seed_from_column(col: dict) -> dict:
                            for placement in col['placements']],
             'text_top': col['text_top'], 'text_bottom': col['text_bottom'],
             'span':col.get('span', 1), 'kind':col.get('kind', 'words'),
+            **({'text_runs':col['text_runs']} if 'text_runs' in col else {}),
             **({'ink_bottom_aligned':True} if col.get('ink_bottom_aligned') else {}),
             **({'terminal_gap_removed':True} if col.get('terminal_gap_removed') else {}),
             **({'word_boundary_justify':True} if col.get('word_boundary_justify') else {}),
@@ -211,6 +212,7 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
                         placements.append({**placement,'x':round(x,5)})
             positioned.append({'placements':placements,
                                'text_top':seed['text_top'], 'text_bottom':seed['text_bottom'],
+                               **({'text_runs':seed['text_runs']} if 'text_runs' in seed else {}),
                                'kind':seed.get('kind','words'), 'span':span,
                                **({'ink_bottom_aligned':True} if seed.get('ink_bottom_aligned') else {}),
                                **({'terminal_gap_removed':True} if seed.get('terminal_gap_removed') else {}),
@@ -258,7 +260,10 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
         for col in positioned:
             if col['kind']!='words' or not col['placements']:continue
             index=round((col['x']-margins['left'])/width)
-            word_slots.setdefault(index,[]).append((col['text_top'],col['text_bottom']))
+            # A contour column may cross a bird/table silhouette: its upper
+            # and lower ink runs must not be joined by a divider through air.
+            word_slots.setdefault(index,[]).extend(col.get('text_runs',
+                [(col['text_top'],col['text_bottom'])]))
         # Shared typography metric, proportional to the universal font size.
         divider_thickness = divider_stroke_mm(doc['font_size_pt'])
         for index in sorted(word_slots):
@@ -444,6 +449,9 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         seed={'placements':placements,
               'text_top':(placements[0][1] if compact else placements[0]['y']),
               'text_bottom':round(y,5),'span':1,'kind':'words',
+              'text_runs':[(round(top+min(g.y for g in items[0][1].signs),5),
+                            round((placements[-1][1] if compact else placements[-1]['y'])+
+                                  max(g.y+g.height for g in last_q.signs),5))],
               'terminal_gap_removed':True,
               **({'ink_bottom_aligned':True,'word_boundary_justify':True}
                  if adjustable else {})}
@@ -470,13 +478,16 @@ def _layout(doc: dict, glyph_metrics: dict | None,
     def contour_column(left:float, obstacles:list, slot_offset:int,
                        preceding:deque, cursor:int|None=None,
                        top:float|None=None) -> tuple[dict|None,int|None]:
-        """Follow occupied artwork pixels with actual glyph-sized footprints.
+        """Compose independent, contour-bounded word runs inside an object slot.
 
-        Word identities and internal spacing stay unchanged. A word is moved
-        only as far as its visible ink requires, rather than reserving the
-        full column width and then stretching disconnected vertical sectors.
+        Each incoming word is tried against the actual 2D silhouette, including
+        the space *below* an object. If it cannot fit before the next contour
+        boundary, adjust only the whitespace between complete words in that
+        run. Never stretch the glyphs, shift a word into occupied pixels, or
+        fill an unfinished final run simply to reach the page margin.
         """
         top=page_top if top is None else top
+
         @lru_cache(maxsize=512)
         def origins(spelling, bold):
             q=quadrat_for(spelling)
@@ -484,55 +495,111 @@ def _layout(doc: dict, glyph_metrics: dict | None,
             return free_word_starts(q,column_left=left,top=top,bottom=page_bottom,
                 clearance=object_clearance_mm(width),obstacles=obstacles,
                 ink_expansion=stroke)
+
         def next_word():
             if preceding:return preceding[0]
             if cursor is not None and cursor<len(doc['items']):
                 entry=doc['items'][cursor]
                 if entry['type']=='word':return entry
             return None
+
         selected=[]
+        run_starts=[0]
         y=top
         while (entry:=next_word()) is not None:
             q=quadrat_for(tuple(entry['signs']))
+            windows=origins(tuple(entry['signs']),entry.get('bold',False))
             candidate=None
-            for a,b in origins(tuple(entry['signs']),entry.get('bold',False)):
-                # Published geometry has five-decimal-mm origins. Round away
-                # from the obstacle so packing cannot consume its clearance.
+            for a,b in windows:
+                # Positions are persisted to five decimal places. Round toward
+                # the free sector so an image's 1/4-column clearance survives.
                 start=ceil((max(a,y)-1e-9)*1e5)/1e5
                 if start<=b+1e-8:
-                    candidate=start;break
+                    candidate=start
+                    break
             if candidate is None:break
-            selected.append((entry,q,candidate))
+            # A jump over occupied ink starts a NEW writing region. Adjustment
+            # must never bridge that gap or make a huge clickable word box.
+            if selected and candidate>y+1e-4:
+                run_starts.append(len(selected))
+            selected.append((entry,q,candidate,windows))
             y=candidate+q.height
             if preceding:preceding.popleft()
             else:cursor+=1
         if not selected:return None,cursor
-        # Entirely unobstructed lanes retain ordinary column justification.
+
+        # Keep ordinary full-height lanes on the common word-column path.
         clear=all(free_sectors(aid,bands=bands,mask=mask,image_width=iw,
             image_height=ih,x_offset=ix,slot_left=left,slot_right=left+width,
             top=top,bottom=page_bottom,clearance=object_clearance_mm(width),
             flip=flip,image_top=iy)==[(top,page_bottom)]
             for aid,bands,mask,iw,ih,ix,flip,iy in obstacles)
         if clear:
-            return wrapped_sector([(ob,q) for ob,q,_ in selected],top,page_bottom,
-                                  slot_offset,next_word() is not None),cursor
+            return wrapped_sector([(ob,q) for ob,q,_,_ in selected],top,
+                                  page_bottom,slot_offset,next_word() is not None),cursor
+
+        positions=[record[2] for record in selected]
+        run_ends=run_starts[1:]+[len(selected)]
+        break_indices=set(run_starts[1:])
+        justified=False
+        for first,end in zip(run_starts,run_ends):
+            # One word contains no adjustable inter-word space. An unfinished
+            # last run must retain its original natural spacing.
+            if end-first<2 or (end==len(selected) and next_word() is None):
+                continue
+            # Let every word advance only within its own permitted origin
+            # interval. The tightest contour limits the uniform added space.
+            # This is equivalent to ordinary word-column adjustment on clear
+            # paper, but it cannot violate a tapering silhouette.
+            extra_per_gap=float('inf')
+            for index in range(first+1,end):
+                ob,q,initial,windows=selected[index]
+                upper=max((b for a,b in windows
+                           if a-1e-5<=initial<=b+1e-5),default=initial)
+                if index==end-1 and end<len(selected):
+                    following_y=selected[end][2]
+                    upper=min(upper,following_y-q.height)
+                extra_per_gap=min(extra_per_gap,
+                                  max(0.0,upper-initial)/(index-first))
+            if extra_per_gap<=1e-6:
+                continue
+            for index in range(first+1,end):
+                positions[index]+=extra_per_gap*(index-first)
+            justified=True
+
+        runs=[(round(positions[first]+min(g.y for g in selected[first][1].signs),5),
+               round(positions[end-1]+max(g.y+g.height for g in selected[end-1][1].signs),5))
+              for first,end in zip(run_starts,run_ends)]
         placements=[]
-        for index,(ob,q,y) in enumerate(selected):
-            extra=-q.flexible_gaps[-1] if index==len(selected)-1 else 0.0
-            if compact:
-                placements.append((ob['id'],round(y,5),round(q.height+extra,5),extra))
+        for index,(ob,q,_,_) in enumerate(selected):
+            last=index==len(selected)-1
+            # A contour-separated run has no artificial whitespace after its
+            # last word; the next run starts at an independent physical origin.
+            if last:
+                extra=-q.flexible_gaps[-1]
+            elif index+1 in break_indices:
+                extra=0.0
             else:
-                adjusted=expand_to_ink_bottom(q,extra) if extra else q
+                extra=max(0.0,positions[index+1]-positions[index]-q.height)
+            if compact:
+                placements.append((ob['id'],round(positions[index],5),
+                                   round(q.height+extra,5),extra))
+            else:
+                adjusted=(expand_to_ink_bottom(q,extra) if last else
+                          expand_after_word(q,extra) if extra>1e-8 else q)
                 placements.append({'id':ob['id'],'type':'word','signs':ob['signs'],
                     'color':ob.get('color','#192433'),'bold':ob.get('bold',False),
-                    'y':round(y,5),'height':round(adjusted.height,5),
+                    'y':round(positions[index],5),'height':round(adjusted.height,5),
                     'quadrat':adjusted.payload()})
         last=selected[-1]
         stats['computed_columns']+=1
-        return {'placements':placements,'text_top':selected[0][2],
-                'text_bottom':round(last[2]+last[1].height-last[1].flexible_gaps[-1],5),
+        return {'placements':placements,'text_top':round(positions[0],5),
+                'text_bottom':round(positions[-1]+last[1].height-
+                                    last[1].flexible_gaps[-1],5),
+                'text_runs':runs,
                 'kind':'words','span':0,'slot_offset':slot_offset,'slot_width':1,
-                'terminal_gap_removed':True},cursor
+                'terminal_gap_removed':True,
+                **({'word_boundary_justify':True} if justified else {})},cursor
 
     def reserve_shared_object_clearance(obj: dict, image_w: float,
                                         image_h: float, image_y: float,
