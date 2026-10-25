@@ -62,22 +62,6 @@
     <!-- Panels float above the document. Exactly one panel can be open. -->
     <aside id="pages-panel" class="floating-panel pages-panel" aria-label="Pages" hidden>
       <div class="floating-panel-heading"><strong>Pages</strong><span id="page-total">0 pages</span></div>
-      <div class="page-settings" role="group" aria-label="Writing surface">
-        <label class="format-line" for="surface">Writing surface <select id="surface"><option>A4</option><option>A3</option><option>A2</option><option value="papyrus">Papyrus</option></select></label>
-<div class="technical-controls" hidden aria-hidden="true">        <div class="format-section-title" id="paper-margin-title">Writing frame margins (mm)</div>
-        <div class="margin-controls" id="paper-margin-controls" role="group" aria-label="Four page margins">
-          <label for="margin-top">Top<input id="margin-top" type="number" min="0" max="80" step="0.5" value="18" /></label>
-          <label for="margin-bottom">Bottom<input id="margin-bottom" type="number" min="0" max="80" step="0.5" value="18" /></label>
-          <label for="margin-left">Left<input id="margin-left" type="number" min="0" max="80" step="0.5" value="18" /></label>
-          <label for="margin-right">Right<input id="margin-right" type="number" min="0" max="80" step="0.5" value="18" /></label>
-        </div>
-        <div class="format-line" id="papyrus-margin-group" hidden>
-          <label for="papyrus-margin">Equal papyrus margin (mm)</label>
-          <input id="papyrus-margin" type="number" min="0" max="80" step="0.5" value="18" />
-        </div>
-</div>
-<div class="format-line" id="papyrus-group" hidden><label for="papyrus-height">Papyrus height (mm)</label><input id="papyrus-height" type="number" min="80" max="2000" value="300"/></div>
-      </div>
       <nav id="pages-overview" class="pages-overview" aria-label="Page thumbnails"></nav>
     </aside>
 
@@ -101,6 +85,22 @@
         <div class="format-group" role="group" aria-label="Font" data-format-group="font">
           <select id="font-family" class="font-select" aria-label="Font: Hieroglyphics" title="Hieroglyphics"><option value="hieroglyphics" aria-label="Hieroglyphics">𓅓 𓈖 𓂋</option></select>
         </div>
+      <div class="format-group format-surface" role="group" aria-label="Writing surface" data-format-group="surface">
+        <div class="surface-control"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z M15 3v5h4"/></svg><label class="visually-hidden" for="surface">Writing surface</label><select id="surface" aria-label="Writing surface"><option>A4</option><option>A3</option><option>A2</option><option value="papyrus">Papyrus</option></select></div>
+<div class="technical-controls" hidden aria-hidden="true">        <div class="format-section-title" id="paper-margin-title">Writing frame margins (mm)</div>
+        <div class="margin-controls" id="paper-margin-controls" role="group" aria-label="Four page margins">
+          <label for="margin-top">Top<input id="margin-top" type="number" min="0" max="80" step="0.5" value="18" /></label>
+          <label for="margin-bottom">Bottom<input id="margin-bottom" type="number" min="0" max="80" step="0.5" value="18" /></label>
+          <label for="margin-left">Left<input id="margin-left" type="number" min="0" max="80" step="0.5" value="18" /></label>
+          <label for="margin-right">Right<input id="margin-right" type="number" min="0" max="80" step="0.5" value="18" /></label>
+        </div>
+        <div class="format-line" id="papyrus-margin-group" hidden>
+          <label for="papyrus-margin">Equal papyrus margin (mm)</label>
+          <input id="papyrus-margin" type="number" min="0" max="80" step="0.5" value="18" />
+        </div>
+</div>
+<div class="format-line" id="papyrus-group" hidden><label for="papyrus-height">Papyrus height (mm)</label><input id="papyrus-height" type="number" min="80" max="2000" value="300"/></div>
+      </div>
         <div class="format-group format-pair" role="group" aria-label="Writing direction" data-format-group="direction">
           <button id="dir-rtl" type="button" class="format-control" aria-label="Right to left" aria-pressed="false" title="Right to left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h14"/></svg></button>
           <button id="dir-ltr" type="button" class="format-control" aria-label="Left to right" aria-pressed="false" title="Left to right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5 7 7-7 7M17 12H3"/></svg></button>

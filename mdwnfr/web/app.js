@@ -95,6 +95,7 @@ function recoverLayoutDetailRevision(documentId,revision,generation,error){
 const VIRTUALIZE_ABOVE_PAGES=10;
 $('canvas-area').addEventListener('scroll',()=>{if(doc?.surface==='papyrus')schedulePapyrusWindow();},{passive:true});
 const PAGE_OVERVIEW_LIMIT=80;
+let pageOverviewVersion=0;
 function clearPageVirtualization(){
  if(pageObserver){pageObserver.disconnect();pageObserver=null;}
  pageSlots=[];itemIndexById.clear();placementById.clear();pageUsageClock=0;
@@ -540,35 +541,41 @@ function updateFormatState(){
 }
 function renderPagesOverview(){
  const container=$('pages-overview');container.replaceChildren();
+ const panel=$('pages-panel'),version=++pageOverviewVersion;
+ panel.onscroll=null;container.classList.remove('virtual-pages');container.style.height='';
  const total=pageSlots.length;
  $('page-total').textContent=total+' '+(total===1?'page':'pages');
  if(!total){const empty=document.createElement('p');empty.className='coming-soon';empty.textContent='No laid-out pages yet.';container.append(empty);return;}
- // Page navigation must remain bounded even for 10,000+ page documents.
- if(total>PAGE_OVERVIEW_LIMIT){
-  const label=document.createElement('label');label.textContent='Go to page';
-  const input=document.createElement('input');input.type='number';input.min='1';input.max=String(total);
-  input.value='1';input.setAttribute('aria-label','Page number');
-  const go=document.createElement('button');go.type='button';go.textContent='Go';
-  go.onclick=()=>{
-   const index=Number(input.value)-1;
-   if(Number.isInteger(index)&&index>=0&&index<total){closePanels();pageSlots[index].shell.scrollIntoView({behavior:'instant',block:'nearest',inline:'nearest'});}
-  };
-  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go.click();}});
-  const controls=document.createElement('div');controls.className='page-jump';controls.append(label,input,go);
-  container.append(controls);
+ // Keep large documents bounded without adding controls to the page list.
+ // The scroll position determines which single-column thumbnails exist.
+ const pitch=144;
+ const virtual=total>PAGE_OVERVIEW_LIMIT;
+ container.classList.toggle('virtual-pages',virtual);
+ container.style.height=virtual?(total*pitch+3)+'px':'';
+ let paintedStart=-1,scheduled=false;
+ function paintThumbnails(){
+  scheduled=false;
+  if(version!==pageOverviewVersion)return;
+  const start=virtual?Math.min(total-PAGE_OVERVIEW_LIMIT,
+   Math.max(0,Math.floor((panel.scrollTop-container.offsetTop)/pitch)-5)):0;
+  if(start===paintedStart)return;
+  paintedStart=start;container.replaceChildren();
+  for(let idx=start;idx<Math.min(total,start+PAGE_OVERVIEW_LIMIT);idx++){
+   const shell=pageSlots[idx].shell;
+   const button=document.createElement('button');button.type='button';button.className='page-overview-item';
+   button.setAttribute('aria-label','Go to page '+(idx+1));
+   if(virtual)button.style.top=(15+idx*pitch)+'px';
+   const shape=document.createElement('span');shape.className='page-miniature';
+   const thumbnail=document.createElement('span');thumbnail.className='page-mini-lines';
+   shape.append(thumbnail);
+   const label=document.createElement('span');label.textContent='Page '+(idx+1);
+   button.append(shape,label);
+   button.onclick=()=>{closePanels();shell.scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'});};
+   container.append(button);
+  }
  }
- for(let idx=0;idx<Math.min(total,PAGE_OVERVIEW_LIMIT);idx++){
-  const shell=pageSlots[idx].shell;
-  const button=document.createElement('button');button.type='button';button.className='page-overview-item';
-  button.setAttribute('aria-label','Go to page '+(idx+1));
-  const shape=document.createElement('span');shape.className='page-miniature';
-  const thumbnail=document.createElement('span');thumbnail.className='page-mini-lines';
-  shape.append(thumbnail);
-  const label=document.createElement('span');label.textContent='Page '+(idx+1);
-  button.append(shape,label);
-  button.onclick=()=>{closePanels();shell.scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'});};
-  container.append(button);
- }
+ panel.onscroll=virtual?()=>{if(!scheduled){scheduled=true;requestAnimationFrame(paintThumbnails);}}:null;
+ paintThumbnails();
 }
 // Legacy v4 artwork is data only; the editor does not import any v4 code.
 async function ensureArtworkCatalog(){

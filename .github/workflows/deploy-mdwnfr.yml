@@ -115,6 +115,7 @@ jobs:
           node --check dist/sw.js
           node --check dist/lexicon-install.mjs
           node qa/test_service_worker_cache.mjs
+          node qa/test_pages_overview.mjs
           node tools/test_recovery_storage.mjs
           python - <<'PY'
           import json

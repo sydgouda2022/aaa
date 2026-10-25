@@ -174,6 +174,35 @@ def free_sectors(artwork_id, *, image_width, image_height, x_offset,
     return _free_from_blocks(blocked,top,bottom)
 
 
+def free_word_starts(quadrat, *, column_left, top, bottom, clearance,
+                     obstacles, ink_expansion=0.0):
+    """Allowed word origins, testing each visible glyph against 2D artwork.
+
+    A column's empty side bearings and a word's inter-row spaces are not ink.
+    They must not turn a tapered contour or the space between legs into an
+    opaque word-sized rectangle. Keep glyph geometry intact and intersect
+    the legal vertical origins of every glyph. Obstacles use reading-axis
+    coordinates, including the already resolved mask reflection.
+    """
+    ink_bottom=max(g.y+g.height for g in quadrat.signs)
+    starts=[(top,bottom-ink_bottom-ink_expansion)]
+    if starts[0][1]<top:return []
+    for glyph in quadrat.signs:
+        for aid,bands,mask,iw,ih,ix,flip,iy in obstacles:
+            free=free_sectors(aid,bands=bands,mask=mask,
+                image_width=iw,image_height=ih,x_offset=ix,
+                slot_left=column_left+glyph.x,
+                slot_right=column_left+glyph.x+glyph.width,
+                top=top+glyph.y,bottom=bottom,
+                clearance=clearance+ink_expansion,flip=flip,image_top=iy)
+            allowed=[(a-glyph.y,b-glyph.y-glyph.height)
+                     for a,b in free if b-a>=glyph.height-1e-8]
+            starts=[(max(a,c),min(b,d)) for a,b in starts for c,d in allowed
+                    if min(b,d)>=max(a,c)-1e-8]
+            if not starts:return []
+    return sorted(starts)
+
+
 @lru_cache(maxsize=512)
 def _mask_row_runs(encoded: str) -> tuple[tuple[tuple[int, int], ...], ...]:
     """Exact contiguous occupied x-pixel intervals in each 2D mask row.

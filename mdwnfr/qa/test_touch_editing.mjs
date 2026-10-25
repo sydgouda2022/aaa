@@ -52,12 +52,14 @@ for(const engineName of engines){
     const layout=await page.evaluate(()=>{
      const panel=document.getElementById('format-panel'),r=panel.getBoundingClientRect();
      const groups=[...document.querySelectorAll('[data-format-group]')].map(x=>x.dataset.formatGroup);
-     const bad=[...document.querySelectorAll('#format-main .format-control,#font-size,#font-family')]
+     const bad=[...document.querySelectorAll('#format-main .format-control,#font-size,#font-family,#surface')]
       .filter(el=>!el.hidden&&el.getClientRects().length).map(el=>({id:el.id,r:el.getBoundingClientRect()}))
       .filter(({r})=>r.width<43.9||r.height<43.9).map(({id,r})=>({id,width:r.width,height:r.height}));
      return {groups,width:r.width,left:r.left,right:r.right,top:r.top,bottom:r.bottom,bad,viewport:{width:innerWidth,height:innerHeight}};
     });
-    assert.deepEqual(layout.groups,['size','colors','history','font','direction','insert']);
+    assert.deepEqual(layout.groups,['size','colors','history','font','surface','direction','insert']);
+    assert.equal(await page.locator('#format-panel #surface').count(),1,'Writing surface belongs in Format');
+    assert.equal(await page.locator('#pages-panel select,#pages-panel input').count(),0,'Pages contains only navigation');
     assert.ok(layout.width<=260,'The inspector must be slim');
     assert.ok(layout.left>=0&&layout.right<=viewport.width&&layout.top>=0&&layout.bottom<=viewport.height);
     assert.deepEqual(layout.bad,[],'All editing targets must be at least 44 CSS px');
@@ -128,6 +130,21 @@ for(const engineName of engines){
     await page.waitForFunction(()=>document.getElementById('create-document')?.disabled===false,null,{timeout:180000});
     await page.locator('.document-open').first().click();await count(6);
     assert.equal(await page.locator('#font-size').inputValue(),'10');
+    // Multiple real pages must stack as one thumbnail per row on both devices.
+    await pasteText(Array(40).fill('𓅓').join(' '));await count(46);
+    await page.locator('#format-toggle').click();
+    await page.locator('#font-size').fill('72');await page.locator('#font-size').press('Tab');
+    await page.waitForFunction(()=>Number(document.getElementById('page-total').textContent.match(/\d+/)?.[0])>=2,
+      null,{timeout:90000});
+    await page.locator('#pages-toggle').click();
+    const thumbnails=await page.locator('.page-overview-item').evaluateAll(els=>els.map(el=>{
+      const r=el.getBoundingClientRect();return {left:r.left,top:r.top,bottom:r.bottom};
+    }));
+    assert.ok(thumbnails.length>=2);
+    for(let i=1;i<thumbnails.length;i++){
+      assert.ok(Math.abs(thumbnails[i].left-thumbnails[0].left)<1,'Exactly one page per row');
+      assert.ok(thumbnails[i].top>=thumbnails[i-1].bottom,'Page thumbnails cannot share a row');
+    }
     assert.deepEqual(errors,[]);
     console.log('PASS:',engineName,viewport.width+'x'+viewport.height,'touch menu, clipboard, colors, delete/undo, reopen');
     results.push({engine:engineName,viewport,commands:'cut/copy/paste/select-all/delete',persistence:true,targets:'44px minimum'});

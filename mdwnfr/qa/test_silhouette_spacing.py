@@ -463,6 +463,8 @@ class ArtworkWordFlow(unittest.TestCase):
         self.assertEqual(expanded,full)
 
     def test_dividers_join_matching_sectors_in_neighboring_slots(self):
+        from mdwnfr.silhouette import free_sectors
+        from mdwnfr.layout import object_clearance_mm
         layout=layout_document(self.document(offset=42))
         checked=0
         width=layout['column_width_mm']
@@ -470,25 +472,30 @@ class ArtworkWordFlow(unittest.TestCase):
             art=next((p for c in page['columns'] if c['kind']=='clipart'
                       for p in c['placements']),None)
             if art is None:continue
-            below=art['y']+art['height']/2
             sectors=[c for c in page['columns'] if c.get('span')==0 and c['placements']]
             for left in sectors:
                 for right in sectors:
                     if not math.isclose(left['x']+width,right['x'],abs_tol=1e-5):continue
                     top=max(left['text_top'],right['text_top'])
                     bottom=min(left['text_bottom'],right['text_bottom'])
-                    # The bottom channels beneath Horus are completely clear.
-                    # They must still have a divider even though the seed list
-                    # interleaves upper and lower sectors of each column.
-                    if top<below-1e-4 or bottom-top<1:continue
-                    checked+=1
-                    self.assertTrue(any(math.isclose(d['x'],right['x'],abs_tol=1e-5)
-                        and d['y1']<=top+1e-5 and d['y2']>=bottom-1e-5
-                        for d in page['dividers']),f'Missing lower divider at {right["x"]}')
+                    if bottom-top<1:continue
+                    thickness=divider_stroke_mm(layout['font_size_pt'])
+                    safe=free_sectors(art['artwork_id'],image_width=art['width_mm'],
+                        image_height=art['height'],x_offset=art['x'],
+                        slot_left=right['x']-thickness/2,slot_right=right['x']+thickness/2,
+                        top=top,bottom=bottom,clearance=object_clearance_mm(width),
+                        flip=art['resolved_flip'],image_top=art['y'])
+                    for a,b in safe:
+                        if b-a<1:continue
+                        checked+=1
+                        self.assertTrue(any(math.isclose(d['x'],right['x'],abs_tol=1e-5)
+                            and d['y1']<=a+1e-4 and d['y2']>=b-1e-4
+                            for d in page['dividers']),f'Missing divider at {right["x"]}')
         self.assertGreater(checked,0)
 
     def test_words_and_dividers_keep_the_artwork_clearance(self):
         from mdwnfr.silhouette import free_sectors
+        from mdwnfr.layout import object_clearance_mm
         for direction in ('rtl','ltr'):
             for offset in (-22,0,42):
                 layout=layout_document(self.document(direction,offset))
@@ -496,17 +503,80 @@ class ArtworkWordFlow(unittest.TestCase):
                 for page in layout['pages']:
                     arts=[p for c in page['columns'] if c['kind']=='clipart'
                           for p in c['placements']]
-                    areas=[(p['x'],p['x']+width,p['y'],p['y']+p['height'])
+                    areas=[(p['x']+(g['x'] if direction=='ltr' else width-g['x']-g['width']),
+                            p['x']+(g['x']+g['width'] if direction=='ltr' else width-g['x']),
+                            p['y']+g['y'],p['y']+g['y']+g['height'])
                         for c in page['columns'] if c['kind']=='words'
-                        for p in c['placements']]
-                    areas.extend((d['x']-.0001,d['x']+.0001,d['y1'],d['y2'])
+                        for p in c['placements'] for g in p['quadrat']['signs']]
+                    areas.extend((d['x']-d['thickness_mm']/2,d['x']+d['thickness_mm']/2,d['y1'],d['y2'])
                                  for d in page['dividers'])
                     for art in arts:
                         for left,right,top,bottom in areas:
                             safe=free_sectors(art['artwork_id'],image_width=art['width_mm'],
                                 image_height=art['height'],x_offset=art['x'],
                                 slot_left=left,slot_right=right,top=top,bottom=bottom,
-                                clearance=width,flip=art['resolved_flip'],image_top=art['y'])
+                                clearance=object_clearance_mm(width),flip=art['resolved_flip'],image_top=art['y'])
                             self.assertLessEqual(bottom-top-sum(b-a for a,b in safe),.0001)
+
+    def test_visible_ink_can_fill_the_channel_between_two_legs(self):
+        import base64
+        from mdwnfr.silhouette import free_word_starts,free_sectors
+        from mdwnfr.layout import object_clearance_mm
+        width=16
+        # Two 2-mm opaque legs, with a genuinely transparent 12-mm channel.
+        bits=((1<<32)-1)<<224 | (1<<32)-1
+        mask=base64.b64encode(bits.to_bytes(32,'big')*256).decode('ascii')
+        obstacle=(None,None,mask,width,80,0,'normal',20)
+        q=compose(['𓏺'],width)
+        clear=object_clearance_mm(width)
+        self.assertEqual(clear,width/4)
+        # The former column-sized exclusion rejects the entire lower lane.
+        self.assertEqual(free_sectors(None,mask=mask,image_width=width,image_height=80,
+            x_offset=0,slot_left=0,slot_right=width,top=18,bottom=100,
+            clearance=clear,image_top=20),[])
+        starts=free_word_starts(q,column_left=0,top=18,bottom=100,
+                               clearance=clear,obstacles=[obstacle])
+        self.assertTrue(any(a<=40<=b for a,b in starts))
+
+    def test_clearance_is_a_quarter_column_from_actual_ink(self):
+        from mdwnfr.silhouette import free_word_starts,solid_object_mask
+        from mdwnfr.layout import object_clearance_mm
+        width=20;clear=object_clearance_mm(width)
+        q=compose(['𓅓'],width);g=q.signs[0]
+        edge=g.x+g.width+clear
+        def fits(x):
+            starts=free_word_starts(q,column_left=0,top=18,bottom=100,
+                clearance=clear,obstacles=[(None,None,solid_object_mask(),4,80,x,'normal',18)])
+            return any(a<=40<=b for a,b in starts)
+        self.assertTrue(fits(edge))
+        self.assertFalse(fits(edge-.1))
+
+    def test_dense_bennu_text_uses_transparent_channels_instead_of_column_boxes(self):
+        from mdwnfr.document import new_document,word,clipart
+        from mdwnfr.layout import object_clearance_mm
+        from mdwnfr.silhouette import free_sectors
+        for direction in ('rtl','ltr'):
+            doc=new_document('Bennu contour reference')
+            doc['direction']=direction
+            doc['items']=[word(list('𓈖𓂝𓂻')) for _ in range(500)]
+            doc['items'].insert(48,clipart('bennu',80,'normal'))
+            layout=layout_document(doc);page=layout['pages'][0]
+            art=next(p for c in page['columns'] if c['kind']=='clipart' for p in c['placements'])
+            width=layout['column_width_mm'];reclaimed=0
+            for col in page['columns']:
+                if col['kind']!='words':continue
+                for p in col['placements']:
+                    if p['y']<art['y']+art['height']*.6:continue
+                    safe=free_sectors(art['artwork_id'],image_width=art['width_mm'],
+                        image_height=art['height'],x_offset=art['x'],
+                        slot_left=p['x'],slot_right=p['x']+width,
+                        top=p['y'],bottom=p['y']+p['height'],
+                        clearance=object_clearance_mm(width),flip=art['resolved_flip'],image_top=art['y'])
+                    if sum(b-a for a,b in safe)<p['height']-.01:reclaimed+=1
+            self.assertGreater(reclaimed,2,'Narrow ink should occupy space rejected by column rectangles')
+            self.assert_natural_ink(layout)
+            self.assertEqual([p['id'] for page in layout['pages'] for c in page['columns']
+                if c['kind']=='words' for p in c['placements']],
+                [o['id'] for o in doc['items'] if o['type']=='word'])
 
 if __name__=='__main__':unittest.main()

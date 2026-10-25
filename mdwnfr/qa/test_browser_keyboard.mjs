@@ -37,7 +37,7 @@ try{
   });
   assert.ok(panelAudit.three);assert.equal(panelAudit.obsolete,false);
   assert.ok(panelAudit.edit,'All five edit commands belong to the contextual menu');
-  assert.deepEqual(panelAudit.groups,['size','colors','history','font','direction','insert']);
+  assert.deepEqual(panelAudit.groups,['size','colors','history','font','surface','direction','insert']);
   assert.equal(await page.locator('#font-size').inputValue(),'10');
   for(const tool of panelAudit.actions){
     assert.equal(tool.inside,true,tool.id+' must live in Format');

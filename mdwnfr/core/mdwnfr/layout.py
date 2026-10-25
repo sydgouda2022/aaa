@@ -13,7 +13,7 @@ from functools import lru_cache
 from math import ceil
 from .document import SURFACES, assert_document, DocumentError, artwork_catalog, validated_margins
 from .quadrat import compose, expand_internal, expand_after_word, expand_to_ink_bottom, _shape_ratio
-from .silhouette import free_sectors, solid_object_mask, cartouche_object_mask, silhouettes_collide
+from .silhouette import free_sectors, free_word_starts, solid_object_mask, cartouche_object_mask, silhouettes_collide
 from .tables import typeset_table, paginate_table, TableError
 from .cartouches import typeset_cartouche, CartoucheError
 from .typography import divider_stroke_mm
@@ -24,13 +24,13 @@ LAYOUT_PARAMETERS = ('id', 'direction', 'surface', 'font_size_pt', 'papyrus_heig
 
 
 def object_clearance_mm(column_width: float) -> float:
-    """One whole current-font quadrat of breathing room around every object.
+    """One quarter of the current column width between objects and visible ink.
 
     The same physical distance applies to normal text, floated text, tables,
     cartouches, raster images, and decorative dividers. It is not a percent of
     object width or a static screen-pixel padding.
     """
-    return column_width
+    return column_width / 4.0
 
 
 def proportional_extra(heights: list[float], remainder: float) -> list[float]:
@@ -223,7 +223,7 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
                                   if 'float_offset' in seed else {})})
             slot += span
         # Lines are derived decoration, never inputs to text geometry.
-        # They stop one current-sign-width before a visible artwork contour
+        # They stop a quarter-column before a visible artwork contour
         # and resume in the next unobstructed vertical sector.
         artworks=[]
         for col in positioned:
@@ -277,8 +277,8 @@ def _pack_pages(doc: dict, columns: list[dict], width: float, page_width: float,
                 for top,bottom in spans:
                     clear=free_sectors(art.get('artwork_id'), bands=art.get('bands'), mask=art.get('mask'), image_width=art['width_mm'],
                          image_height=art['height'],x_offset=art['x'],
-                         slot_left=x-0.0001,slot_right=x+0.0001,
-                         top=top,bottom=bottom,clearance=width,
+                         slot_left=x-divider_thickness/2,slot_right=x+divider_thickness/2,
+                         top=top,bottom=bottom,clearance=object_clearance_mm(width),
                          flip=art['flip'],image_top=art['y'])
                     remaining.extend(clear)
                 spans=remaining
@@ -466,6 +466,73 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         """
         return {**word_column(items,top,bottom,justified),'span':0,
                 'slot_offset':slot_offset,'slot_width':1}
+
+    def contour_column(left:float, obstacles:list, slot_offset:int,
+                       preceding:deque, cursor:int|None=None,
+                       top:float|None=None) -> tuple[dict|None,int|None]:
+        """Follow occupied artwork pixels with actual glyph-sized footprints.
+
+        Word identities and internal spacing stay unchanged. A word is moved
+        only as far as its visible ink requires, rather than reserving the
+        full column width and then stretching disconnected vertical sectors.
+        """
+        top=page_top if top is None else top
+        @lru_cache(maxsize=512)
+        def origins(spelling, bold):
+            q=quadrat_for(spelling)
+            stroke=max(g.font_size for g in q.signs)*.006 if bold else 0.0
+            return free_word_starts(q,column_left=left,top=top,bottom=page_bottom,
+                clearance=object_clearance_mm(width),obstacles=obstacles,
+                ink_expansion=stroke)
+        def next_word():
+            if preceding:return preceding[0]
+            if cursor is not None and cursor<len(doc['items']):
+                entry=doc['items'][cursor]
+                if entry['type']=='word':return entry
+            return None
+        selected=[]
+        y=top
+        while (entry:=next_word()) is not None:
+            q=quadrat_for(tuple(entry['signs']))
+            candidate=None
+            for a,b in origins(tuple(entry['signs']),entry.get('bold',False)):
+                # Published geometry has five-decimal-mm origins. Round away
+                # from the obstacle so packing cannot consume its clearance.
+                start=ceil((max(a,y)-1e-9)*1e5)/1e5
+                if start<=b+1e-8:
+                    candidate=start;break
+            if candidate is None:break
+            selected.append((entry,q,candidate))
+            y=candidate+q.height
+            if preceding:preceding.popleft()
+            else:cursor+=1
+        if not selected:return None,cursor
+        # Entirely unobstructed lanes retain ordinary column justification.
+        clear=all(free_sectors(aid,bands=bands,mask=mask,image_width=iw,
+            image_height=ih,x_offset=ix,slot_left=left,slot_right=left+width,
+            top=top,bottom=page_bottom,clearance=object_clearance_mm(width),
+            flip=flip,image_top=iy)==[(top,page_bottom)]
+            for aid,bands,mask,iw,ih,ix,flip,iy in obstacles)
+        if clear:
+            return wrapped_sector([(ob,q) for ob,q,_ in selected],top,page_bottom,
+                                  slot_offset,next_word() is not None),cursor
+        placements=[]
+        for index,(ob,q,y) in enumerate(selected):
+            extra=-q.flexible_gaps[-1] if index==len(selected)-1 else 0.0
+            if compact:
+                placements.append((ob['id'],round(y,5),round(q.height+extra,5),extra))
+            else:
+                adjusted=expand_to_ink_bottom(q,extra) if extra else q
+                placements.append({'id':ob['id'],'type':'word','signs':ob['signs'],
+                    'color':ob.get('color','#192433'),'bold':ob.get('bold',False),
+                    'y':round(y,5),'height':round(adjusted.height,5),
+                    'quadrat':adjusted.payload()})
+        last=selected[-1]
+        stats['computed_columns']+=1
+        return {'placements':placements,'text_top':selected[0][2],
+                'text_bottom':round(last[2]+last[1].height-last[1].flexible_gaps[-1],5),
+                'kind':'words','span':0,'slot_offset':slot_offset,'slot_width':1,
+                'terminal_gap_removed':True},cursor
 
     def reserve_shared_object_clearance(obj: dict, image_w: float,
                                         image_h: float, image_y: float,
@@ -712,46 +779,18 @@ def _layout(doc: dict, glyph_metrics: dict | None,
         if flip_override is None and doc['direction']=='rtl':
             reflection='mirror' if reflection=='normal' else 'normal'
         replacement=[]
+        _, older_obstacles = prior_object_obstacles()
+        obstacles=older_obstacles+[(obj.get('artwork_id'),obj.get('bands'),
+            mask_override if mask_override is not None else obj.get('mask'),
+            image_w,image_h,image_start,reflection,image_y)]
         for j in range(touched):
             left=(occupied-touched+j)*width
-            sectors=[(page_top,page_bottom)]
-            _, older_obstacles = prior_object_obstacles()
-            for aid,bands,old_mask,iw,ih,ix,old_flip,iy in older_obstacles:
-                remaining=[]
-                for top,bottom in sectors:
-                    remaining.extend(free_sectors(aid,bands=bands,mask=old_mask,
-                        image_width=iw,image_height=ih,x_offset=ix,
-                        slot_left=left,slot_right=left+width,
-                        top=top,bottom=bottom,clearance=object_clearance_mm(width),
-                        flip=old_flip,image_top=iy))
-                sectors=remaining
-                if not sectors:break
-            remaining=[]
-            for top,bottom in sectors:
-                remaining.extend(free_sectors(obj.get('artwork_id'),
-                    bands=obj.get('bands'),
-                    mask=mask_override if mask_override is not None else obj.get('mask'),
-                    image_width=image_w,image_height=image_h,x_offset=image_start,
-                    slot_left=left,slot_right=left+width,top=top,bottom=bottom,
-                    clearance=object_clearance_mm(width),flip=reflection,image_top=image_y))
-            sectors=remaining
             # An empty placeholder keeps the original physical slot. The
-            # zero-span sectors paint geometry inside that same slot.
+            # zero-span contour column paints inside that same slot.
             replacement.append({'placements':[], 'text_top':page_top,
                 'text_bottom':page_top, 'span':1,'kind':'words'})
-            for top,bottom in sectors:
-                if bottom-top < .75*width: continue
-                segment=[]
-                length=0.0
-                while preceding:
-                    entry=preceding[0]
-                    q=quadrat_for(tuple(entry['signs']))
-                    need=q.height+(gap if segment else 0)
-                    if length+need>bottom-top+1e-8:break
-                    segment.append((preceding.popleft(),q))
-                    length+=need
-                if segment:
-                    replacement.append(wrapped_sector(segment,top,bottom,-1,bool(preceding)))
+            seed,_=contour_column(left,obstacles,-1,preceding)
+            if seed:replacement.append(seed)
         columns[-touched:]=replacement
         if requested>=0 and preceding:
             # At zero/forward offset the object is *after* these words in the
@@ -781,98 +820,37 @@ def _layout(doc: dict, glyph_metrics: dict | None,
     def wrap_after_clipart(obj:dict, image_w:float, image_h:float, span:int,
                            start:int, preceding:deque | None = None,
                            *, following_below:bool=False) -> int:
-        """Fill silhouette-free vertical sectors using following ordered words.
+        """Pack following words tightly around every occupied 2D contour.
 
-        Remaining words automatically continue in ordinary columns. No word
-        ever splits across sectors. Next clip-art anchors begin a new band.
+        A transparent channel can accept the ink of a narrow glyph even when
+        it is too small for the old full-column exclusion rectangle.
         """
-        clear=object_clearance_mm(width)
         cursor=start
-        preceding = preceding if preceding is not None else deque()
-        slot_position, obstacles = prior_object_obstacles()
-        # Current image is the last obstacle. Find its start in slot space.
+        preceding=preceding if preceding is not None else deque()
+        slot_position,obstacles=prior_object_obstacles()
         image_start=slot_position-span
         image_y=obstacles[-1][-1] if obstacles else page_top
+        top=(max(page_top,image_y+image_h+object_clearance_mm(width))
+             if following_below else page_top)
         for slot_index in range(span):
-            left=(image_start+slot_index)*width
-            right=left+width
-            sectors=[(page_top,page_bottom)]
-            for aid,bands,mask,iw,ih,ix,reflection,iy in obstacles:
-                remaining=[]
-                for top,bottom in sectors:
-                    remaining.extend(free_sectors(aid,bands=bands,mask=mask,image_width=iw,
-                        image_height=ih,x_offset=ix,slot_left=left,slot_right=right,
-                        top=top,bottom=bottom,clearance=clear,flip=reflection,
-                        image_top=iy))
-                sectors=remaining
-                if not sectors:break
-            for top,bottom in sectors:
-                if following_below:
-                    top=max(top,image_y+image_h+clear)
-                if bottom-top<.75*width:continue  # reject dead channels
-                segment=[]
-                length=0.
-                while preceding or (cursor<len(doc['items']) and doc['items'][cursor]['type']=='word'):
-                    ob=preceding[0] if preceding else doc['items'][cursor]
-                    q=quadrat_for(tuple(ob['signs']))
-                    needed=q.height+(gap if segment else 0)
-                    if length+needed > bottom-top+1e-8:break
-                    segment.append((ob,q));length+=needed
-                    if preceding:preceding.popleft()
-                    else:cursor+=1
-                if segment:
-                    overflow=bool(preceding or (cursor<len(doc['items']) and
-                                               doc['items'][cursor]['type']=='word'))
-                    columns.append(wrapped_sector(segment,top,bottom,
-                                                    -span+slot_index,overflow))
-        # The edge of a reserved object band is ALSO an internal border.
-        # The first ordinary word column after it must respect the contour:
-        # otherwise zero-offset rectangles/cartouches can touch following ink.
-        # Reserve at most one edge column, and only when its clearance is
-        # actually obstructed. The page's normal full-width column is restored
-        # immediately after that narrow window.
-        next_left=slot_position*width
-        more_words=(preceding or (cursor<len(doc['items']) and
-                                   doc['items'][cursor]['type']=='word'))
-        if more_words and (page_capacity is None or
-                           next_left < page_capacity*width-1e-8):
-            safe=[(page_top,page_bottom)]
-            for aid,bands,mask,iw,ih,ix,reflection,iy in obstacles:
-                updated=[]
-                for top,bottom in safe:
-                    updated.extend(free_sectors(aid,bands=bands,mask=mask,
-                        image_width=iw,image_height=ih,x_offset=ix,
-                        slot_left=next_left,slot_right=next_left+width,
-                        top=top,bottom=bottom,clearance=clear,flip=reflection,
-                        image_top=iy))
-                safe=updated
-                if not safe:break
-            # No new reservation is needed when the edge is completely clear.
-            if safe!=[(page_top,page_bottom)]:
-                columns.append({'placements':[], 'text_top':page_top,
+            seed,cursor=contour_column((image_start+slot_index)*width,obstacles,
+                                      -span+slot_index,preceding,cursor,top)
+            if seed:columns.append(seed)
+        # Check the first slot beyond the reservation as well: its ink can
+        # still approach the expanded contour. Subsequent slots are clear.
+        more_words=preceding or (cursor<len(doc['items']) and doc['items'][cursor]['type']=='word')
+        if more_words and (page_capacity is None or slot_position<page_capacity):
+            left=slot_position*width
+            blocked=any(free_sectors(aid,bands=bands,mask=mask,image_width=iw,
+                image_height=ih,x_offset=ix,slot_left=left,slot_right=left+width,
+                top=page_top,bottom=page_bottom,clearance=object_clearance_mm(width),
+                flip=flip,image_top=iy)!=[(page_top,page_bottom)]
+                for aid,bands,mask,iw,ih,ix,flip,iy in obstacles)
+            if blocked:
+                columns.append({'placements':[],'text_top':page_top,
                     'text_bottom':page_top,'span':1,'kind':'words'})
-                for top,bottom in safe:
-                    if following_below:
-                        top=max(top,image_y+image_h+clear)
-                    if bottom-top<.75*width:continue
-                    part=[];height=0.0
-                    while preceding or (cursor<len(doc['items']) and
-                                        doc['items'][cursor]['type']=='word'):
-                        ob=preceding[0] if preceding else doc['items'][cursor]
-                        q=quadrat_for(tuple(ob['signs']))
-                        required=q.height+(gap if part else 0.0)
-                        if height+required>bottom-top+1e-8:break
-                        part.append((ob,q));height+=required
-                        if preceding:preceding.popleft()
-                        else:cursor+=1
-                    if part:
-                        overflow=bool(preceding or (cursor<len(doc['items']) and
-                                                   doc['items'][cursor]['type']=='word'))
-                        columns.append(wrapped_sector(part,top,bottom,-1,overflow))
-        # Keep earlier silhouette-safe word sectors intact even when another
-        # graphical object follows. Rewinding these already composed words
-        # back into an ordinary full-width column silently discards the first
-        # object's clearance and can make ink cross its boundary.
+                seed,cursor=contour_column(left,obstacles,-1,preceding,cursor,top)
+                if seed:columns.append(seed)
         return cursor
 
     def wrap_after_table(table_bottom: float, span: int, cursor: int) -> int:

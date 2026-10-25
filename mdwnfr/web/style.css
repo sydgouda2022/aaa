@@ -75,7 +75,7 @@
 .floating-panel-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:14px 0;border-bottom:1px solid #e4ebf0;color:#213e5a}
 .floating-panel-heading strong{font-size:15px}
 .floating-panel-heading span{font-size:10px;color:#8292a0}
-.pages-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:15px}
+.pages-overview{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding-top:15px}
 .page-overview-item{border:1px solid transparent;border-radius:11px;padding:10px 5px;background:#f5f8fb;display:flex;flex-direction:column;align-items:center;gap:8px;color:#44617d;font-size:11px}
 .page-overview-item:hover,.page-overview-item:focus-visible{background:#eaf2f9;border-color:#a8c1d5}
 .page-miniature{background:#fffdf8;border:1px solid #d2d7d7;width:64px;height:88px;border-radius:2px;display:grid;place-items:center;box-shadow:0 3px 7px #2e3b4418}
@@ -342,8 +342,6 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .object-inspector .clipart-note{display:none}
 .object-inspector .table-buttons button{min-width:44px;min-height:44px}
 .object-inspector .artwork-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.page-settings{padding:12px 0;border-bottom:1px solid #e0e8ef}
-.page-settings select,.page-settings input{min-height:44px;font-size:16px}
 .edit-menu{position:fixed;z-index:90;width:210px;max-width:calc(100vw - 24px);padding:5px;background:rgba(255,255,255,.98);border:1px solid #cfdae4;border-radius:14px;box-shadow:0 8px 30px #102d5133;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .edit-menu button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:44px;border:0;border-bottom:1px solid #e8edf2;border-radius:6px;background:transparent;padding:10px 12px;text-align:left;font:16px system-ui;color:#153d66;touch-action:manipulation}
 .edit-menu button:last-child{border-bottom:0;color:#a72d38}
@@ -365,3 +363,13 @@ button:disabled{opacity:.42;cursor:not-allowed}
 }
 @media(max-width:360px){.egyptian-colors{grid-template-columns:repeat(4,minmax(44px,1fr))}}
 @media(prefers-reduced-motion:reduce){.word{transition:none}}
+
+/* Writing-surface controls belong in Format; Pages is one thumbnail per row. */
+.format-surface .surface-control{display:grid;grid-template-columns:22px minmax(0,1fr);align-items:center;gap:12px}
+.format-surface .surface-control svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.format-surface select,.format-surface input{width:100%;min-height:44px;min-width:0;font-size:16px;color:#153d66;border:1px solid #d4e0eb;background:#f5f8fc;border-radius:10px;padding:8px 10px}
+.format-surface .format-line{margin-top:10px}
+
+.page-overview-item{height:132px}
+.pages-overview.virtual-pages{display:block;position:relative}
+.virtual-pages .page-overview-item{position:absolute;left:0;width:100%}
