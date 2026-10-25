@@ -136,7 +136,7 @@ jobs:
         run: |
           set -euo pipefail
           npm install --no-save --package-lock=false playwright@1.56.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
           python -m http.server 8123 --bind 127.0.0.1 --directory dist >/tmp/mdwnfr-browser-http.log 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
@@ -146,6 +146,7 @@ jobs:
           done
           node qa/test_browser_keyboard.mjs
           node qa/test_font_bounds_browser.mjs
+          node qa/test_touch_editing.mjs
       - name: Deploy Cloudflare Worker
         working-directory: mdwnfr
         env:

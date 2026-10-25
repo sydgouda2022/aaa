@@ -17,30 +17,31 @@ try{
     {timeout:180000});
   await page.locator('#create-document').click();
   await page.locator('#editor-screen').waitFor({state:'visible',timeout:90000});
-  // Google-Docs-like editor has exactly three panels. The former Edit and
-  // Insert controls live in Format as accessible icon-only actions.
+  // The approved slim Format panel keeps editing commands in its touch menu.
   const panelAudit=await page.evaluate(()=>{
     const ids=['pages-panel','format-panel','keyboard-panel'];
     const old=['edit-panel','insert-panel','edit-toggle','insert-toggle'];
-    const actions=['select-all','copy-selection','cut-selection','paste-selection',
-                   'delete','undo','redo','insert-clipart','insert-image',
-                   'insert-table','insert-cartouche'];
+    const actions=['undo','redo','insert-clipart','insert-image','insert-table','insert-cartouche'];
     const format=document.getElementById('format-panel');
+    const menu=document.getElementById('edit-menu');
     return {three:ids.every(x=>document.getElementById(x)),
       obsolete:old.some(x=>document.getElementById(x)),
-      actions:actions.map(x=>{
-       const el=document.getElementById(x);
-       return {id:x,inside:Boolean(format?.contains(el)),icon:Boolean(el?.querySelector('svg')),
-         label:el?.getAttribute('aria-label'),text:el?.textContent?.trim()};
+      groups:[...format.querySelectorAll('[data-format-group]')].map(el=>el.dataset.formatGroup),
+      edit:['select-all','copy-selection','cut-selection','paste-selection','delete'].every(id=>
+        menu.contains(document.getElementById(id))&&!format.contains(document.getElementById(id))),
+      actions:actions.map(id=>{
+        const el=document.getElementById(id);
+        return {id,inside:format.contains(el),icon:Boolean(el.querySelector('svg')),
+          label:el.getAttribute('aria-label'),text:el.textContent.trim()};
       })};
   });
-  assert.ok(panelAudit.three,'The editor must provide all three panels');
-  assert.equal(panelAudit.obsolete,false,'Obsolete panels must be removed');
+  assert.ok(panelAudit.three);assert.equal(panelAudit.obsolete,false);
+  assert.ok(panelAudit.edit,'All five edit commands belong to the contextual menu');
+  assert.deepEqual(panelAudit.groups,['size','colors','history','font','direction','insert']);
+  assert.equal(await page.locator('#font-size').inputValue(),'10');
   for(const tool of panelAudit.actions){
-    assert.equal(tool.inside,true,tool.id+' must live inside Format');
-    assert.equal(tool.icon,true,tool.id+' must display an icon');
-    assert.equal(tool.text,'',tool.id+' must be icon-only');
-    assert.ok(tool.label,tool.id+' must retain accessible labels');
+    assert.equal(tool.inside,true,tool.id+' must live in Format');
+    assert.equal(tool.icon,true);assert.equal(tool.text,'');assert.ok(tool.label);
   }
   // e.code is tied to physical keys; e.key deliberately uses Arabic here.
   await page.evaluate(()=>document.dispatchEvent(

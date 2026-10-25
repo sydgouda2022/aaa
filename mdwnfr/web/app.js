@@ -2,6 +2,7 @@ import {save,load,list,remove,loadProfile,saveProfile,listSnapshots,restoreSnaps
 import {SIGN_CATALOG} from './keyboard_catalog.js';
 import {NO_MIRROR_HIEROGLYPHS,mirrorSign,reverseVisualQuadrat} from './hieroglyph_facing.mjs';
 import {fitQuadrat} from './quadrat_preview.mjs';
+import {buildEgyptianPalette,normalizeColour} from './editor_controls.mjs';
 
 /* All document and typesetting decisions go through the Python RPC worker.
    JavaScript owns only interaction state, local persistence, and DOM drawing. */
@@ -399,7 +400,17 @@ const editorScreen=$('editor-screen');
 const PANELS={pages:'pages-panel',format:'format-panel',keyboard:'keyboard-panel'};
 const TRIGGERS={pages:'pages-toggle',format:'format-toggle',keyboard:'keyboard-toggle'};
 let activePanel=null;
+let selectedColour='#1f4ba8';
+function setFormatView(view='main'){
+ $('format-panel').dataset.view=view;
+ $('format-main').hidden=view!=='main';
+ $('format-colors').hidden=view!=='colors';
+ $('color-picker').setAttribute('aria-expanded',String(view==='colors'));
+ $('format-panel').scrollTop=0;
+}
 function switchPanel(name=null){
+ hideEditMenu();
+ setFormatView('main');
  activePanel=activePanel===name?null:name;
  for(const kind of Object.keys(PANELS)){
   const opened=kind===activePanel;
@@ -419,12 +430,18 @@ for(const kind of Object.keys(TRIGGERS)){
  });
 }
 document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#edit-menu'))hideEditMenu();
  if(!activePanel||editorScreen.hidden)return;
  if(e.target.closest('.panel-trigger')||e.target.closest('#'+PANELS[activePanel]))return;
  closePanels();
 });
 document.addEventListener('keydown',e=>{
- if(e.key==='Escape'&&activePanel){closePanels();}
+ if(e.key==='Escape'){
+  if(!$('edit-menu').hidden){hideEditMenu();e.preventDefault();return;}
+  if(activePanel==='format'&&$('format-panel').dataset.view==='colors'){
+   setFormatView('main');$('color-picker').focus();e.preventDefault();
+  }else if(activePanel)closePanels();
+ }
 });
 // Physical key codes keep commands usable with Arabic, Coptic, or other
 // active keyboard layouts. Do not capture native typing in text controls.
@@ -442,9 +459,6 @@ document.addEventListener('keydown',e=>{
  if(textFocus)return;
  if(mod&&!e.shiftKey&&code==='KeyB'){
   e.preventDefault();if(!$('bold').disabled)$('bold').click();return;
- }
- if(!mod&&!e.shiftKey&&(code==='Delete'||code==='Backspace')&&selectedItems().length){
-  e.preventDefault();if(!$('delete').disabled)$('delete').click();
  }
 });
 let keyboardWasDragged=false;
@@ -507,7 +521,11 @@ function updateFormatState(){
  const words=selection.filter(i=>i.type==='word');
  const hasWords=words.length>0;
  $('bold').disabled=!hasWords;$('delete').disabled=!selection.length;
- $('color-black').disabled=!hasWords;$('color-red').disabled=!hasWords;$('color-custom').disabled=!hasWords;
+ $('color-black').disabled=!hasWords;$('color-red').disabled=!hasWords;
+ $('color-custom').disabled=!hasWords;$('color-picker').disabled=!hasWords;
+ $('color-hex').disabled=!hasWords;
+ if(hasWords)selectedColour=normalizeColour(words[0].color)||'#192433';
+ refreshColourState();
  $('copy-selection').disabled=!selection.length;
  $('cut-selection').disabled=!selection.length;
  $('paste-selection').disabled=!doc;
@@ -993,7 +1011,47 @@ $('font-decrease').onclick=()=>doc&&apply({op:'set_document',font_size_pt:Math.m
 $('font-increase').onclick=()=>doc&&apply({op:'set_document',font_size_pt:Math.min(72,Number(doc.font_size_pt)+1)});
 $('dir-rtl').onclick=()=>doc&&apply({op:'set_document',direction:'rtl'});
 $('dir-ltr').onclick=()=>doc&&apply({op:'set_document',direction:'ltr'});
-$('color-custom').oninput=e=>{if(doc)styleSelected({color:e.target.value});};
+buildEgyptianPalette($('egyptian-colors'),value=>chooseColour(value));
+function refreshColourState(){
+ $('color-custom').value=selectedColour;
+ if(document.activeElement!==$('color-hex'))$('color-hex').value=selectedColour.toUpperCase();
+ $('selected-color-chip').style.setProperty('--chip',selectedColour);
+ for(const button of $('egyptian-colors').querySelectorAll('button')){
+  button.setAttribute('aria-pressed',String(button.dataset.color===selectedColour));
+  const rgb=button.dataset.color.slice(1).match(/../g).map(v=>parseInt(v,16));
+  button.style.setProperty('--check',rgb[0]*.299+rgb[1]*.587+rgb[2]*.114>160?'#102d51':'#fff');
+ }
+ $('color-black').setAttribute('aria-pressed',String(selectedColour==='#192433'));
+ $('color-red').setAttribute('aria-pressed',String(selectedColour==='#ac2533'));
+}
+function chooseColour(value){
+ const colour=normalizeColour(value);
+ if(!colour||!selectedItems().some(item=>item.type==='word'))return false;
+ selectedColour=colour;$('color-hex').removeAttribute('aria-invalid');
+ refreshColourState();styleSelected({color:colour});return true;
+}
+function setColourMode(mode){
+ $('egyptian-colors').hidden=mode!=='egyptian';
+ $('spectrum-controls').hidden=mode!=='spectrum';
+ $('color-egyptian').setAttribute('aria-pressed',String(mode==='egyptian'));
+ $('color-spectrum').setAttribute('aria-pressed',String(mode==='spectrum'));
+}
+$('color-picker').onclick=()=>{
+ if($('color-picker').disabled)return;
+ setColourMode('egyptian');setFormatView('colors');refreshColourState();
+ $('color-back').focus({preventScroll:true});
+};
+$('color-back').onclick=()=>{setFormatView('main');$('color-picker').focus({preventScroll:true});};
+$('color-close').onclick=()=>{closePanels();$('format-toggle').focus({preventScroll:true});};
+$('color-egyptian').onclick=()=>setColourMode('egyptian');
+$('color-spectrum').onclick=()=>setColourMode('spectrum');
+$('color-custom').oninput=e=>chooseColour(e.target.value);
+$('color-hex').onchange=e=>{
+ const value=normalizeColour(e.target.value);
+ if(!value){e.target.setAttribute('aria-invalid','true');return;}
+ chooseColour(value);e.target.value=value.toUpperCase();
+};
+$('color-hex').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur();}});
 function status(text,error=false){
  $('state').textContent=text;
  $('state').style.color=error?'#a72828':'#406c68';
@@ -1271,34 +1329,37 @@ function replayHistory(kind){
  txQueue=task.then(()=>undefined,()=>undefined);
  return task;
 }
-// Native clipboard shortcuts are handled only while the writing surface owns focus.
+// Document commands never override native text editing in titles, values, or dialogs.
+function editingField(target){
+ return target instanceof Element&&Boolean(target.closest('input,textarea,select,[contenteditable="true"],[role="dialog"]'));
+}
 document.addEventListener('keydown',e=>{
- if(editorScreen.hidden||!doc||!(e.ctrlKey||e.metaKey)||e.altKey)return;
- if(e.target instanceof Element && e.target.closest('input,textarea,[contenteditable="true"],#dialog-backdrop'))return;
- const key=(e.code?.startsWith('Key')?e.code.slice(3):e.key).toLowerCase();
- if(key==='a'){e.preventDefault();selectAll();}
- else if(key==='c'){e.preventDefault();copySelection();}
- else if(key==='x'){e.preventDefault();cutSelection();}
- else if(key==='v'){e.preventDefault();pasteSelection();}
+ if(editorScreen.hidden||!doc||e.isComposing||e.altKey||editingField(e.target))return;
+ const mod=e.ctrlKey||e.metaKey;
+ const code=e.code||'';
+ if(!mod&&!e.shiftKey&&['Delete','Backspace'].includes(code||e.key)&&selectedItems().length){
+  e.preventDefault();hideEditMenu();deleteSelection();return;
+ }
+ if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'){
+  e.preventDefault();const node=$('pages').querySelector('.selected')||$('pages').querySelector('.paper');
+  if(node){const r=node.getBoundingClientRect();showEditMenu(r.left+r.width/2,r.top,node,true);}return;
+ }
+ if(!mod||e.shiftKey&&!['KeyZ'].includes(code))return;
+ const key=(code.startsWith('Key')?code.slice(3):e.key).toLowerCase();
+ const action={a:selectAll,c:copySelection,x:cutSelection,v:pasteSelection};
+ if(action[key]){e.preventDefault();hideEditMenu();action[key]();}
+ else if(key==='z'||key==='y'){
+  e.preventDefault();hideEditMenu();replayHistory(key==='y'||e.shiftKey?'redo':'undo');
+ }
 });
-// Browser-native copy/paste events preserve expected behavior where available.
-document.addEventListener('copy',e=>{
- if(!editorScreen.hidden&&selectedItems().length&&!(e.target instanceof Element && e.target.closest('input,textarea,[contenteditable="true"]')))copySelection(e);
-});
-document.addEventListener('cut',e=>{
- if(!editorScreen.hidden&&selectedItems().length&&!(e.target instanceof Element && e.target.closest('input,textarea,[contenteditable="true"]')))cutSelection(e);
-});
-document.addEventListener('paste',e=>{
- if(!editorScreen.hidden&&doc&&!(e.target instanceof Element && e.target.closest('input,textarea,[contenteditable="true"]')))pasteSelection(e);
-});
+for(const [kind,action] of [['copy',copySelection],['cut',cutSelection],['paste',pasteSelection]]){
+ document.addEventListener(kind,e=>{
+  if(editorScreen.hidden||!doc||editingField(e.target)||kind!=='paste'&&!selectedItems().length)return;
+  hideEditMenu();action(e);
+ });
+}
 $('undo').onclick=()=>replayHistory('undo');
 $('redo').onclick=()=>replayHistory('redo');
-document.addEventListener('keydown',e=>{
- if(editorScreen.hidden||!doc||!(e.ctrlKey||e.metaKey)||e.altKey||!['KeyZ','KeyY'].includes(e.code)&&!['z','y'].includes(e.key.toLowerCase()))return;
- // Never hijack native undo inside rename/dialog/format inputs.
- if(e.target instanceof Element && e.target.closest('input,textarea,[contenteditable="true"],#dialog-backdrop'))return;
- e.preventDefault();replayHistory(e.code==='KeyY'||e.key.toLowerCase()==='y'||e.shiftKey?'redo':'undo');
-});
 // Only one geometry calculation is queued at a time. Edits stay on the
 // independent document worker and new revisions replace obsolete queued jobs.
 // The renderer never sees a half-computed layout.
@@ -1567,10 +1628,10 @@ function nearestWordToScreenPoint(x,y){
 async function copySelection(event=null){
  const items=selectedItems();if(!items.length)return false;
  const plain=items.filter(item=>item.type==='word').map(item=>item.signs.join('')).join(' ');
- internalClipboard={text:plain,objects:items}; // Transaction model never mutates existing word records.
- if(event?.clipboardData){event.clipboardData.setData('text/plain',plain);event.preventDefault();}
+ internalClipboard={text:plain,objects:items,systemWritten:false}; // Preserve the rich fragment when system clipboard access is denied.
+ if(event?.clipboardData){event.clipboardData.setData('text/plain',plain);event.preventDefault();internalClipboard.systemWritten=true;}
  else{
-  try{await navigator.clipboard.writeText(plain);}catch(_){status('Copied inside MdwNfr; system clipboard unavailable');}
+  try{await navigator.clipboard.writeText(plain);internalClipboard.systemWritten=true;}catch(_){status('Copied inside MdwNfr; system clipboard unavailable');}
  }
  return true;
 }
@@ -1581,15 +1642,31 @@ async function deleteSelection(){
  return success;
 }
 async function cutSelection(event=null){
- if(!await copySelection(event))return;
- await deleteSelection();
+ const identity=doc?.id,revision=doc?.revision;
+ const ids=selectedItems().map(item=>item.id).join(',');
+ if(!await copySelection(event))return false;
+ // Clipboard permission can be asynchronous. Never cut a different selection.
+ if(identity!==doc?.id||revision!==doc?.revision||ids!==selectedItems().map(item=>item.id).join(',')){
+  status('Selection changed; cut canceled');return false;
+ }
+ return deleteSelection();
 }
 async function pasteSelection(event=null){
  if(!doc)return;
  let textValue=event?.clipboardData?.getData('text/plain')??null;
  if(event)event.preventDefault();
+ if(textValue===null&&internalClipboard&&!internalClipboard.systemWritten)textValue=internalClipboard.text;
  if(textValue===null){
-  try{textValue=await navigator.clipboard.readText();}catch(_){textValue=internalClipboard?.text??'';}
+  try{textValue=await navigator.clipboard.readText();}
+  catch(_){
+   if(internalClipboard)textValue=internalClipboard.text;
+   else{
+    // WebKit can require its native Paste UI instead of granting readText.
+    const answer=await modal({title:'Paste',description:'Touch and hold the field to paste hieroglyphic text.',action:'Paste',initialValue:''});
+    if(!answer.confirmed)return false;
+    textValue=answer.value;
+   }
+  }
  }
  // The rich clipboard never supplies old object IDs to the transaction.
  let objects=[];
@@ -1609,10 +1686,82 @@ async function pasteSelection(event=null){
  const success=await apply({op:'splice',index,delete_count:count,objects});
  if(success){clearSelection();editingId=null;buffer=[];caretIndex=index+objects.length;updateSelection();renderComposer();}
 }
-$('copy-selection').onclick=()=>copySelection();
-$('cut-selection').onclick=()=>cutSelection();
-$('paste-selection').onclick=()=>pasteSelection();
-$('select-all').onclick=selectAll;
+for(const [id,action] of [['copy-selection',copySelection],['cut-selection',cutSelection],['paste-selection',pasteSelection],['select-all',selectAll]]){
+ $(id).onclick=()=>{hideEditMenu();action();};
+}
+// Touch-and-hold and a contextual menu share the canonical clipboard commands.
+let touchEditGesture=null,ignoreDocumentClickUntil=0;
+function hideEditMenu(){
+ $('edit-menu').hidden=true;
+}
+function showEditMenu(x,y,target,preserveSelection=false){
+ if(editorScreen.hidden||!doc)return;
+ const item=target?.closest('.selectable-item');
+ if(item&&!preserveSelection){
+  const index=Number(item.dataset.index);
+  if(!isIndexSelected(index))selectWord(item.dataset.id);
+ }else if(!item&&!preserveSelection){
+  const paper=target?.closest('.paper');
+  const slot=paper&&pageSlots.find(entry=>entry.shell.contains(paper));
+  if(slot?.page)placeCaretFromPoint({clientX:x,clientY:y,currentTarget:paper},slot.page);
+ }
+ closePanels();updateFormatState();
+ const menu=$('edit-menu');menu.hidden=false;
+ const vv=window.visualViewport;
+ const left=vv?.offsetLeft||0,top=vv?.offsetTop||0;
+ const width=vv?.width||innerWidth,height=vv?.height||innerHeight;
+ const r=menu.getBoundingClientRect();
+ menu.style.left=Math.max(left+12,Math.min(x-r.width/2,left+width-r.width-12))+'px';
+ const preferred=y-r.height-14>=top+12?y-r.height-14:y+18;
+ menu.style.top=Math.max(top+12,Math.min(preferred,top+height-r.height-36))+'px';
+ const first=menu.querySelector('button:not(:disabled)');
+ first?.focus({preventScroll:true});
+}
+function cancelTouchEdit(){
+ if(touchEditGesture)clearTimeout(touchEditGesture.timer);
+ touchEditGesture=null;
+}
+$('pages').addEventListener('pointerdown',e=>{
+ ignoreDocumentClickUntil=0;
+ if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+ cancelTouchEdit();
+ if(!e.isPrimary||e.button!==0||e.target.closest('.art-resize,input,textarea'))return;
+ const target=e.target;
+ const gesture={id:e.pointerId,x:e.clientX,y:e.clientY,target,timer:null};
+ gesture.timer=setTimeout(()=>{
+  if(touchEditGesture!==gesture)return;
+  ignoreDocumentClickUntil=performance.now()+1000;
+  showEditMenu(gesture.x,gesture.y,target,Boolean(target.closest('.range-handle')));
+ },550);
+ touchEditGesture=gesture;
+},true);
+window.addEventListener('pointermove',e=>{
+ if(touchEditGesture?.id===e.pointerId&&Math.hypot(e.clientX-touchEditGesture.x,e.clientY-touchEditGesture.y)>8)cancelTouchEdit();
+},{passive:true});
+window.addEventListener('pointerup',e=>{if(touchEditGesture?.id===e.pointerId)cancelTouchEdit();});
+window.addEventListener('pointercancel',cancelTouchEdit);
+$('pages').addEventListener('click',e=>{
+ if(performance.now()<ignoreDocumentClickUntil){e.preventDefault();e.stopImmediatePropagation();}
+},true);
+$('pages').addEventListener('contextmenu',e=>{
+ if(e.target.closest('input,textarea'))return;
+ e.preventDefault();cancelTouchEdit();
+ showEditMenu(e.clientX,e.clientY,e.target);
+});
+$('canvas-area').addEventListener('scroll',()=>{cancelTouchEdit();hideEditMenu();},{passive:true});
+$('edit-menu').addEventListener('keydown',e=>{
+ const buttons=[...$('edit-menu').querySelectorAll('button:not(:disabled)')];
+ const index=buttons.indexOf(document.activeElement);
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+  e.preventDefault();buttons[(index+(e.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus();
+ }else if(e.key==='Home'||e.key==='End'){
+  e.preventDefault();buttons[e.key==='Home'?0:buttons.length-1]?.focus();
+ }
+});
+if(!/Mac|iPhone|iPad/.test(navigator.platform||'')){
+ for(const kbd of $('edit-menu').querySelectorAll('kbd'))kbd.textContent=kbd.textContent.replace('⌘','Ctrl+');
+}
+window.addEventListener('resize',()=>{cancelTouchEdit();hideEditMenu();});
 function updateSelection(){
  const range=selectedRange();
  for(const el of $('pages').querySelectorAll('.selectable-item')){
@@ -1814,7 +1963,7 @@ for(const edge of ['top','bottom','left','right']){
 }
 function styleSelected(patch){
  const words=selectedItems().filter(item=>item.type==='word');
- if(words.length)apply({op:'set_styles',styles:words.map(item=>({id:item.id,...patch}))});
+ if(words.length)return apply({op:'set_styles',styles:words.map(item=>({id:item.id,...patch}))});
 }
 $('color-black').onclick=()=>styleSelected({color:'#192433'});
 $('color-red').onclick=()=>styleSelected({color:'#ac2533'});
@@ -1822,7 +1971,7 @@ $('bold').onclick=()=>{
  const words=selectedItems().filter(item=>item.type==='word');
  if(words.length)styleSelected({bold:!words.every(item=>item.bold)});
 };
-$('delete').onclick=deleteSelection;
+$('delete').onclick=()=>{hideEditMenu();deleteSelection();};
 $('library').onclick=()=>{closePanels();backToLibrary();};
 $('create-document').onclick=createDocument;
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&doc)flushAutosave().catch(()=>{});});
@@ -1835,6 +1984,7 @@ function modal({title,description='',action='Continue',initialValue=null,destruc
   $('dialog-title').textContent=title;$('dialog-desc').textContent=description;
   ok.textContent=action;ok.classList.toggle('danger',destructive);
   input.hidden=initialValue===null;input.value=initialValue??'';
+  input.setAttribute('aria-label',title==='Paste'?'Paste hieroglyphic text':'Document name');
   bg.classList.remove('hidden');
   function finish(confirmed){
    if(confirmed&&initialValue!==null&&!input.value.trim()){

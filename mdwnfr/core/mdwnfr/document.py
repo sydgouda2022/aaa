@@ -190,7 +190,7 @@ def valid_name(name: str) -> str:
 
 
 def new_document(name: str = "Untitled", direction: str = "rtl",
-                 surface: str = "A4", font_size_pt: float = 22.0) -> dict:
+                 surface: str = "A4", font_size_pt: float = 10.0) -> dict:
     if direction not in ("ltr", "rtl") or surface not in (*SURFACES, "papyrus"):
         raise DocumentError("Unsupported writing direction or writing surface")
     if not 6 <= float(font_size_pt) <= 72:

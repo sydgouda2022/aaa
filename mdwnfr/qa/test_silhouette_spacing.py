@@ -266,7 +266,7 @@ class VisibleInkComposition(unittest.TestCase):
     def test_completed_column_balances_first_and_last_visible_ink(self):
         from mdwnfr.document import new_document,transaction,validated_margins,SURFACES
         from mdwnfr.layout import incremental_layout_document,expand_compact_layout
-        doc=new_document('Page edge ink')
+        doc=new_document('Page edge ink',font_size_pt=22)
         for i in range(34):
             doc=transaction(doc,{'op':'insert_word','index':i,
                                  'signs':['𓅓'] if i%3 else ['𓈖']})
