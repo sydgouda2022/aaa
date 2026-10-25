@@ -9,6 +9,24 @@ from PIL import Image, ImageDraw, ImageFont
 RESOLUTION=64
 RASTER_SIZE=320
 
+def ink_detail_factor(tile):
+    """Bounded optical correction from visible raster stroke complexity.
+
+    Fine, sparse contours need slightly more display area than heavy strokes.
+    This measures ink rather than unicode category or font advance width.
+    """
+    data=tile.load()
+    filled=[[data[x,y]>=50 for x in range(64)] for y in range(64)]
+    coverage=sum(sum(row) for row in filled)/4096
+    boundaries=(sum(filled[y][x]!=filled[y][x+1]
+                    for y in range(64) for x in range(63))
+                +sum(filled[y][x]!=filled[y+1][x]
+                     for y in range(63) for x in range(64)))/8064
+    detail=max(0.0,min(1.0,(boundaries-0.045)/0.11))
+    sparse=max(0.0,min(1.0,(0.28-coverage)/0.20))
+    return round(1.0+0.18*detail*(0.35+0.65*sparse),5)
+
+
 def silhouette_scanlines(font,sign):
     """Ink left/right extent per horizontal scan, normalized to visible glyph."""
     bbox=font.getbbox(sign)
@@ -26,7 +44,7 @@ def silhouette_scanlines(font,sign):
         result.append([ink[0],ink[-1]+1] if ink else None)
     if not any(row is not None for row in result):
         raise ValueError('Empty ink scan profile: '+sign)
-    return result
+    return result,ink_detail_factor(tile)
 
 
 def build(font_path:Path,output:Path)->None:
@@ -40,6 +58,7 @@ def build(font_path:Path,output:Path)->None:
     outlines=font.getGlyphSet()
     entries={}
     scans={}
+    optical={}
     painted_font=ImageFont.truetype(str(font_path),RASTER_SIZE)
     for cp in range(0x13000,0x13430):
         glyph=cmap.get(cp)
@@ -50,16 +69,16 @@ def build(font_path:Path,output:Path)->None:
         x0,y0,x1,y1=pen.bounds
         if x1<=x0 or y1<=y0:continue
         entries[chr(cp)]=[round(x/upm,6) for x in (x0,y0,x1,y1)]
-        scans[chr(cp)]=silhouette_scanlines(painted_font,chr(cp))
+        scans[chr(cp)],optical[chr(cp)]=silhouette_scanlines(painted_font,chr(cp))
     if len(entries)!=1072:
         raise ValueError(f'Expected 1,072 actual hieroglyphic outlines, found {len(entries)}')
     payload={'format':'mdwnfr-glyph-ink-v2','font_sha256':digest,
              'em_units':upm,'resolution':RESOLUTION,
-             'glyphs':entries,'scanlines':scans}
+             'glyphs':entries,'scanlines':scans,'optics':optical}
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(payload,ensure_ascii=False,
         sort_keys=True,separators=(',',':')),encoding='utf-8')
-    print(f'Installed {len(entries)} glyphs, with outline bounds and silhouette scanlines')
+    print(f'Installed {len(entries)} glyphs with ink outlines, scanlines and optical detail factors')
 
 if __name__=='__main__':
     build(Path(sys.argv[1]),Path(sys.argv[2]))
