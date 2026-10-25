@@ -1,5 +1,6 @@
 import {save,load,list,remove,loadProfile,saveProfile,listSnapshots,restoreSnapshot} from './storage.js';
 import {SIGN_CATALOG} from './keyboard_catalog.js';
+import {NO_MIRROR_HIEROGLYPHS,mirrorSign,reverseVisualQuadrat} from './hieroglyph_facing.mjs';
 import {fitQuadrat} from './quadrat_preview.mjs';
 
 /* All document and typesetting decisions go through the Python RPC worker.
@@ -234,20 +235,37 @@ async function renderPapyrusWindow(){
  }
 }
 // One verified font determines exact glyph ink and SVG baseline coordinates.
+// Single SVG rendering path for ordinary, table, cartouche and preview glyphs.
 function drawQuadratInk(host,quadrat,color,bold){
  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
  svg.classList.add('glyph-ink-svg');
  svg.setAttribute('viewBox',`0 0 ${quadrat.width} ${quadrat.height}`);
  svg.setAttribute('aria-hidden','true');
+ const direction=doc?.direction||'ltr';
+ const layer=document.createElementNS(ns,'g');
+ layer.classList.add('hieroglyph-direction-layer');
+ layer.setAttribute('data-writing-direction',direction);
+ // RTL reverses the whole quadrat: both sign faces and paired-row order.
+ if(reverseVisualQuadrat(direction))
+  layer.setAttribute('transform',`translate(${quadrat.width} 0) scale(-1 1)`);
+ svg.append(layer);
  for(const glyph of quadrat.signs){
   const text=document.createElementNS(ns,'text');text.textContent=glyph.sign;
-  text.setAttribute('x',String(glyph.text_x));text.setAttribute('y',String(glyph.text_y));
+  text.setAttribute('x',String(glyph.text_x));
+  text.setAttribute('y',String(glyph.text_y));
   text.setAttribute('font-size',String(glyph.font_size));
   text.setAttribute('font-family','MdwNfr Hieroglyphs');
-  text.setAttribute('fill',color||'#192433');
-  if(bold){text.setAttribute('paint-order','stroke fill');text.setAttribute('stroke',color||'#192433');
+  text.setAttribute('direction','ltr');text.setAttribute('fill',color||'#192433');
+  // Counter-mirror only semantic NoMirror glyphs; they still change position.
+  if(reverseVisualQuadrat(direction)&&NO_MIRROR_HIEROGLYPHS.has(glyph.sign)){
+   const center=glyph.x+glyph.width/2;
+   text.setAttribute('transform',`translate(${2*center} 0) scale(-1 1)`);
+   text.setAttribute('data-no-mirror','true');
+  }
+  if(bold){text.setAttribute('paint-order','stroke fill');
+   text.setAttribute('stroke',color||'#192433');
    text.setAttribute('stroke-width',String(glyph.font_size*.012));}
-  svg.append(text);
+  layer.append(text);
  }
  host.append(svg);
 }
@@ -1074,6 +1092,9 @@ function rpc(method,payload={}){
 worker.postMessage({id:0,method:'boot'});
 function setUiFromDoc(){
  $('docname').value=doc.name;$('direction').value=doc.direction;
+ const oldFacing=$('editor-screen').dataset.writingDirection;
+ $('editor-screen').dataset.writingDirection=doc.direction;
+ if(oldFacing&&oldFacing!==doc.direction){drawKeys();renderComposer();}
  $('surface').value=doc.surface;$('font-size').value=doc.font_size_pt;
  $('papyrus-height').value=doc.papyrus_height_mm;
  const papyrus=doc.surface==='papyrus';
@@ -1604,18 +1625,32 @@ function updateSelection(){
 }
 function openWord(id){const target=doc.items.find(x=>x.id===id);if(!target||target.type!=='word')return;
  selectionAnchorId=id;selectionFocusId=id;selectedId=id;editingId=id;buffer=target.signs.slice();renderComposer();updateSelection();if(activePanel!=='keyboard')switchPanel('keyboard');}
+// Glyphs change VISUAL facing only; logical input and codes never change.
+function facingSignNode(sign,kind=''){
+ const span=document.createElement('span');span.textContent=sign;
+ span.className=kind?kind+' facing-sign':'facing-sign';
+ span.setAttribute('dir','ltr');
+ if(mirrorSign(doc?.direction||'ltr',sign))span.classList.add('mirrored-sign');
+ return span;
+}
+function facingSequenceNode(signs){
+ const sequence=document.createElement('span');sequence.className='facing-sequence';
+ sequence.dataset.writingDirection=doc?.direction||'ltr';
+ for(const glyph of signs)sequence.append(facingSignNode(glyph));
+ return sequence;
+}
 function drawKeys(){
  const keys=$('keys');keys.replaceChildren();
  for(const sign of glyphGroups[activeGroup]){
   const button=document.createElement('button');button.className='key';
-  const glyph=document.createElement('span');glyph.className='key-glyph';glyph.textContent=sign.glyph;
+  const glyph=facingSignNode(sign.glyph,'key-glyph');
   const number=document.createElement('small');number.className='key-code';number.textContent=sign.code;
   button.append(glyph,number);button.title=sign.code+' · '+sign.name;
   button.setAttribute('aria-label',sign.code+' '+sign.name);
   button.type='button';button.onclick=()=>typeSign(sign.glyph);keys.append(button);
  }
  const row=$('numbers');row.replaceChildren();for(const n of numerals){const btn=document.createElement('button');btn.className='numkey';
-  const glyph=document.createElement('span');glyph.className='glyph';glyph.textContent=n.sign;
+  const glyph=facingSignNode(n.sign,'glyph');
   const value=document.createElement('small');value.textContent=n.value;btn.append(glyph,value);
   btn.setAttribute('aria-label','Egyptian numeral '+n.value);btn.onclick=()=>typeSign(n.sign);row.append(btn);}
  for(const t of document.querySelectorAll('.tab'))t.classList.toggle('active',t.dataset.tab===activeGroup);
@@ -1638,7 +1673,7 @@ function renderComposer(){
  const area=$('composer');area.replaceChildren();
  const preview=$('quadrat-preview');preview.hidden=true;preview.replaceChildren();
  if(previewTimer!==null){clearTimeout(previewTimer);previewTimer=null;}
- if(buffer.length)for(const ch of buffer){const span=document.createElement('span');span.textContent=ch;area.append(span);}
+ if(buffer.length)area.append(facingSequenceNode(buffer));
  $('suggestion-toolbar').hidden=!buffer.length;
  $('suggestions').hidden=!buffer.length;
  $('save-personal-word').disabled=!buffer.length;
@@ -1673,7 +1708,7 @@ function renderComposer(){
  }).catch(e=>{if(current===predVersion)status('Prediction: '+e.message,true);});
 }
 function suggestionButton(candidate){
- const button=document.createElement('button');button.textContent=candidate.signs.join('');
+ const button=document.createElement('button');button.append(facingSequenceNode(candidate.signs));
  if(candidate.source==='user')button.classList.add('user-choice');
  if(candidate.source==='personal')button.classList.add('personal-choice');
  const rtc=candidate.source_tier==='ramses_corpus';

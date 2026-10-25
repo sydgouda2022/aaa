@@ -324,3 +324,9 @@ button:disabled{opacity:.42;cursor:not-allowed}
  .editor-screen .format-panel{max-height:calc(100dvh - 75px)}
  .format-panel .icon-only-action{height:44px}
 }
+
+/* Direction-aware glyph faces, without reversing other UI text or controls. */
+.facing-sign{display:inline-block;direction:ltr;unicode-bidi:isolate}
+.facing-sign.mirrored-sign{transform:scaleX(-1)}
+.facing-sequence{display:inline-flex;align-items:center;direction:ltr;unicode-bidi:isolate}
+.facing-sequence[data-writing-direction="rtl"]{flex-direction:row-reverse}

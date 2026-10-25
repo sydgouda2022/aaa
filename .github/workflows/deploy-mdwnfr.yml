@@ -107,6 +107,8 @@ jobs:
           python tools/build_static.py
           node --check dist/app.js
           node --check dist/quadrat_preview.mjs
+          node --check dist/hieroglyph_facing.mjs
+          node --test qa/test_hieroglyph_facing.mjs
           node qa/test_quadrat_preview.mjs
           node --check dist/worker.js
           node --check dist/storage.js
