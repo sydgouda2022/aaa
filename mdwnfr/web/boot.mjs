@@ -16,23 +16,25 @@ async function activate(worker) {
 
 async function boot() {
   if('serviceWorker' in navigator){
+    let updateError=null;
     try{
       const registration=await navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'});
-      // Offline startup may use the last complete installed release.
-      await registration.update().catch(()=>{});
+      await registration.update().catch(error=>{updateError=error;});
       await activate(registration.installing||registration.waiting||registration.active);
-      if(navigator.serviceWorker.controller){
-        const installed=await fetch('/index.html',{cache:'no-store'});
-        if(!installed.ok)throw new Error('Installed release is unavailable');
-        const html=new DOMParser().parseFromString(await installed.text(),'text/html');
-        const current=document.querySelector('meta[name="mdwnfr-build"]')?.content;
-        const complete=html.querySelector('meta[name="mdwnfr-build"]')?.content;
-        if(current&&complete&&current!==complete){location.reload();return;}
+    }catch(error){updateError=error;}
+    if(navigator.serviceWorker.controller){
+      // A normal fetch of index.html (not a navigation) comes from the active
+      // cache even with the older worker. It proves which HTML its assets match.
+      const installed=await fetch('/index.html',{cache:'no-store'});
+      if(!installed.ok)throw new Error('Installed release is unavailable');
+      const html=new DOMParser().parseFromString(await installed.text(),'text/html');
+      const current=document.querySelector('meta[name="mdwnfr-build"]')?.content;
+      const complete=html.querySelector('meta[name="mdwnfr-build"]')?.content;
+      if(current!==complete){
+        if(updateError)throw updateError;
+        location.reload();return;
       }
-    }catch(error){
-      // With a controlling worker, importing through a failed update could mix
-      // releases. A plain online tab or a test that blocks workers can run direct.
-      if(navigator.serviceWorker.controller&&navigator.onLine!==false)throw error;
+      // An unavailable update server must not block a coherent offline release.
     }
   }
   // Re-request CSS after activation as well; its initial request may have been
