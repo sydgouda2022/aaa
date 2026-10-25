@@ -72,6 +72,28 @@ try{
     null,{timeout:90000});
   const ink=await page.locator('.word .glyph-ink-svg text').allTextContents();
   assert.deepEqual(ink,['𓇋','𓇋'],'Rendered document preserves glyph sequence');
+  // Native Unicode Noto outlines are LTR; right-to-left documents must
+  // mirror visible ink, while the logical word remains identical.
+  const rtlLayer=page.locator('.word .hieroglyph-direction-layer').first();
+  await rtlLayer.waitFor({state:'attached'});
+  assert.equal(await rtlLayer.getAttribute('data-writing-direction'),'rtl');
+  assert.match(await rtlLayer.getAttribute('transform'),/scale\(-1 1\)/);
+  assert.deepEqual(await page.locator('.word .glyph-ink-svg text').allTextContents(),
+    ['𓇋','𓇋'],'Mirroring cannot reverse stored logical glyph order');
+  await page.locator('#format-toggle').click();
+  await page.locator('#dir-ltr').click();
+  await page.waitForFunction(()=>
+   document.querySelector('.word .hieroglyph-direction-layer')?.getAttribute('data-writing-direction')==='ltr',
+   null,{timeout:30000});
+  assert.equal(await page.locator('.word .hieroglyph-direction-layer').first().getAttribute('transform'),null,
+    'Left-to-right outlines must remain in Unicode font baseline orientation');
+  await page.locator('#dir-rtl').click();
+  await page.waitForFunction(()=>
+   document.querySelector('.word .hieroglyph-direction-layer')?.getAttribute('data-writing-direction')==='rtl',
+   null,{timeout:30000});
+  assert.match(await page.locator('.word .hieroglyph-direction-layer').first().getAttribute('transform'),
+    /scale\(-1 1\)/,'Restored RTL faces should mirror again');
+
   // Physical Ctrl+B must work despite an Arabic key value.
   await page.locator('.word').first().click();
   await page.evaluate(()=>document.dispatchEvent(
