@@ -276,8 +276,8 @@ function paintPageContent(slot,p,shell){
      box.setAttribute('aria-label',`Table cell ${String.fromCharCode(65+cell.column)}${cell.row+1}`);
      const choose=()=>selectTableCell(item.id,cell.row,cell.column);
      box.addEventListener('click',e=>{e.stopPropagation();choose();});
-     box.addEventListener('dblclick',e=>{e.stopPropagation();choose();if(activePanel!=='insert')switchPanel('insert');});
-     box.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();choose();if(activePanel!=='insert')switchPanel('insert');}});
+     box.addEventListener('dblclick',e=>{e.stopPropagation();choose();if(activePanel!=='format')switchPanel('format');});
+     box.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();choose();if(activePanel!=='format')switchPanel('format');}});
      if(selectedTableCell?.tableId===item.id&&selectedTableCell.row===cell.row&&selectedTableCell.column===cell.column)box.classList.add('active');
      for(const w of cell.words){
       const wordNode=document.createElement('div');wordNode.className='table-cell-word';
@@ -299,7 +299,7 @@ function paintPageContent(slot,p,shell){
     if(range&&itemIndex>=range.start&&itemIndex<range.end)node.classList.add('selected','in-range');
     node.setAttribute('role','button');node.tabIndex=0;node.setAttribute('aria-label','Hieroglyphic cartouche');
     node.addEventListener('click',e=>{e.stopPropagation();selectWord(item.id,e.shiftKey);});
-    node.addEventListener('dblclick',e=>{e.stopPropagation();selectWord(item.id);if(activePanel!=='insert')switchPanel('insert');});
+    node.addEventListener('dblclick',e=>{e.stopPropagation();selectWord(item.id);if(activePanel!=='format')switchPanel('format');});
     node.addEventListener('pointerdown',e=>beginNestedDrag(e,item,c,p,node));
     const geometry=item.cartouche;
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -359,8 +359,13 @@ function paintPageContent(slot,p,shell){
  }
  for(const line of p.dividers){
   const el=document.createElement('div');el.className='divider-line';
+  // CSS subpixel rounding made identical dividers look thin/thick at zoom.
+  // Quantize both width and left edge to the same physical pixel grid.
   const thickness=line.thickness_mm??0.53;
-  el.style.left=mm(line.x-thickness/2);el.style.width=mm(thickness);
+  const physicalGrid=1/(Math.max(.01,zoom)*Math.max(1,window.devicePixelRatio||1));
+  const widthPx=Math.max(physicalGrid,Math.round(thickness*pxmm/physicalGrid)*physicalGrid);
+  const leftPx=Math.round((line.x*pxmm-widthPx/2)/physicalGrid)*physicalGrid;
+  el.style.left=leftPx+'px';el.style.width=widthPx+'px';
   el.style.top=mm(line.y1);el.style.height=mm(line.y2-line.y1);
   paper.append(el);
  }
@@ -373,8 +378,8 @@ let libraryBusy=false;
 const libraryScreen=$('library-screen');
 const editorScreen=$('editor-screen');
 // Exactly one floating inspector is visible at a time; panels never resize the page.
-const PANELS={pages:'pages-panel',format:'format-panel',edit:'edit-panel',insert:'insert-panel',keyboard:'keyboard-panel'};
-const TRIGGERS={pages:'pages-toggle',format:'format-toggle',edit:'edit-toggle',insert:'insert-toggle',keyboard:'keyboard-toggle'};
+const PANELS={pages:'pages-panel',format:'format-panel',keyboard:'keyboard-panel'};
+const TRIGGERS={pages:'pages-toggle',format:'format-toggle',keyboard:'keyboard-toggle'};
 let activePanel=null;
 function switchPanel(name=null){
  activePanel=activePanel===name?null:name;
@@ -385,7 +390,7 @@ function switchPanel(name=null){
   $(TRIGGERS[kind]).classList.toggle('is-active',opened);
  }
  if(activePanel==='pages')renderPagesOverview();
- if(['format','edit','insert'].includes(activePanel))updateFormatState();
+ if(activePanel==='format')updateFormatState();
 }
 function closePanels(){if(activePanel)switchPanel(null);}
 // Switch icons own their clicks. Any click/tap outside the active panel closes it.
@@ -402,6 +407,27 @@ document.addEventListener('pointerdown',e=>{
 });
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&activePanel){closePanels();}
+});
+// Physical key codes keep commands usable with Arabic, Coptic, or other
+// active keyboard layouts. Do not capture native typing in text controls.
+document.addEventListener('keydown',e=>{
+ if(editorScreen.hidden||!doc||e.isComposing||e.repeat||e.altKey)return;
+ const mod=e.ctrlKey||e.metaKey;
+ const code=e.code||'';
+ const textFocus=e.target instanceof Element &&
+   Boolean(e.target.closest('input,textarea,select,[contenteditable="true"],[role="dialog"],#dialog-backdrop'));
+ if(mod&&e.shiftKey&&['Digit1','Digit2','Digit3','Numpad1','Numpad2','Numpad3'].includes(code)){
+  e.preventDefault();
+  const panel=code.endsWith('1')?'keyboard':code.endsWith('2')?'format':'pages';
+  switchPanel(panel);return;
+ }
+ if(textFocus)return;
+ if(mod&&!e.shiftKey&&code==='KeyB'){
+  e.preventDefault();if(!$('bold').disabled)$('bold').click();return;
+ }
+ if(!mod&&!e.shiftKey&&(code==='Delete'||code==='Backspace')&&selectedItems().length){
+  e.preventDefault();if(!$('delete').disabled)$('delete').click();
+ }
 });
 let keyboardWasDragged=false;
 // Optional draggable owl, with normal tap semantics preserved.
@@ -602,7 +628,7 @@ $('insert-cartouche').onclick=async()=>{
  const range=selectedRange(),index=range?range.end:caretIndex;
  const success=await apply({op:'insert_cartouche',index,orientation:'vertical'});
  if(success){const item=doc.items[index];if(item?.type==='cartouche'){
-  selectWord(item.id);if(activePanel!=='insert')switchPanel('insert');
+  selectWord(item.id);if(activePanel!=='format')switchPanel('format');
  }}
 };
 function selectedCartoucheObject(){const selected=selectedItems();
