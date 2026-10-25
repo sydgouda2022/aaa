@@ -130,8 +130,8 @@ body[data-season=shemu]{
 .year-mini-epagomenal{gap:3px;flex-wrap:wrap;justify-content:flex-end}
 .year-mini-epagomenal .year-mini-day{border:1px solid #b5984a70;border-radius:50%;background:#fff9e8;min-width:22px;min-height:22px}
 body[data-language=cop]{--mini-size:14px}
-body[data-language=egy]{--mini-size:18px;--mini-height:27px}
-body[data-language=egy] .year-overview .year-month-name{font-size:21px}
+body[data-language=egy]{--mini-size:22px;--mini-height:28px}
+body[data-language=egy] .year-overview .year-month-name{font-size:23px}
 body[data-language=egy] .year-overview .season-heading{font-size:27px}
 body[data-language=egy] .epagomenal-tile strong{font-size:18px}
 
@@ -178,7 +178,7 @@ html[data-renpet-layout^=tablet] .year-overview .year-month .year-mini-title{min
 html[data-renpet-layout^=tablet] .year-overview .year-month .year-mini-grid{row-gap:2px}
 html[data-renpet-layout^=tablet] body{--mini-size:11px;--mini-height:17px}
 html[data-renpet-layout^=tablet] body[data-language=cop]{--mini-size:12px}
-html[data-renpet-layout^=tablet] body[data-language=egy]{--mini-size:17px;--mini-height:24px}
+html[data-renpet-layout^=tablet] body[data-language=egy]{--mini-size:22px;--mini-height:28px}
 html[data-renpet-layout^=tablet] .year-overview .year-month-name{font-size:14px}
 html[data-renpet-layout^=tablet] .year-overview .year-month .year-mini-today{min-width:18px;min-height:18px}
 html[data-renpet-layout^=tablet] .epagomenal-tile{min-height:42px;padding:7px 10px}
@@ -186,7 +186,7 @@ html[data-renpet-layout=tablet-split] .year-season{display:grid;grid-template-co
 html[data-renpet-layout=tablet-split] .year-season .season-heading{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;margin:0;font-size:24px;min-width:0}
 html[data-renpet-layout=tablet-split] .season-plant{flex:0 0 49px;width:72px;height:49px;background-size:290px auto;background-position:25% 87%}
 html[data-renpet-layout=tablet-split] .season-current{margin-inline-start:0;font-size:12px}
-html[data-renpet-layout=tablet-split] body[data-language=egy] .year-overview .year-month-name{font-size:19px}
+html[data-renpet-layout^=tablet] body[data-language=egy] .year-overview .year-month-name{font-size:23px}
 @media(min-width:1250px){
  html[data-renpet-layout^=tablet] body{--art-top:68px;--art-edge:27px;--art-garden:155px}
  html[data-renpet-layout=tablet-split] .year-season{grid-template-columns:142px minmax(0,1fr)}
