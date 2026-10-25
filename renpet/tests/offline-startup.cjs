@@ -27,6 +27,26 @@ async function scenario(engine,name) {
     const moduleUrl=await p.evaluate(()=>document.querySelector('script[type="module"]')?.getAttribute('src'));
     const cacheNames=await p.evaluate(()=>caches.keys());
     if(!moduleUrl||!cacheNames.some(s=>s.startsWith('renpet-'+release+'-')))throw Error('Service worker release missing: '+release);
+    // Regression: previous versions cached the obsolete six-source registry
+    // forever. Inject that stale cached response and verify the new worker
+    // retrieves the current four-source registry while online.
+    const registry=await p.evaluate(async()=>{
+     const key=(await caches.keys()).find(k=>k.startsWith('renpet-'));
+     const cache=await caches.open(key);
+     const uri=new URL('./festival-sources.json',location.href).href;
+     const stale={schema:1,sources:[
+      {id:'amun-theban'},{id:'national-egypt'},
+      {id:'christian-coptic'},{id:'muslim-egypt'},
+      {id:'esna-khnum'},{id:'isis-philae'}]};
+     await cache.put(uri,new Response(JSON.stringify(stale),{
+      headers:{'Content-Type':'application/json'}}));
+     const response=await fetch('./festival-sources.json');
+     if(!response.ok)throw Error('Online catalog revalidation failed');
+     const sources=(await response.json()).sources.map(s=>s.id);
+     return {sources,staleWasOverridden:sources.length===4&&
+       !sources.includes('christian-coptic')&&!sources.includes('muslim-egypt')};
+    });
+    if(!registry.staleWasOverridden)throw Error('Old festival catalogs still served from cache: '+JSON.stringify(registry));
     // Linux Playwright's WebKit offline mode rejects SW-served fetches
     // and its network route emulation blocks navigation in Web Inspector.
     // Verify real CacheStorage availability even while offline, but reserve

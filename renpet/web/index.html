@@ -57,6 +57,34 @@
   ready: function () { ready = true; clearTimeout(timer); },
   fail: fail
  };
+ // A previous installed release may serve stale app.js and festival data
+ // from CacheStorage, even after its replacement has been deployed.
+ // Discover the new worker *before* the module starts, and reload once
+ // when a newer worker takes control. Never discard an open editor draft.
+ if ('serviceWorker' in navigator) {
+  const previousController = navigator.serviceWorker.controller;
+  let handledUpgrade = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+   if (!previousController || handledUpgrade || navigator.onLine === false) return;
+   handledUpgrade = true;
+   if (document.querySelector('#event-editor')) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'تحديث رنبت · Update Renpet';
+    button.setAttribute('aria-label', 'تحديث رنبت · Update Renpet');
+    button.style.cssText = 'position:fixed;z-index:9999;bottom:18px;left:18px;'+
+     'padding:12px 18px;border:0;border-radius:12px;background:#176c59;'+
+     'color:white;font:600 15px system-ui;box-shadow:0 2px 12px #0003';
+    button.addEventListener('click', function () { location.reload(); });
+    document.body.appendChild(button);
+    return;
+   }
+   location.reload();
+  });
+  navigator.serviceWorker.getRegistration().then(function (registration) {
+   if (registration && navigator.onLine !== false) return registration.update();
+  }).catch(function (error) { console.warn('Renpet update check', error); });
+ }
  window.addEventListener('error', function (event) {
   // A broken module import leaves the HTML loading placeholder unchanged.
   if (!ready && event.target && event.target.tagName === 'SCRIPT') {

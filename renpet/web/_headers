@@ -14,3 +14,9 @@
 
 /data.json
   Cache-Control: no-cache
+
+/festival-sources.json
+  Cache-Control: no-cache, must-revalidate
+
+/festival-packs/*
+  Cache-Control: no-cache, must-revalidate
