@@ -25,7 +25,10 @@ files = [
 ]
 required = {"./index.html", "./app.js", "./data.json", "./ui.css",
             "./calendar.js", "./scheduler.js", "./locales.js",
-            "./time-editor.js", "./clock.js", "./keyboard.js"}
+            "./time-editor.js", "./clock.js", "./keyboard.js",
+            "./calendar-presentation.mjs", "./season-theme.css",
+            "./assets/seasons/akhet.webp", "./assets/seasons/peret.webp",
+            "./assets/seasons/shemu.webp"}
 if not required.issubset(files):
     raise SystemExit("Missing offline boot files: " + repr(required - set(files)))
 stamp = hashlib.sha256(b"".join(
@@ -116,3 +119,4 @@ text = template.replace("__CACHE__", f"renpet-{version}-{stamp}") \
                .replace("__ASSETS__", json.dumps(files, ensure_ascii=False, separators=(",", ":")))
 (web / "sw.js").write_text(text, encoding="utf-8")
 print(f"Built Renpet {version} service worker with {len(files)} cacheable assets and query-safe offline paths")
+

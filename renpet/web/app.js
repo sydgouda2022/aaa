@@ -2,6 +2,7 @@ import {DAY,dayNumber,toEgyptian,toGregorian,monthGrid,nativeNumber} from './cal
 import {layoutForViewport,isKeyboardDrivenResize} from './responsive-layout.js';
 import {LOCALES} from './locales.js';
 import {WORDS} from './ui-words.js';
+import {SEASONS,seasonForMonth,seasonName,gregorianText} from './calendar-presentation.mjs';
 import {AMUN_SOURCE,loadFestivalCatalog,enabledSourceIds,festivalHitsForDay,festivalSourceName} from './festival-catalog.js';
 import {loadScheduler,saveScheduler,createItem,upsertItem,removeItem,itemsForDay,hiddenItemsForDay,ensureSavedItemVisible,revealSavedCalendars,searchItems,createCalendar,updateCalendar,removeCalendar,toggleCompleted,occurrenceStartForDay,excludeOccurrence} from './scheduler.js';
 import {openBackup} from './backup.js';
@@ -56,7 +57,7 @@ const monthName=m=>m===13?LOCALES[lang()].epagomenal:lang()==='egy'?('𓇹 '+N(m
 // Use full-size native signs for short calendar numbers; numeral SVG assets
 // compose large years and longer numbers into readable grouped signs.
 const numHtml=n=>lang()==='egy'&&n>30&&(n<=333||(data?.years?.some(y=>y.year===n)))?'<img class="glyph" src="assets/numerals/'+n+'.svg" alt="'+safe(N(n))+'">':safe(N(n));
-const greg=(d,opts={day:'numeric',month:'short'})=>new Intl.DateTimeFormat(lang()==='ar'?'ar-EG-u-nu-arab':'en-GB',{...opts,timeZone:'UTC'}).format(new Date(d*DAY));
+const greg=(d,opts={day:'numeric',month:'short'})=>gregorianText(d,lang(),opts);
 const monthDays=e=>e.month===13?data.years.find(y=>y.year===e.year).days-360:30;
 const monthStart=e=>toGregorian({year:e.year,month:e.month,day:1},data.years);
 const yearStart=y=>dayNumber(data.years.find(v=>v.year===y).start);
@@ -164,7 +165,7 @@ function monthView(){
 
 function yearView(){
  const e=egy(state.focus),yr=e.year,w=week(),current=today();
- const seasons=lang()==='ar'?['آخت','برت','شمو']:lang()==='cop'?['Ⲁⲭⲉⲧ','Ⲡⲉⲣⲉⲧ','Ⲥⲙⲟⲩ']:['𓈗','𓆤','𓇳'];
+ const currentDate=egy(current),currentSeason=seasonForMonth(currentDate.month);
  const monthCard=m=>{
   const start=monthStart({year:yr,month:m});
   const cells=monthGrid(yr,m,w,data.years);
@@ -176,7 +177,10 @@ function yearView(){
   }).join('');
   return '<button class="year-month'+(m===e.month?' active-month':'')+'" data-open-month="'+m+'" aria-label="'+safe(monthName(m))+'"><span class="year-mini-title"><span class="year-month-name">'+safe(monthName(m))+'</span><span class="year-month-index">'+numHtml(m)+'</span></span><span class="year-mini-grid" data-week="'+w+'" aria-hidden="true">'+body+'</span></button>';
  };
- const groups=Array.from({length:3},(_,season)=>'<section class="year-season"><h2>'+safe(seasons[season])+'</h2><div class="year-months">'+Array.from({length:4},(_,i)=>monthCard(season*4+i+1)).join('')+'</div></section>').join('');
+ const groups=SEASONS.map((season,index)=>{
+  const isCurrent=yr===currentDate.year&&season.id===currentSeason.id;
+  return '<section class="year-season" data-season="'+season.id+'" data-current-season="'+isCurrent+'"><h2 class="season-heading"><span class="season-plant" aria-hidden="true"></span><span>'+safe(seasonName(season,lang()))+'</span>'+(isCurrent?'<small class="season-current"><i aria-hidden="true"></i>'+safe(T().today)+'</small>':'')+'</h2><div class="year-months">'+Array.from({length:4},(_,i)=>monthCard(index*4+i+1)).join('')+'</div></section>';
+ }).join('');
  const days=monthDays({year:yr,month:13});
  const epStart=monthStart({year:yr,month:13});
  const mini=Array.from({length:days},(_,i)=>'<span class="year-mini-day'+(epStart+i===current?' year-mini-today':'')+'">'+numHtml(i+1)+'</span>').join('');
@@ -264,7 +268,7 @@ function toolbar(){
  const e=egy(state.focus),year=state.view==='year',month=state.view==='month',isList=state.view==='list';
  const heading=year?numHtml(e.year):month?safe(monthName(e.month)):isList?safe(T().list):numHtml(e.day)+' '+safe(monthName(e.month));
  const yearButton=year?'<span class="year-brand">'+safe(LOCALES[lang()].brand)+'</span>':'<button class="year-shortcut" data-open-year aria-label="'+safe(LOCALES[lang()].year)+' '+safe(N(e.year))+'"><span class="year-shortcut-label">'+safe(LOCALES[lang()].year)+'</span><span class="year-shortcut-value">'+numHtml(e.year)+'</span></button>';
- const season=e.month===13?LOCALES[lang()].epagomenal:(lang()==='ar'?['آخت','برت','شمو'][Math.floor((e.month-1)/4)]:monthName(e.month));
+ const season=e.month===13?LOCALES[lang()].epagomenal:seasonName(seasonForMonth(e.month),lang());
  return '<header class="toolbar ux-toolbar"><div class="ux-toolbar-top"><div class="ux-back">'+(state.view==='day'?'<button data-back aria-label="'+safe(spoken('month'))+'">'+icon('back')+'<span>'+safe(T().month)+'</span></button>':yearButton)+'</div><div class="ux-toolbar-actions"><button data-search aria-label="'+safe(spoken('search'))+'" aria-expanded="'+state.search+'">'+icon('search')+'</button><button data-new aria-label="'+safe(spoken('add'))+'">'+icon('plus')+'</button><button data-open-panel="settings" aria-label="'+safe(spoken('settings'))+'">'+icon('settings')+'</button></div></div><div class="ux-toolbar-head"><div class="ux-heading"><h1>'+heading+'</h1>'+(year?'':'<p>'+safe(season)+'</p>')+'</div><div class="ux-heading-actions"><div class="ux-period-controls"><button data-prev aria-label="'+safe(spoken('previous'))+'">‹</button><button data-next aria-label="'+safe(spoken('next'))+'">›</button></div></div></div>'+(state.search?'<div class="search-panel"><input type="search" name="query" value="'+safe(state.query)+'" placeholder="'+safe(T().search)+'" autocomplete="off"><div class="search-results">'+searchResults()+'</div></div>':'')+'</header>';
 }
 
@@ -344,9 +348,11 @@ function render(){
  document.documentElement.lang=LOCALES[lang()].html;
  document.documentElement.dir=lang()==='ar'?'rtl':'ltr';
  document.body.dataset.language=lang();
+ document.body.dataset.season=seasonForMonth(egy(state.focus).month).id;
+ document.body.dataset.view=state.view;
  const content=state.view==='year'?yearView():state.view==='day'?dayView():state.view==='list'?listView():monthView();
  const savedText=lang()==='ar'?'تم حفظ الموعد':lang()==='cop'?'Ⲁϥⲥⲱⲛϩ':'𓏞 ✓';
- root.innerHTML='<div class="app-shell">'+toolbar()+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'
+ root.innerHTML='<div class="app-shell"><div class="season-art" aria-hidden="true"><div class="season-frieze"></div><div class="season-edge season-edge-start"></div><div class="season-edge season-edge-end"></div><div class="season-garden"></div></div>'+toolbar()+'<main class="main-scroll" id="main-content">'+content+'</main>'+nav()+'</div>'
    +(state.saveNotice?'<div class="save-confirmation" role="status" aria-live="polite">✓ '+savedText+'</div>':'')
    +panelContent()+(state.dialog?editor():'')+festivalDetails();
  if(['cop','egy'].includes(lang())&&typeof document.createElement==='function'){
