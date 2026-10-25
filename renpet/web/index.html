@@ -81,9 +81,21 @@
    }
    location.reload();
   });
-  navigator.serviceWorker.getRegistration().then(function (registration) {
-   if (registration && navigator.onLine !== false) return registration.update();
-  }).catch(function (error) { console.warn('Renpet update check', error); });
+  function checkForUpdates() {
+   if (navigator.onLine === false) return;
+   navigator.serviceWorker.getRegistration().then(function (registration) {
+    if (registration) return registration.update();
+   }).catch(function (error) { console.warn('Renpet update check', error); });
+  }
+  checkForUpdates();
+  // Standalone Home Screen PWAs can stay suspended for days rather than
+  // navigating afresh. Recheck when the app returns to the foreground.
+  window.addEventListener('pageshow', function (event) {
+   if (event.persisted) checkForUpdates();
+  });
+  document.addEventListener('visibilitychange', function () {
+   if (!document.hidden) checkForUpdates();
+  });
  }
  window.addEventListener('error', function (event) {
   // A broken module import leaves the HTML loading placeholder unchanged.
