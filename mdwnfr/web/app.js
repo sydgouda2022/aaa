@@ -1183,7 +1183,6 @@ async function initialize(){
   notice.textContent='';
   // No implicit 'Untitled' document, and no last-document auto-open.
   await renderDocList();
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
  }catch(e){showLibraryError('Unable to load the documents library: '+e.message);status(String(e.message),true);}
 }
 async function openDocument(id){

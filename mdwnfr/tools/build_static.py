@@ -12,6 +12,14 @@ DEST=ROOT/'dist'
 if DEST.exists():rmtree(DEST)
 copytree(ROOT/'web',DEST,ignore=ignore_patterns('__pycache__','*.pyc','.DS_Store'))
 copytree(ROOT/'core',DEST/'core',ignore=ignore_patterns('__pycache__','*.pyc','.DS_Store'))
+# Startup can detect when a newly activated worker owns a different HTML schema.
+# Hash source bytes before inserting the marker, avoiding a circular fingerprint.
+release_files=('index.html','boot.mjs','app.js','style.css','editor_controls.mjs','core/mdwnfr/document.py')
+release=hashlib.sha256(b'\0'.join((DEST/name).read_bytes() for name in release_files)).hexdigest()[:16]
+index=DEST/'index.html'
+index.write_text(index.read_text(encoding='utf-8').replace(
+    'name="mdwnfr-build" content="development"',
+    f'name="mdwnfr-build" content="{release}"'),encoding='utf-8')
 # The runtime is always self-hosted. A release without the licensed font is invalid.
 font=ROOT/'web/assets/fonts/hieroglyphs.woff2'
 if not font.is_file() or font.stat().st_size<1000 or font.read_bytes()[:4]!=b'wOF2':

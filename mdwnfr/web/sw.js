@@ -48,7 +48,8 @@ self.addEventListener('fetch',event=>{
   if(request.method!=='GET'||url.origin!==self.location.origin)return;
   event.respondWith((async()=>{
     const active=await caches.open(CACHE);
-    if(request.mode==='navigate'){try{const fresh=await fetch(request,{cache:'no-store'});if(fresh.ok)return fresh;}catch(e){/* offline */}}
+    // Keep HTML and assets on the same verified release while online too.
+    // A newly installed worker claims the next startup atomically.
     // Cache asset keys are paths without version queries.
     const match=await active.match(url.pathname,{ignoreSearch:false});
     if(match)return match;

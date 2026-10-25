@@ -34,5 +34,6 @@ assert.ok(matched.includes('/app.js'));
 assert.ok(matched.includes('/style.css'));
 assert.ok(!matched.includes('/app.js?v=047'));
 online=true;
-assert.equal(await request('/?v=047','navigate'),'NETWORK');
+assert.equal(await request('/?v=047','navigate'),'OFFLINE_HOME',
+  'Online navigation must retain the cached HTML matching its cached assets');
 console.log('PASS: cached versioned app assets and offline/online navigation');

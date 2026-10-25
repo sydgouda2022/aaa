@@ -124,7 +124,7 @@ jobs:
           assets=json.loads((root/'offline-assets.json').read_text())
           assert status['offline_ready'] and assets['complete']
           assert len(assets['assets'])>=100
-          assert {'/editor_controls.mjs','/hieroglyph_facing.mjs'} <= {a['path'] for a in assets['assets']}
+          assert {'/boot.mjs','/editor_controls.mjs','/hieroglyph_facing.mjs'} <= {a['path'] for a in assets['assets']}
           assert all((root/x['path'].lstrip('/')).is_file() for x in assets['assets'])
           html=(root/'index.html').read_text()
           assert '/icons/app-192.png' in html and 'app_icon.svg' not in html
@@ -148,6 +148,7 @@ jobs:
           node qa/test_browser_keyboard.mjs
           node qa/test_font_bounds_browser.mjs
           node qa/test_touch_editing.mjs
+          node qa/test_release_update.mjs
       - name: Deploy Cloudflare Worker
         working-directory: mdwnfr
         env:
