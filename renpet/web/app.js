@@ -111,7 +111,7 @@ function festivalDetails(){
  const sources=[...new Set([f.sourceUrl,...(original.match(/https:\/\/[^\s|]+/g)||[])].filter(url=>{
   try{const u=new URL(url);return u.protocol==='https:'&&url.length<2048;}catch{return false;}
  }))].slice(0,8);
- return '<div class="festival-detail-overlay" data-close-festival-overlay><section class="festival-detail-sheet" role="dialog" aria-modal="true" aria-label="'+safe(ui.details)+'"><header><h2 lang="'+lang()+'">'+safe(title)+'</h2><button type="button" data-close-festival aria-label="'+safe(ui.close)+'">×</button></header><p class="festival-type" lang="'+lang()+'">'+safe(type)+'</p><p class="festival-when">'+safe(N(egy(day).day))+' '+safe(monthName(egy(day).month))+' · '+safe(greg(day,{day:'numeric',month:'long',year:'numeric'}))+'</p>'+(note?'<p class="festival-evidence" lang="'+lang()+'" dir="'+(lang()==='ar'?'rtl':'ltr')+'">'+safe(note)+'</p>':'<p>'+safe(ui.notice)+'</p>')+(ui.translation?'<p class="festival-translation-note" lang="'+lang()+'">'+safe(ui.translation)+'</p>':'')+'<h3 lang="'+lang()+'">'+safe(ui.sources)+' · '+safe(festivalSourceName(src||{name:f.sourceName},lang()))+'</h3>'+(sources.length?'<div class="festival-sources-links">'+sources.map((url,i)=>'<a href="'+safe(url)+'" target="_blank" rel="noopener noreferrer" lang="'+lang()+'" aria-label="'+safe(ui.sources)+' '+N(i+1)+'">'+safe(ui.sources)+' '+safe(N(i+1))+' ↗</a>').join('')+'</div>':'<p>'+safe(ui.notice)+'</p>')+'</section></div>';
+ return '<div class="festival-detail-overlay" data-close-festival-overlay><section class="festival-detail-sheet" role="dialog" aria-modal="true" aria-label="'+safe(ui.details)+'"><header><h2 lang="'+lang()+'">'+safe(title)+'</h2><button type="button" data-close-festival aria-label="'+safe(ui.close)+'">×</button></header><p class="festival-type" lang="'+lang()+'">'+safe(type)+'</p><p class="festival-when">'+safe(N(egy(day).day))+' '+safe(monthName(egy(day).month))+(prefs.gregorian?' · '+safe(greg(day,{day:'numeric',month:'long',year:'numeric'})):'')+'</p>'+(note?'<p class="festival-evidence" lang="'+lang()+'" dir="'+(lang()==='ar'?'rtl':'ltr')+'">'+safe(note)+'</p>':'<p>'+safe(ui.notice)+'</p>')+(ui.translation?'<p class="festival-translation-note" lang="'+lang()+'">'+safe(ui.translation)+'</p>':'')+'<h3 lang="'+lang()+'">'+safe(ui.sources)+' · '+safe(festivalSourceName(src||{name:f.sourceName},lang()))+'</h3>'+(sources.length?'<div class="festival-sources-links">'+sources.map((url,i)=>'<a href="'+safe(url)+'" target="_blank" rel="noopener noreferrer" lang="'+lang()+'" aria-label="'+safe(ui.sources)+' '+N(i+1)+'">'+safe(ui.sources)+' '+safe(N(i+1))+' ↗</a>').join('')+'</div>':'<p>'+safe(ui.notice)+'</p>')+'</section></div>';
 }
 function agenda(d){
  const a=items(d),festivals=festivalsOn(d);
@@ -130,11 +130,16 @@ function monthNumber(n){
 function dateButton(c){
  if(!c)return '<span class="blank" aria-hidden="true"></span>';
  const d=c.gregorian,ev=items(d),hits=festivalsOn(d);
+ // Festival dates are always mapped to the underlying absolute day. Turning
+ // off the Gregorian *labels* must never remove national/Christian/Islamic
+ // festival markers, accessible names, or continued multi-day observances.
+ const festivalNames=hits.map(f=>festivalText(f,'title'));
+ const festivalSources=[...new Set(hits.map(f=>f.sourceId))].join(',');
  const dots=ev.slice(0,3).map(i=>{
   const col=schedule.calendars.find(x=>x.id===i.calendarId)?.color||'#176C59';
   return '<i style="background:'+( /^#[0-9a-f]{6}$/i.test(col)?col:'#176C59')+'"></i>';
  }).join('');
- return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today':'')+'" data-date="'+d+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+(ev.length?' · '+safe(N(ev.length))+' '+safe(T().event):'')+(hits.length?' · '+safe(N(hits.length))+' '+safe(T().festivals):'')+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+monthNumber(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(ev.length>3?'<span class="date-more-count">+'+safe(N(ev.length-3))+'</span>':'')+(hits.some(f=>f.start===d)?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
+ return '<button class="date '+(d===state.focus?'chosen ':'')+(d===today()?'is-today ':'')+(hits.length?'has-festival':'')+'" data-date="'+d+'" data-festival-sources="'+safe(festivalSources)+'" data-festival-count="'+hits.length+'" title="'+safe(festivalNames.join(' · '))+'" aria-label="'+safe(monthName(egy(d).month))+' '+safe(N(c.day))+(ev.length?' · '+safe(N(ev.length))+' '+safe(T().event):'')+(festivalNames.length?' · '+safe(festivalNames.join(' · ')):'')+'" aria-pressed="'+(d===state.focus)+'"><span class="day-number">'+monthNumber(c.day)+'</span>'+(prefs.gregorian?'<small class="greg-day" lang="en">'+safe(greg(d,{day:'numeric'}))+'</small>':'')+'<span class="dots">'+dots+'</span>'+(ev.length>3?'<span class="date-more-count">+'+safe(N(ev.length-3))+'</span>':'')+(hits.length?'<em class="fest-mark" aria-label="'+safe(T().festivals)+'">✦</em>':'')+'</button>';
 }
 function monthSection(e){
  const w=week(),start=monthStart(e),length=monthDays(e);
