@@ -143,8 +143,15 @@ class VisibleInkComposition(unittest.TestCase):
         b=second['quadrat']['signs'][0]
         bottom=first['y']+a['y']+a['height']
         top=second['y']+b['y']
-        # Document placements are rounded to 5 decimal places in millimetres.
-        self.assertAlmostEqual(top-bottom,a['height']/2,places=4)
+        # A short final column now allocates spare height to the one
+        # interior gap, while its final glyph touches the bottom frame.
+        # Previously this assertion assumed non-justified short columns.
+        from mdwnfr.document import SURFACES,validated_margins
+        margins=validated_margins(doc)
+        frame_height=SURFACES[doc['surface']][1]-margins['top']-margins['bottom']
+        expected_gap=frame_height-a['height']-b['height']
+        self.assertAlmostEqual(top-bottom,expected_gap,places=4)
+        self.assertTrue(placements[-1]['quadrat']['flexible_gaps'][-1]==0)
 
     def test_asymmetric_neighbors_have_one_preceding_half_height_gap(self):
         for sequence in ('𓅓𓈖', '𓈖𓅓', '𓅓𓅓', '𓈖𓈖'):
