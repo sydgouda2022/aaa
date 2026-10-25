@@ -20,7 +20,12 @@ const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9-]{1,63}$/.test(id);
 // Preserve these source identifiers exactly; pack source IDs stay stricter.
 const validEventId=id=>typeof id==='string'&&id.length<=180&&/^[a-z0-9@._-]+$/i.test(id);
 const validPack=path=>typeof path==='string'&&/^\.\/festival-packs\/[a-z0-9-]+\.json$/.test(path);
-const validSource=s=>s&&validId(s.id)&&s.status==='available'&&
+// Installed apps may retain old registries and packs while offline. Enforce
+// catalog retirement here as well as in the published source registry.
+const retiredIds=new Set(['christian-coptic','muslim-egypt']);
+const retiredCategories=new Set(['christian','muslim','islamic']);
+const retainedSource=s=>s&&!retiredIds.has(s.id)&&!retiredCategories.has(s.category);
+const validSource=s=>retainedSource(s)&&validId(s.id)&&s.status==='available'&&
  ['egyptian-fixed','gregorian-fixed','gregorian-annual','dated','orthodox-easter'].includes(s.calendarRule)&&
  (s.data?.type==='embedded'&&s.data.key==='festivals'||
   s.data?.type==='file'&&validPack(s.data.path));
@@ -72,7 +77,7 @@ export async function loadFestivalCatalog(data,fetcher=fetch){
 }
 
 export function enabledSourceIds(selection,catalog,legacyVisible=true){
- const sources=catalog?.sources||[];
+ const sources=(catalog?.sources||[]).filter(retainedSource);
  const known=new Set(sources.map(s=>s.id));
  if(Array.isArray(selection))return [...new Set(selection.filter(id=>known.has(id)))];
  return legacyVisible===false?[]:sources.filter(s=>s.defaultEnabled===true).map(s=>s.id);
@@ -117,3 +122,4 @@ export function festivalHitsForDay(day,years,catalog,selection){
  }
  return results;
 }
+
