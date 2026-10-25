@@ -5,6 +5,9 @@ import {dayNumber} from '../web/calendar.js';
 const handlers={};
 const root={innerHTML:'',addEventListener:(n,fn)=>{(handlers[n]??=[]).push(fn)},querySelector:()=>null};
 const memory=new Map();
+// Simulate a returning user who previously selected now-removed catalogs.
+memory.set('renpet.settings.v1',JSON.stringify({language:'ar',gregorian:true,
+ festivalSources:['amun-theban','christian-coptic','muslim-egypt'],weeks:{}}));
 globalThis.localStorage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
 globalThis.document={querySelector:s=>s==='#app'?root:null,addEventListener:()=>{},documentElement:{lang:'ar',dir:'rtl'},body:{dataset:{}}};
 // The unit smoke loader must serve the manifest AND its read-only packs,
@@ -17,6 +20,8 @@ const has=s=>root.innerHTML.includes(s);
 function click(n,value=''){const b={disabled:false,dataset:{[n.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:String(value)},hasAttribute:x=>x===n};for(const f of handlers.click||[])f({target:{closest:x=>x==='button'?b:null,stopImmediatePropagation(){},preventDefault(){}}});}
 function change(n,value,checked){for(const f of handlers.change||[])f({target:{name:n,value,checked,hasAttribute:()=>false,closest:()=>null}});}
 assert.ok(has('class="app-shell"')&&has('month-agenda'),'One calendar with month and selected-day agenda');
+assert.deepEqual(JSON.parse(memory.get('renpet.settings.v1')).festivalSources,['amun-theban'],
+ 'Startup removes retired Christian and Muslim preferences but preserves Amun');
 assert.equal((root.innerHTML.match(/class="ux-bottom"/g)||[]).length,1,'One navigation');
 assert.ok(has('data-primary-view="today"')&&has('data-primary-view="list"')&&!has('data-primary-view="month"'),'Two useful bottom actions, no redundant Month tab');
 assert.ok(!has('data-primary-view="year"')&&!has('data-more')&&!has('data-menu'),'Old redundant navigation removed');
@@ -48,7 +53,8 @@ assert.ok(has('data-open-panel="calendars"')&&has('data-backup'),'Advanced featu
 assert.ok(has('data-open-panel="festivals"'),'Festival source selector is available within Settings');
 click('data-open-panel','festivals');
 assert.ok(has('festival-source-page')&&has('data-festival-source-id="amun-theban"'),'Amun remains a selectable source');
-assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,6,'Amun, Esna, Isis, national, Christian, Muslim choices present');
+assert.equal((root.innerHTML.match(/data-festival-source-id="/g)||[]).length,4,'Only Amun, Esna, Isis and national choices present');
+assert.ok(!has('data-festival-source-id="christian-coptic"')&&!has('data-festival-source-id="muslim-egypt"'),'Removed sources do not appear in Settings');
 for(const handler of handlers.change||[])handler({target:{
  name:'',checked:false,dataset:{festivalSourceId:'amun-theban'},
  hasAttribute:key=>key==='data-festival-source-id',closest:()=>null

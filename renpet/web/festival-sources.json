@@ -45,48 +45,6 @@
       "defaultEnabled": false
     },
     {
-      "id": "christian-coptic",
-      "category": "christian",
-      "status": "available",
-      "name": {
-        "ar": "الأعياد المسيحية — القبطية",
-        "cop": "Ⲛⲓϣⲁⲓ ⲛ̀ⲛⲓⲢⲉⲙⲛ̀Ⲭⲏⲙⲓ ⲛ̀ⲭⲣⲓⲥⲧⲓⲁⲛⲟⲥ",
-        "egy": "𓎛𓃀𓎱 𓋹𓏤 𓆳𓏺"
-      },
-      "description": {
-        "ar": "عيد القيامة والشعانين والجمعة العظيمة والصعود والعنصرة بحساب كنسي؛ قائمة بقية الأعياد جزئية.",
-        "cop": "Ⲡⲓⲡⲁⲥⲭⲁ, ⲡⲓϣⲁⲓ ⲛ̀Ⲟⲥⲁⲛⲛⲁ, ⲡⲓϫⲓⲥⲓ ⲛⲉⲙ ϯⲠⲉⲛⲧⲏⲕⲟⲥⲧⲏ. Ⲡⲓⲙⲏϣ ⲛ̀ⲛⲓϣⲁⲓ ⲙ̀ⲡⲉϥϫⲱⲕ ⲉ̀ⲃⲟⲗ.",
-        "egy": "𓎛𓃀𓎱 𓋹𓏤 · 𓆳𓏺 · 𓏞𓏤"
-      },
-      "calendarRule": "gregorian-annual",
-      "data": {
-        "type": "file",
-        "path": "./festival-packs/christian-coptic.json"
-      },
-      "defaultEnabled": false
-    },
-    {
-      "id": "muslim-egypt",
-      "category": "muslim",
-      "status": "available",
-      "name": {
-        "ar": "المناسبات الإسلامية — مصر",
-        "cop": "Ⲛⲓϣⲁⲓ ⲛ̀ⲛⲓⲘⲟⲥⲗⲉⲙ ⲛ̀Ⲭⲏⲙⲓ",
-        "egy": "𓎛𓃀𓎱 𓆳𓏺 𓇳𓏤"
-      },
-      "description": {
-        "ar": "تواريخ منشورة لعام ٢٠٢٦ فقط؛ بلا تكرار قمري آلي",
-        "cop": "Ⲛⲓⲉϩⲟⲟⲩ ⲛ̀ⲧⲉ 2026 ⲙ̀ⲙⲁⲩⲁⲧⲟⲩ. Ⲙ̀ⲙⲟⲛ ⲟⲩϫⲓⲛⲥⲟⲡⲥ ⲛ̀ⲡⲓⲧⲉⲃⲧ ⲛ̀ⲣⲟⲙⲡⲓ ⲛ̀ⲥⲁϩ.",
-        "egy": "𓎛𓃀𓎱 𓈉𓏤 · 𓆳𓏺 · 𓏞𓏤"
-      },
-      "calendarRule": "dated",
-      "data": {
-        "type": "file",
-        "path": "./festival-packs/muslim-egypt.json"
-      },
-      "defaultEnabled": false
-    },
-    {
       "id": "esna-khnum",
       "category": "ancient-egyptian",
       "status": "available",
