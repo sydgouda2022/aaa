@@ -1,0 +1,31 @@
+name: Export pinned Pyodide offline assets for local migration QA
+on:
+  push:
+    branches: [export/four-stream-snapshot-20261025]
+    paths: [.github/workflows/export-four-stream-pyodide.yml]
+permissions:
+  contents: read
+jobs:
+  assets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.12'}
+      - name: Vendor exact old-app Pyodide version and verify offline
+        run: |
+          set -euo pipefail
+          python mdwnfr/tools/vendor_runtime.py
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,'mdwnfr/tools')
+          from runtime_assets import inspect
+          assert inspect()['offline_ready']
+          PY
+          ls -lh mdwnfr/web/vendor/pyodide
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mdwnfr-pinned-offline-python-runtime
+          path: mdwnfr/web/vendor/pyodide/
+          retention-days: 3
