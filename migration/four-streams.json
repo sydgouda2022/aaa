@@ -3,7 +3,8 @@
   "origin": {
     "repository": "sydgouda2022/aaa",
     "branch": "main",
-    "baseline_commit": "448fa145a30c8d55d2665fb69507a3309783abc0"
+    "baseline_commit": "448fa145a30c8d55d2665fb69507a3309783abc0",
+    "retention": "keep_as_recoverable_archive_until_new_repos_and_deployments_verified"
   },
   "target_repositories": [
     {
@@ -80,10 +81,9 @@
   },
   "deletion_candidates": [
     "sydgouda2022/Object-Detection-in-an-Urban-Environment",
-    "sydgouda2022/Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking",
     "sydgouda2022/egypt-radio-gateway",
-    "sydgouda2022/egyptian-radio-pwa",
-    "sydgouda2022/aaa"
+    "sydgouda2022/Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking",
+    "sydgouda2022/egyptian-radio-pwa"
   ],
   "state": "proposed-not-migrated",
   "cutover_gates": [
@@ -96,5 +96,16 @@
     "old_deploys_disabled",
     "backups_checked"
   ],
-  "cleanup_allowed_only_after_all_gates": true
+  "migration_operation": "split_origin_repository_into_four_independent_repositories",
+  "legacy_cleanup": {
+    "independent_of_migration": true,
+    "exact_repositories": [
+      "sydgouda2022/Object-Detection-in-an-Urban-Environment",
+      "sydgouda2022/egypt-radio-gateway",
+      "sydgouda2022/Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking",
+      "sydgouda2022/egyptian-radio-pwa"
+    ],
+    "includes_origin_repo": false
+  },
+  "original_repo_must_survive_cutover": true
 }

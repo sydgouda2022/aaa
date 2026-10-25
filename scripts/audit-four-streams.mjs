@@ -16,6 +16,17 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const baseline=json('migration/four-streams.json');
 assert.equal(baseline.schema,'four-streams-migration-v1');
 assert.equal(baseline.state,'proposed-not-migrated');
+assert.equal(baseline.migration_operation,'split_origin_repository_into_four_independent_repositories');
+assert.equal(baseline.original_repo_must_survive_cutover,true);
+assert.deepEqual(baseline.deletion_candidates,[
+ 'sydgouda2022/Object-Detection-in-an-Urban-Environment',
+ 'sydgouda2022/egypt-radio-gateway',
+ 'sydgouda2022/Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking',
+ 'sydgouda2022/egyptian-radio-pwa'
+]);
+assert.equal(baseline.legacy_cleanup.includes_origin_repo,false);
+assert(!baseline.deletion_candidates.includes(baseline.origin.repository),
+ 'Never delete the aaa migration source while splitting it');
 const expected=['coptic-keyboard','hieroglyphic-keyboard','renpet','mdwnfr'];
 assert.deepEqual(baseline.target_repositories.map(p=>p.name),expected);
 const edges=baseline.dependency_edges.map(([from,to])=>from+'>'+to);

@@ -1,6 +1,9 @@
 # Four independent development streams
 
-Decision date: 2026-10-25. Source repository until cutover: `sydgouda2022/aaa`.
+Decision date: 2026-10-25. The task is to **SPLIT the existing**
+`‎sydgouda2022/aaa` monorepo into four separately owned, independently buildable
+and auditable repositories; not simply create empty independent projects.
+`aaa` remains the migration source and a recoverable archive through cutover.
 This file is a **migration specification**, NOT evidence that four independent repositories
 or downstream automatic updates have been created. Do not delete the source
 repository or switch Cloudflare deployments until all cutover gates pass.
@@ -140,19 +143,33 @@ completeness or verified lemma identity for all Ramses entries.
       `renpet.sydgouda.workers.dev` and
       `mdwnfr.sydgouda.workers.dev`; prevent parallel old/new workflows
       deploying the same worker. Turn off old workflows after cutover.
-- [ ] Audit and export the five existing repositories before deletion.
-      Delete obsolete repositories **only after** all four new ones are
-      functional, the data is preserved, and both deployments are verified.
+- [ ] Confirm the source directory/file/history mapping accounts for every
+      applicable file in `aaa`, without leaking an unrelated project into any
+      destination. The output must consist of exactly four self-contained
+      repositories.
+- [ ] Keep `aaa` untouched as a source/archive until all new repositories
+      are verified, production deployments transferred and old workflows disabled.
 
-## Existing-repository disposition
+## Separate user-requested deletion of unrelated repositories
 
-GitHub inventory on 2026-10-25: `aaa` (authoritative monorepo, KEEP UNTIL
-CUTOVER), `egypt-radio-gateway`, `egyptian-radio-pwa`,
-`Object-Detection-in-an-Urban-Environment`, and
-`Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking`.
-The non-four repositories are **deletion candidates** per the user's cleanup
-request, not evidence of safe deletion. Preserve backups/issues/releases and
-avoid irreversible deletion while they are still the sole source of any app.
+Delete **exactly four unrelated repositories** from the GitHub account
+independently of splitting `aaa`. They are NOT inputs or targets of the split:
 
-No repo creation/deletion, data migration, or live dependency updates may be
-inferred merely because this specification is committed.
+1. `sydgouda2022/Object-Detection-in-an-Urban-Environment`
+2. `sydgouda2022/egypt-radio-gateway`
+3. `sydgouda2022/Udacity-Self-Driving-Car-Engineer-Nanodegree-Program-Sensor-Fusion-and-Tracking`
+4. `sydgouda2022/egyptian-radio-pwa`
+
+The user explicitly requested those four deletions. Do not replace them
+with "delete all repositories other than the new four," and do not include
+`aaa` in this deletion batch. `aaa` is the only authoritative migration
+source and must survive until the new repositories are fully functional. Any
+future deletion of `aaa` needs a separate post-migration disposition.
+
+The connected GitHub actions used to record this plan cannot create/delete
+whole repositories. Documentation, commits or branch/file deletion are NOT
+equivalent to repository-level creation/deletion. No deletion has been executed.
+Do not use TinyFish for account operations (owner preference).
+
+No repo creation/deletion, code split, data migration, or automatic downstream
+release propagation may be inferred merely because this document is committed.
