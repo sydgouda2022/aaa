@@ -722,7 +722,15 @@ root.addEventListener('touchend',ev=>{
  }
 },{passive:true});
 async function init(){
- try{const r=await fetch('./data.json');if(!r.ok)throw Error('Calendar data unavailable');data=await r.json();festivalCatalog=await loadFestivalCatalog(data);prefs.festivalSources=selectedFestivalIds();state.focus=clamp(state.focus);render();globalThis.RenpetBoot?.ready();if(typeof document.createElement==='function')initKeyboard(()=>lang());startForegroundAlerts(()=>loadScheduler(),()=>data?.years);void Promise.allSettled([primeEgyptianLexicon(),primeCopticLexicon()]);
+ try{const r=await fetch('./data.json');if(!r.ok)throw Error('Calendar data unavailable');data=await r.json();festivalCatalog=await loadFestivalCatalog(data);
+ // Migrate retired festival source IDs out of stored preferences. This never
+ // changes the user's appointments or any still-supported festival choices.
+ const previousFestivalSources=prefs.festivalSources;
+ prefs.festivalSources=selectedFestivalIds();
+ if(Array.isArray(previousFestivalSources)&&
+    (previousFestivalSources.length!==prefs.festivalSources.length||
+     previousFestivalSources.some((id,i)=>id!==prefs.festivalSources[i])))savePrefs();
+ state.focus=clamp(state.focus);render();globalThis.RenpetBoot?.ready();if(typeof document.createElement==='function')initKeyboard(()=>lang());startForegroundAlerts(()=>loadScheduler(),()=>data?.years);void Promise.allSettled([primeEgyptianLexicon(),primeCopticLexicon()]);
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(console.warn);}
  }catch(e){root.textContent='Renpet: '+e.message;console.error(e);globalThis.RenpetBoot?.fail(e.message);}
 }

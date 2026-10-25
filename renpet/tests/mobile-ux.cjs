@@ -516,7 +516,7 @@ async function run(){
   });
 
 
-  await step(name+' real six-source festival multi-selection and personal calendar isolation',async()=>{
+  await step(name+' four-source festival multi-selection and personal calendar isolation',async()=>{
    const q=await ctx.newPage();q.setDefaultTimeout(8000);
    q.on('dialog',d=>d.accept());
    await q.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
@@ -528,7 +528,8 @@ async function run(){
    await settings.locator('[data-open-panel=festivals]').click();
    const source=q.locator('[data-festival-source-id=amun-theban]');
    await source.waitFor();
-   if((await q.locator('.festival-source-row').count())!==6)throw Error('Six festival sources must be selectable');
+   if((await q.locator('.festival-source-row').count())!==4)throw Error('Four festival sources must be selectable');
+    if(await q.locator('[data-festival-source-id=christian-coptic],[data-festival-source-id=muslim-egypt]').count())throw Error('Removed religious catalog still offered');
     if(await q.locator('[data-festival-source-id=national-egypt]').isChecked())throw Error('National source must be opt-in');
    const initial=await source.isChecked();
    if(!initial){await source.check();}
@@ -570,7 +571,7 @@ async function run(){
    if(await source.isChecked())throw Error('Disabled Amun source was not persisted after reload');
    await source.check();
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
-   return {sources:['amun-theban','national-egypt','christian-coptic','muslim-egypt','esna-khnum','isis-philae'],monthDayList:true,disabledHidesFestivals:true,
+   return {sources:['amun-theban','national-egypt','esna-khnum','isis-philae'],monthDayList:true,disabledHidesFestivals:true,
            personalAppointmentsUnaffected:true,persisted:true};
   });
 
