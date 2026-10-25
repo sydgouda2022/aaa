@@ -534,11 +534,10 @@ root.addEventListener('click',ev=>{
  if(b.hasAttribute('data-search')){state.search=!state.search;state.query='';render();if(state.search)root.querySelector('[name="query"]')?.focus();return;}
  if(b.hasAttribute('data-date')){
   state.saveNotice=false;
-  // Always go straight to the selected Day with a single tap.
+  // A day tap opens its timeline on every screen size.
   state.focus=clamp(Number(b.dataset.date));
-   // Tablet month mode keeps its adjacent/stacked agenda visible.
-   if(!document.documentElement.dataset?.renpetLayout?.startsWith('tablet'))state.view='day';
-   render();return;
+  state.view='day';
+  render();return;
  }
  if(b.hasAttribute('data-open-month')){
   const y=egy(state.focus).year,m=Number(b.dataset.openMonth);

@@ -38,7 +38,7 @@ async function main(){
  try{
   for(const [name,width,height] of [
    ['iphone-small',375,667],['iphone',390,844],['ipad-portrait',768,1024],
-   ['ipad-classic',1024,768],['ipad-landscape',1194,834]
+   ['ipad-classic',1024,768],['ipad-landscape',1194,834],['desktop',1440,900]
   ]){
    const ctx=await browser.newContext({viewport:{width,height},isMobile:width<700,hasTouch:true,
     serviceWorkers:'block',timezoneId:'Africa/Cairo'});
@@ -123,8 +123,24 @@ async function main(){
      if(language==='cop')assert.equal(caption,'Ⲁⲭⲉⲧ');
      if(language==='egy')assert.ok(!/[\u0600-\u06ffA-Za-z]/u.test(caption));
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+     const selectedDay=Number(await page.locator('.month-section .date').nth(6).getAttribute('data-date'));
+     await page.locator('[data-date="'+selectedDay+'"]').click();
+     await page.locator('.day-page').waitFor();
+     assert.equal(await page.locator('body').getAttribute('data-view'),'day','A day click opens Day at every viewport size');
+     assert.equal(await page.locator('.timeline-hour').count(),24);
+     assert.equal(await page.locator('.month-scroll').count(),0,'Day replaces the month and agenda');
+     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Day fits the available width');
+     if(language==='cop')await page.screenshot({path:path.join(out,'season-'+name+'-day.png')});
+     await page.locator('[data-next]').click();
+     await page.locator('[data-back]').click();
+     assert.equal(await page.locator('.date.chosen').getAttribute('data-date'),String(selectedDay+1),'Next advances one day, rather than one month');
+     await page.locator('.date.chosen').click();
+     await page.locator('[data-prev]').click();
+     await page.locator('[data-back]').click();
+     assert.equal(await page.locator('.date.chosen').getAttribute('data-date'),String(selectedDay),'Back retains the selected day');
+     assert.equal(await page.locator('body').getAttribute('data-view'),'month');
     }
-    results.push({name,width,height,month,year,artwork,appointmentSaved:true,allScripts:true,seasonTransitions:true});
+    results.push({name,width,height,month,year,artwork,appointmentSaved:true,allScripts:true,seasonTransitions:true,dayNavigation:true});
    }finally{await ctx.close();}
   }
  }finally{await browser.close();}

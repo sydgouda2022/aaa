@@ -33,7 +33,10 @@ async function main(){
   await page.locator('[data-back]').click();
   const chosen=page.locator('.month-section .date[data-date="'+(item.startDay+1)+'"]');
   await chosen.click();
-  assert.equal(await page.locator('.month-scroll').count(),1,'iPad selection should stay in month view');
+  await page.locator('.day-page').waitFor();
+  assert.equal(await page.locator('.timeline-event:has-text("Three-day preservation test")').count(),1,'iPad day selection opens its appointments');
+  await page.locator('[data-back]').click();
+  assert.equal(await chosen.getAttribute('aria-pressed'),'true','Returning to month retains the selected day');
   assert.equal(await page.locator('.month-agenda .event-row:has-text("Three-day preservation test")').count(),1);
   // Saving one weekly occurrence must not truncate the original series.
   await page.locator('header [data-new]').click();

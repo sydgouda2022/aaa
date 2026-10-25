@@ -608,9 +608,10 @@ async function run(){
    const festivalDate=await q.locator('.festival-detail-sheet .festival-when').innerText();
    if(/2026|٢٠٢٦/.test(festivalDate))throw Error('Festival detail still shows the hidden Gregorian date in '+language);
    await q.locator('[data-close-festival]').click();
-   // iPad retains its month/agenda split when a date is tapped; it does not
-   // navigate to the phone-only Day screen.
+   // A date tap opens Day on iPad too, with its national festival preserved.
    await cell().click();
+   await q.locator('.day-festivals [data-festival-source=national-egypt]').waitFor();
+   await q.locator('[data-back]').click();
    await event().waitFor();
    if((await cell().getAttribute('aria-pressed'))!=='true')throw Error('Selected national day not retained on iPad');
    await q.locator('header [data-open-panel=settings]').click();
@@ -772,7 +773,7 @@ async function run(){
    await q.locator('[name=language]').selectOption(language);
    await q.locator('.ux-panel-backdrop').click({position:{x:12,y:12}});
    await q.locator('[data-date="'+day+'"]').click();
-   const fest=q.locator('.month-agenda .festival-in-agenda[data-festival-open]').first();
+   const fest=q.locator('.day-festivals .festival-in-agenda[data-festival-open]').first();
    await fest.waitFor();
    const heading=await fest.locator('strong').innerText();
    if(!character.test(heading)||/[\u0600-\u06ff]/u.test(heading))throw Error('Wrong script in agenda title '+language+': '+heading);
@@ -787,6 +788,7 @@ async function run(){
    await screenshot(q,'ipad-'+language+'-festival-localized');
    screens.push({language,title:heading,sources:await details.locator('.festival-sources-links a').count()});
    await q.locator('[data-close-festival]').click();
+   await q.locator('[data-back]').click();
   }
   await ctx.close();return {screens,quickAddRemoved:true};
  });

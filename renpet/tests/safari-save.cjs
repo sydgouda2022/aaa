@@ -5,7 +5,7 @@ const trace=[],issues=[];
 async function run(){
  const browser=await webkit.launch({headless:true});
  try {
- for(const [width,height] of [[375,667],[390,844]]){
+ for(const [width,height] of [[375,667],[390,844],[768,1024],[1194,834]]){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:2,isMobile:true,hasTouch:true,locale:'en-US',timezoneId:'Africa/Cairo',serviceWorkers:'block'});
   const page=await ctx.newPage();page.setDefaultTimeout(6500);
   const report=(type,detail)=>trace.push({width,type,detail:String(detail).slice(0,600)});
@@ -21,6 +21,15 @@ async function run(){
     await page.locator('[data-open-panel=settings]').click();
     await page.locator('select[name=language]').selectOption(lang);
     await page.locator('.ux-panel-backdrop').click({position:{x:9,y:9}});
+    const selectedDay=await page.locator('.month-section .date').nth(6).getAttribute('data-date');
+    await page.locator('[data-date="'+selectedDay+'"]').tap();
+    await page.locator('.day-page').waitFor();
+    if(await page.locator('.timeline-hour').count()!==24)throw Error('Day tap did not open the timeline');
+    await page.locator('[data-back]').tap();
+    if(await page.locator('.date.chosen').getAttribute('data-date')!==selectedDay)throw Error('Back lost the selected day');
+    await page.locator('[data-date="'+selectedDay+'"]').tap();
+    await page.locator('.day-page').waitFor();
+    report(lang+'-day-navigation','Single tap opens Day and Back preserves the selected date');
     await page.locator('header [data-new]').click();
     const form=page.locator('#event-editor'),input=form.locator('[name=title]');
     await input.fill(title);
@@ -139,3 +148,4 @@ async function run(){
  if(issues.length)process.exitCode=1;
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
+

@@ -16,6 +16,9 @@ On a month screen its extra botanical scene uses spare space after the dates,
 collapsing when date rows need the height. Decorative layers ignore pointer
 events and are hidden from accessibility navigation.
 
+Selecting a day opens its full timeline on iPhone, iPad and desktop. The Month
+back action retains the selected date and returns to the month and agenda.
+
 Original Egyptian-inspired artwork was generated from the user's approved
 concept: papyrus/water-lilies for Akhet, growing grain/flax for Peret, and ripe
 grain/date palms for Shemu. This is contemporary illustration, not a claimed
