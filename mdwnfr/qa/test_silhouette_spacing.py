@@ -37,7 +37,8 @@ class VisibleInkComposition(unittest.TestCase):
         near(self,a.y,a.height/2)
         near(self,q.height-(a.y+a.height),a.height/2)
         for g in (a,b):
-            near(self,g.width/g.height,0.244/1.001)
+            box=glyph_geometry()[g.sign]
+            near(self,g.width/g.height,(box[2]-box[0])/(box[3]-box[1]))
 
     def test_mixed_slender_signs_use_taller_row(self):
         q=compose(list('𓇋𓇄'),C)
