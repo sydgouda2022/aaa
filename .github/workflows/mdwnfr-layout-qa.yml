@@ -1,0 +1,31 @@
+name: Verify MdwNfr page layout
+on:
+  pull_request:
+    paths:
+      - 'mdwnfr/core/**'
+      - 'mdwnfr/qa/**'
+      - '.github/workflows/mdwnfr-layout-qa.yml'
+permissions:
+  contents: read
+jobs:
+  page-layout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Prepare the verified Egyptian font geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'fonttools[woff]' brotli Pillow
+          curl -fLsS --retry 3 --max-time 120 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o /tmp/mdwnfr-hieroglyphs.ttf
+          python mdwnfr/tools/generate_glyph_ink.py /tmp/mdwnfr-hieroglyphs.ttf mdwnfr/core/mdwnfr/data/glyph_geometry.json
+      - name: Validate silhouette wrapping and divider geometry
+        run: |
+          set -euo pipefail
+          python -m compileall -q mdwnfr/core/mdwnfr
+          python mdwnfr/qa/test_quadrat_flow.py -v
+          python mdwnfr/qa/test_silhouette_spacing.py -v
