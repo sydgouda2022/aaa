@@ -4,6 +4,30 @@ import hashlib,json,sys
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.pens.boundsPen import BoundsPen
+from PIL import Image, ImageDraw, ImageFont
+
+RESOLUTION=64
+RASTER_SIZE=320
+
+def silhouette_scanlines(font,sign):
+    """Ink left/right extent per horizontal scan, normalized to visible glyph."""
+    bbox=font.getbbox(sign)
+    if bbox is None:raise ValueError('Missing rendered hieroglyph: '+sign)
+    canvas=Image.new('L',(max(1,bbox[2]-bbox[0])+8,
+                          max(1,bbox[3]-bbox[1])+8),0)
+    ImageDraw.Draw(canvas).text((4-bbox[0],4-bbox[1]),sign,font=font,fill=255)
+    visible=canvas.getbbox()
+    if visible is None:raise ValueError('Empty rendered hieroglyph: '+sign)
+    tile=canvas.crop(visible).resize((RESOLUTION,RESOLUTION),Image.Resampling.LANCZOS)
+    pixels=tile.load()
+    result=[]
+    for y in range(RESOLUTION):
+        ink=[x for x in range(RESOLUTION) if pixels[x,y]>=32]
+        result.append([ink[0],ink[-1]+1] if ink else None)
+    if not any(row is not None for row in result):
+        raise ValueError('Empty ink scan profile: '+sign)
+    return result
+
 
 def build(font_path:Path,output:Path)->None:
     data=font_path.read_bytes()
@@ -15,6 +39,8 @@ def build(font_path:Path,output:Path)->None:
     cmap=font.getBestCmap()
     outlines=font.getGlyphSet()
     entries={}
+    scans={}
+    painted_font=ImageFont.truetype(str(font_path),RASTER_SIZE)
     for cp in range(0x13000,0x13430):
         glyph=cmap.get(cp)
         if glyph is None:continue
@@ -24,14 +50,16 @@ def build(font_path:Path,output:Path)->None:
         x0,y0,x1,y1=pen.bounds
         if x1<=x0 or y1<=y0:continue
         entries[chr(cp)]=[round(x/upm,6) for x in (x0,y0,x1,y1)]
+        scans[chr(cp)]=silhouette_scanlines(painted_font,chr(cp))
     if len(entries)!=1072:
         raise ValueError(f'Expected 1,072 actual hieroglyphic outlines, found {len(entries)}')
-    payload={'format':'mdwnfr-glyph-ink-v1','font_sha256':digest,
-             'em_units':upm,'glyphs':entries}
+    payload={'format':'mdwnfr-glyph-ink-v2','font_sha256':digest,
+             'em_units':upm,'resolution':RESOLUTION,
+             'glyphs':entries,'scanlines':scans}
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(payload,ensure_ascii=False,
         sort_keys=True,separators=(',',':')),encoding='utf-8')
-    print(f'Installed {len(entries)} verified visible-glyph bounds')
+    print(f'Installed {len(entries)} glyphs, with outline bounds and silhouette scanlines')
 
 if __name__=='__main__':
     build(Path(sys.argv[1]),Path(sys.argv[2]))

@@ -46,16 +46,66 @@ class Quadrat:
 
 
 @lru_cache(maxsize=1)
-def glyph_geometry()->dict:
+def _catalogue()->tuple[dict,dict]:
     source=json.loads(DATA_PATH.read_text(encoding='utf-8'))
-    if source.get('format')!='mdwnfr-glyph-ink-v1' or len(source.get('glyphs',{}))!=1072:
-        raise ValueError('Verified Egyptian glyph silhouettes are missing')
-    for sign,bounds in source['glyphs'].items():
+    glyphs=source.get('glyphs',{})
+    scans=source.get('scanlines',{})
+    resolution=source.get('resolution')
+    if (source.get('format')!='mdwnfr-glyph-ink-v2' or
+        len(glyphs)!=1072 or set(scans)!=set(glyphs) or resolution!=64):
+        raise ValueError('Verified two-dimensional Egyptian glyph silhouettes are missing')
+    for sign,bounds in glyphs.items():
         if (len(sign)!=1 or len(bounds)!=4 or
             not all(isinstance(v,(int,float)) and math.isfinite(v) for v in bounds) or
             bounds[2]<=bounds[0] or bounds[3]<=bounds[1]):
             raise ValueError('Invalid Egyptian glyph outline')
-    return source['glyphs']
+        rows=scans[sign]
+        if not isinstance(rows,list) or len(rows)!=resolution:
+            raise ValueError('Invalid glyph ink scan length')
+        valid_rows=0
+        for row in rows:
+            if row is None:continue
+            if (not isinstance(row,list) or len(row)!=2 or
+                any(type(v) is not int for v in row) or
+                not 0<=row[0]<row[1]<=resolution):
+                raise ValueError('Invalid glyph silhouette scan')
+            valid_rows+=1
+        if not valid_rows:raise ValueError('Empty glyph silhouette')
+    return glyphs,scans
+
+
+def glyph_geometry()->dict:
+    return _catalogue()[0]
+
+
+def glyph_scanlines()->dict:
+    return _catalogue()[1]
+
+
+def _silhouette_advance(left:list,right:list,w_left:float,h_left:float,
+                        w_right:float,h_right:float)->float:
+    """Nearest facing ink edges at the SAME vertical position, not rectangles.
+
+    The quarter-sum-width gap is retained between visible ink contours.
+    The rounding allowance bounds raster error. Never move glyphs farther
+    apart than the original bounding-box spacing.
+    """
+    gap=(w_left+w_right)/4
+    high=max(h_left,h_right)
+    max_facing=None
+    for step in range(128):
+        y=(step+.5)*high/128
+        l_y=y-(high-h_left)/2
+        r_y=y-(high-h_right)/2
+        if not(0<=l_y<h_left and 0<=r_y<h_right):continue
+        l=left[min(63,int(l_y/h_left*64))]
+        r=right[min(63,int(r_y/h_right*64))]
+        if l is None or r is None:continue
+        facing=l[1]*w_left/64-r[0]*w_right/64
+        max_facing=facing if max_facing is None else max(max_facing,facing)
+    if max_facing is None:
+        return w_left+gap
+    return min(w_left+gap,max_facing+gap+max(w_left,w_right)/64)
 
 
 def _shape_ratio(sign:str,glyph_metrics:Mapping[str,object]|None=None)->float:
@@ -81,6 +131,7 @@ def compose(signs:list[str],column_width:float,
         raise ValueError('Nonempty signs and positive finite column width required')
     width=float(column_width)
     bounds=glyph_geometry()
+    ink_scans=glyph_scanlines()
     ratios=[_shape_ratio(s,glyph_metrics) for s in signs]
 
     # A single ink silhouette occupies up to C/2 width. If two slender signs
@@ -124,10 +175,14 @@ def compose(signs:list[str],column_width:float,
             xs=[(width-2*w)/2+w/2]
         else:
             w1,w2=dims[0][0],dims[1][0]
-            # Space in between unequal silhouettes = (w1+w2)/4.
-            occupied=1.75*(w1+w2)
-            slack=(width-occupied)/2
-            xs=[slack+w1/2,slack+w1/2+w1+(w1+w2)/4]
+            advance=_silhouette_advance(ink_scans[signs[row[0]]],
+                                        ink_scans[signs[row[1]]],
+                                        w1,dims[0][1],w2,dims[1][1])
+            # Left and right external clearances are half their respective
+            # ink widths; unused column slack is distributed symmetrically.
+            occupied=w1/2+advance+w2+w2/2
+            slack=max(0.0,width-occupied)/2
+            xs=[slack+w1/2,slack+w1/2+advance]
         for (w,h),x,index in zip(dims,xs,row):
             ink_y=y+(row_height-h)/2
             left,bottom,right,top=bounds[signs[index]]

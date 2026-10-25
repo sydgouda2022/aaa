@@ -67,7 +67,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check 'fonttools[woff]' brotli
+          python -m pip install --disable-pip-version-check 'fonttools[woff]' brotli Pillow
           mkdir -p mdwnfr/web/assets/fonts
           curl -fLsS --retry 3 --max-time 120 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/NotoSansEgyptianHieroglyphs-Regular.ttf' -o /tmp/mdwnfr-hieroglyphs.ttf
           curl -fLsS --retry 3 --max-time 120 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansegyptianhieroglyphs/OFL.txt' -o mdwnfr/web/assets/fonts/OFL-NotoEgyptian.txt

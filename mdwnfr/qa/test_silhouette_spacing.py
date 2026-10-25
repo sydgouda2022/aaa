@@ -3,7 +3,7 @@ import json,math,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'core'))
-from mdwnfr.quadrat import compose,expand_internal,glyph_geometry
+from mdwnfr.quadrat import compose,expand_internal,glyph_geometry,glyph_scanlines,_silhouette_advance
 
 C=20.0
 def near(test,left,right):
@@ -13,7 +13,9 @@ def near(test,left,right):
 class VisibleInkComposition(unittest.TestCase):
     def test_one_font_one_catalogue(self):
         data=json.loads((ROOT/'core/mdwnfr/data/glyph_geometry.json').read_text())
-        self.assertEqual(data['format'],'mdwnfr-glyph-ink-v1')
+        self.assertEqual(data['format'],'mdwnfr-glyph-ink-v2')
+        self.assertEqual(data['resolution'],64)
+        self.assertEqual(len(glyph_scanlines()),1072)
         self.assertEqual(len(glyph_geometry()),1072)
         self.assertEqual(data['font_sha256'],
                          'b792accc6207ca9caa59fc67f53926b6985a99d255dd432d7c68b68a6dfd62f8')
@@ -27,6 +29,25 @@ class VisibleInkComposition(unittest.TestCase):
         near(self,C-s.x-s.width,s.width/2)
         near(self,s.y,s.height/2)
         near(self,q.height-s.y-s.height,s.height/2)
+
+    def test_real_silhouette_profiles_reduce_unused_gap(self):
+        # Complementary half-width ink contours may have overlapping
+        # rectangular boxes while their actual ink remains well separated.
+        a=[[0,32] for _ in range(64)]
+        b=[[32,64] for _ in range(64)]
+        gap=_silhouette_advance(a,b,2.0,4.0,2.0,4.0)
+        self.assertGreater(gap,1.0)  # includes the quarter-sum-width ink gap
+        self.assertLess(gap,3.0)    # bounding-rectangle gap would be 3.0
+        for row_a,row_b in zip(a,b):
+            free=(gap+row_b[0]*2/64)-(row_a[1]*2/64)
+            self.assertGreaterEqual(free,(2+2)/4)
+
+    def test_each_glyph_has_nonempty_bounded_silhouette(self):
+        for sign,rows in glyph_scanlines().items():
+            self.assertEqual(len(rows),64,sign)
+            self.assertTrue(any(r is not None for r in rows),sign)
+            for r in rows:
+                if r is not None:self.assertTrue(0<=r[0]<r[1]<=64,sign)
 
     def test_two_slender_glyphs_share_row_and_gap_is_half_width(self):
         q=compose(list('𓇋𓇋'),C)
