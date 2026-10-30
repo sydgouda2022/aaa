@@ -1,17 +1,7 @@
 name: Build and deploy MdwNfr
+# MdwNfr production ownership migrated to sydgouda2022/mdwnfr.
+# Manual legacy recovery only; old aaa commits must never overwrite live.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'mdwnfr/core/**'
-      - 'mdwnfr/web/**'
-      - 'mdwnfr/data/**'
-      - 'mdwnfr/tools/**'
-      - 'mdwnfr/qa/**'
-      - 'mdwnfr/pyproject.toml'
-      - 'mdwnfr/worker.mjs'
-      - 'mdwnfr/wrangler.toml'
-      - '.github/workflows/deploy-mdwnfr.yml'
   workflow_dispatch:
 permissions:
   contents: read
